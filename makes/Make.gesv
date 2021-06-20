@@ -70,10 +70,10 @@ lib.grd : $(HPL_gesobj)
 #
 # ######################################################################
 #
-HPL_dgesv.o            : ../HPL_dgesv.c            $(INCdep)
-	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dgesv.c
-HPL_ipid.o             : ../HPL_ipid.c             $(INCdep)
-	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_ipid.c
+HPL_dgesv.o            : ../HPL_dgesv.cpp            $(INCdep)
+	$(CC) -x c $@ -c $(CCFLAGS)  ../HPL_dgesv.cpp
+HPL_ipid.o             : ../HPL_ipid.cpp             $(INCdep)
+	$(CC) -x c $@ -c $(CCFLAGS)  ../HPL_ipid.cpp
 #
 # ######################################################################
 #

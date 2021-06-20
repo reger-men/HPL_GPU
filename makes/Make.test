@@ -78,12 +78,12 @@ dexe.grd: $(HPL_tesobj) $(HPLlib)
 #
 # ######################################################################
 #
-HPL_ddriver.o          : ../HPL_ddriver.c          $(INCdep)
-	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_ddriver.c
-HPL_dinfo.o            : ../HPL_dinfo.c            $(INCdep)
-	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dinfo.c
-HPL_dtest.o            : ../HPL_dtest.c            $(INCdep)
-	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dtest.c
+HPL_ddriver.o          : ../HPL_ddriver.cpp          $(INCdep)
+	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_ddriver.cpp
+HPL_dinfo.o            : ../HPL_dinfo.cpp            $(INCdep)
+	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dinfo.cpp
+HPL_dtest.o            : ../HPL_dtest.cpp            $(INCdep)
+	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dtest.cpp
 #
 # ######################################################################
 #
