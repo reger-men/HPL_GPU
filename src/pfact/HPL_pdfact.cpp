@@ -118,8 +118,6 @@ void HPL_pdfact
    HPL_ptimer( HPL_TIMING_RPFACT );
 #endif
    align = PANEL->algo->align;
-   size_t s = (((size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) *sizeof(double) );
-   printf("%ld\n", s);
    vptr  = (void *)malloc( ( (size_t)(align) + 
               (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) *
               sizeof(double) );
