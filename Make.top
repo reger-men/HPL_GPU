@@ -61,11 +61,13 @@ build_src        :
 	( $(CD) src/pgesv/$(arch);         $(MAKE) )
 #
 build_tst        :
+	( $(CD) testing/backend/$(arch);   $(MAKE) )
 	( $(CD) testing/matgen/$(arch);    $(MAKE) )
 	( $(CD) testing/timer/$(arch);     $(MAKE) )
 	( $(CD) testing/pmatgen/$(arch);   $(MAKE) )
 	( $(CD) testing/ptimer/$(arch);    $(MAKE) )
 	( $(CD) testing/ptest/$(arch);     $(MAKE) )
+	@echo " ********** HPL build successfully completed. ********** "
 #( SPMS_make_cd`' testing/test/$(arch);      SPMS_make_make`' )
 #
 ## startup #############################################################
@@ -88,6 +90,7 @@ startup_src      :
 	- $(MAKE) -f Make.top leaf le=src/pgesv       arch=$(arch)
 #
 startup_tst      :
+	- $(MAKE) -f Make.top leaf le=testing/backend arch=$(arch)
 	- $(MAKE) -f Make.top leaf le=testing/matgen  arch=$(arch)
 	- $(MAKE) -f Make.top leaf le=testing/timer   arch=$(arch)
 	- $(MAKE) -f Make.top leaf le=testing/pmatgen arch=$(arch)
@@ -108,6 +111,7 @@ refresh_src      :
 	- $(CP) makes/Make.pgesv    src/pgesv/$(arch)/Makefile
 #
 refresh_tst      :
+	- $(CP) makes/Make.backend  testing/backend/$(arch)/Makefile
 	- $(CP) makes/Make.matgen   testing/matgen/$(arch)/Makefile
 	- $(CP) makes/Make.timer    testing/timer/$(arch)/Makefile
 	- $(CP) makes/Make.pmatgen  testing/pmatgen/$(arch)/Makefile
@@ -128,6 +132,7 @@ clean_src        :
 	- ( $(CD) src/pgesv/$(arch);        $(MAKE) clean )
 #
 clean_tst        :
+	- ( $(CD) testing/backend/$(arch);  $(MAKE) clean )
 	- ( $(CD) testing/matgen/$(arch);   $(MAKE) clean )
 	- ( $(CD) testing/timer/$(arch);    $(MAKE) clean )
 	- ( $(CD) testing/pmatgen/$(arch);  $(MAKE) clean )
@@ -148,6 +153,7 @@ clean_arch_src   :
 	- $(RM) -r src/pgesv/$(arch)
 #
 clean_arch_tst   :
+	- $(RM) -r testing/backend/$(arch)
 	- $(RM) -r testing/matgen/$(arch)
 	- $(RM) -r testing/timer/$(arch)
 	- $(RM) -r testing/pmatgen/$(arch)
@@ -175,6 +181,7 @@ clean_guard_src  :
 	- ( $(CD) src/pgesv/$(arch);       $(RM) *.grd )
 #
 clean_guard_tst  :
+	- ( $(CD) testing/backend/$(arch); $(RM) *.grd )
 	- ( $(CD) testing/matgen/$(arch);  $(RM) *.grd )
 	- ( $(CD) testing/timer/$(arch);   $(RM) *.grd )
 	- ( $(CD) testing/pmatgen/$(arch); $(RM) *.grd )

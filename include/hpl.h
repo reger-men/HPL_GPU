@@ -72,6 +72,8 @@
  * Include files
  * ---------------------------------------------------------------------
  */
+#include "backend/hpl_backendWrapper.h"
+
 #include "hpl_misc.h"
 #include "hpl_blas.h"
 #include "hpl_auxil.h"
