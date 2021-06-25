@@ -93,13 +93,19 @@ void HPL_copyL
  
       if( PANEL->grid->myrow == PANEL->prow )
       {
-         HPL_dlacpy( PANEL->mp-jb, jb, Mptr( PANEL->A, jb, -jb, lda ),
-                     lda, PANEL->L2, PANEL->ldl2 );
+         //Adil
+         HPL_bacpy(PANEL->mp-jb, jb, Mptr( PANEL->A, jb, -jb, lda ),
+                     lda, PANEL->L2, PANEL->ldl2, T_DEFAULT);
+         /*HPL_dlacpy( PANEL->mp-jb, jb, Mptr( PANEL->A, jb, -jb, lda ),
+                     lda, PANEL->L2, PANEL->ldl2 );*/
       }
       else
       {
-         HPL_dlacpy( PANEL->mp,    jb, Mptr( PANEL->A,  0, -jb, lda ),
-                     lda, PANEL->L2, PANEL->ldl2 );
+         //Adil
+         HPL_bacpy( PANEL->mp,    jb, Mptr( PANEL->A,  0, -jb, lda ),
+                     lda, PANEL->L2, PANEL->ldl2, T_DEFAULT);
+         /*HPL_dlacpy( PANEL->mp,    jb, Mptr( PANEL->A,  0, -jb, lda ),
+                     lda, PANEL->L2, PANEL->ldl2 );*/
       }
    }
 /*

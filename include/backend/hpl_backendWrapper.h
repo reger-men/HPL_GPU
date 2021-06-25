@@ -31,8 +31,14 @@ void HPL_bdgemm(const enum HPL_ORDER, const enum HPL_TRANS, const enum HPL_TRANS
                 const int, const double *, const int, const double, double *, 
                 const int, enum HPL_TARGET);
 
+void HPL_bdgemv(const enum HPL_ORDER, const enum HPL_TRANS, const int, const int,
+                const double, const double *, const int, const double *, const int,
+                const double, double *, const int, enum HPL_TARGET);
+
+void HPL_bacpy(const int, const int, const double *, const int, double *, const int, enum HPL_TARGET);
+
 void HPL_batcpy(const int, const int, const double *, const int,
-                double *, const int, enum HPL_TARGET);                
+                double *, const int, enum HPL_TARGET);
 
 #ifdef __cplusplus
 }

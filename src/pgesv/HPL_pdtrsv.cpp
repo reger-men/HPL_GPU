@@ -221,9 +221,13 @@ void HPL_pdtrsv
          if( n1pprev > 0 )
          {
             tmp1 = Anpprev - n1pprev;
-            HPL_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
+            //Adil
+            HPL_bdgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
                        -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
-                       XC+tmp1, 1 );
+                       XC+tmp1, 1, T_DEFAULT);
+            /*HPL_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
+                       -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
+                       XC+tmp1, 1 );*/
             if( GridIsNotPx1 )
                (void) HPL_send( XC+tmp1, n1pprev, Alcol, Rmsgid, Rcomm );
          }
@@ -261,8 +265,11 @@ void HPL_pdtrsv
 *  Finish previous update
 */
       if( ( mycol == colprev ) && ( ( tmp1 = Anpprev - n1pprev ) > 0 ) )
-         HPL_dgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
-                    Aprev, lda, Xdprev, 1, HPL_rone, XC, 1 );
+         //Adil
+         HPL_bdgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
+                    Aprev, lda, Xdprev, 1, HPL_rone, XC, 1, T_DEFAULT);
+         /*HPL_dgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
+                    Aprev, lda, Xdprev, 1, HPL_rone, XC, 1 );*/
 /*
 *  Save info of current step and update info for the next step
 */

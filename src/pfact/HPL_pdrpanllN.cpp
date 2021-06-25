@@ -236,8 +236,11 @@ void HPL_pdrpanllN
  */
       if( curr != 0 )
       {
-         HPL_dlacpy( ioff, jb, Mptr( L1, 0, ioff, n0 ), n0,
-                     Mptr( A, 0, ioff, lda ), lda );
+         //Adil
+         HPL_bacpy( ioff, jb, Mptr( L1, 0, ioff, n0 ), n0,
+                     Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
+         /*HPL_dlacpy( ioff, jb, Mptr( L1, 0, ioff, n0 ), n0,
+                     Mptr( A, 0, ioff, lda ), lda );*/
          ii += jb; m -= jb;
       }
       jj += jb; jb = Mmin( n, nb );

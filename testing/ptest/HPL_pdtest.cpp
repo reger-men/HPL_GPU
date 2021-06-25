@@ -376,13 +376,19 @@ void HPL_pdtest
  */
    if( mycol == HPL_indxg2p( N, NB, NB, 0, npcol ) )
    {
-      HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
-                 mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1 );
+      //Adil
+      HPL_bdgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
+                 mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1, T_DEFAULT);
+      /*HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
+                 mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1 );*/
    }
    else if( nq > 0 )
    {
-      HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
-                 mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1 );
+      //Adil
+      HPL_bdgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
+                 mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1, T_DEFAULT);
+      /*HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
+                 mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1 );*/
    }
    else { for( ii = 0; ii < mat.mp; ii++ ) Bptr[ii] = HPL_rzero; }
 /*

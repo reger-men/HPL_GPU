@@ -196,9 +196,13 @@ void HPL_pdpancrT
          (void) vsip_mdestroy_d( Xv1 );
          (void) vsip_mdestroy_d( Av1 );
 #else
-         HPL_dgemv( HplColumnMajor, HplNoTrans, Nm1, kk, -HPL_rone,
+         //Adil
+         HPL_bdgemv( HplColumnMajor, HplNoTrans, Nm1, kk, -HPL_rone,
                     Mptr( L1, jj+1, ICOFF, n0 ), n0, Mptr( L1, ICOFF,
-                    jj, n0 ), 1, HPL_rone, L1ptr, 1 );
+                    jj, n0 ), 1, HPL_rone, L1ptr, 1, T_DEFAULT);
+         /*HPL_dgemv( HplColumnMajor, HplNoTrans, Nm1, kk, -HPL_rone,
+                    Mptr( L1, jj+1, ICOFF, n0 ), n0, Mptr( L1, ICOFF,
+                    jj, n0 ), 1, HPL_rone, L1ptr, 1 );*/
 #endif
          if( curr != 0 )
             HPL_dcopy( Nm1, L1ptr, 1, Mptr( A, ii, jj+1, lda ), lda );
@@ -229,9 +233,13 @@ void HPL_pdpancrT
       (void) vsip_mdestroy_d( Xv1 );
       (void) vsip_mdestroy_d( Av1 );
 #else
-      HPL_dgemv( HplColumnMajor, HplNoTrans, Mm1, kk+1, -HPL_rone,
+      //Adil
+      HPL_bdgemv( HplColumnMajor, HplNoTrans, Mm1, kk+1, -HPL_rone,
                  Mptr( A, iip1, ICOFF, lda ), lda, Mptr( L1, jj+1, ICOFF,
-                 n0 ), n0, HPL_rone, Mptr( A, iip1, jj+1, lda ), 1 );
+                 n0 ), n0, HPL_rone, Mptr( A, iip1, jj+1, lda ), 1, T_DEFAULT);
+      /*HPL_dgemv( HplColumnMajor, HplNoTrans, Mm1, kk+1, -HPL_rone,
+                 Mptr( A, iip1, ICOFF, lda ), lda, Mptr( L1, jj+1, ICOFF,
+                 n0 ), n0, HPL_rone, Mptr( A, iip1, jj+1, lda ), 1 );*/
 #endif
       HPL_dlocmax( PANEL, Mm1, iip1, jj+1, WORK );
       if( curr != 0 ) { ii = iip1; iip1++; m = Mm1; Mm1--; }

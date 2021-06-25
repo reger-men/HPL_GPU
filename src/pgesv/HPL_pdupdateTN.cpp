@@ -346,7 +346,9 @@ void HPL_pdupdateTN
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda );*/
 #endif
-            HPL_dlacpy( jb, nn, Uptr, LDU, Aptr, lda );
+            //Adil
+            HPL_bacpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
+            /*HPL_dlacpy( jb, nn, Uptr, LDU, Aptr, lda );*/
          }
          else
          {
@@ -415,7 +417,9 @@ void HPL_pdupdateTN
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda );*/
 #endif
-            HPL_dlacpy( jb, nn, Uptr, LDU, Aptr, lda );
+            //Adil
+            HPL_bacpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
+            /*HPL_dlacpy( jb, nn, Uptr, LDU, Aptr, lda );*/
          }
          else
          {

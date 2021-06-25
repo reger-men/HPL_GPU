@@ -63,7 +63,7 @@ extern "C" {
    }
 
    /*
-   * Douple precision GEMM op
+   * Douple precision GEMM OP
    */
    void HPL_bdgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA, 
                 const enum HPL_TRANS TRANSB, const int M, const int N, const int K, 
@@ -84,6 +84,43 @@ extern "C" {
    }
 
    /*
+   * Douple precision GEMV OP
+   */
+   void HPL_bdgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
+                const double ALPHA, const double *A, const int LDA, const double *X, const int INCX,
+                const double BETA, double *Y, const int INCY, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::dgemv, ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
+            break;
+         case T_HIP:
+            printf("NOT IMPLEMENTED!!\n");
+            break;
+         default:
+            HPL::dispatch(CPU::dgemv, ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
+      }   
+   }
+
+   /*
+   * copies array A into an array B.
+   */
+   void HPL_bacpy(const int M, const int N, const double *A, const int LDA,
+                  double *B, const int LDB, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::acpy, M, N, A, LDA, B, LDB);
+            break;
+         case T_HIP:
+            printf("NOT IMPLEMENTED!!\n");
+            break;
+         default:
+            HPL::dispatch(CPU::acpy, M, N, A, LDA, B, LDB);
+      }
+   }
+
+   /*
    * Copies the transpose of an array A into an array B
    */
    void HPL_batcpy(const int M, const int N, const double *A, const int LDA,
@@ -99,5 +136,5 @@ extern "C" {
          default:
             HPL::dispatch(CPU::atcpy, M, N, A, LDA, B, LDB);
       }
-   }                
+   }
 } //extern "C"

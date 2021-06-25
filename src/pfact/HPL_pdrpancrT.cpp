@@ -283,8 +283,11 @@ void HPL_pdrpancrT
  */
       if( curr != 0 )
       {
-         HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
-                      Mptr( A, 0, ioff, lda ), lda );
+         //Adil
+         HPL_batcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
+                      Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
+         /*HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
+                      Mptr( A, 0, ioff, lda ), lda );*/
          ii += jb; m -= jb;
       }
       jj += jb; jb = Mmin( n, nb );

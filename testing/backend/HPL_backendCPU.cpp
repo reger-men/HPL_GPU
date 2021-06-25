@@ -33,6 +33,21 @@ void CPU::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
     HPL_dgemm(ORDER, TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC);
 }
 
+void CPU::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
+                const double ALPHA, const double *A, const int LDA, const double *X, const int INCX,
+                const double BETA, double *Y, const int INCY)
+{
+    printf("DGEMV on CPU\n");
+    HPL_dgemv(ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
+}
+
+void CPU::acpy(const int M, const int N, const double *A, const int LDA,
+                  double *B, const int LDB)
+{
+    printf("A copy on CPU\n");
+    HPL_dlacpy(M, N, A, LDA, B, LDB);
+}
+
 void CPU::atcpy(const int M, const int N, const double *A, const int LDA,
                 double *B, const int LDB)
 {

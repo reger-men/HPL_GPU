@@ -43,7 +43,7 @@ HPL_backendWrapper.o         : ../HPL_backendWrapper.cpp         $(INCdep)
 	$(CXX) -o $@ -c $(CXXFLAGS)  ../HPL_backendWrapper.cpp
 HPL_backendCommon.o          : ../HPL_backendCommon.cpp          $(INCdep)
 	$(CXX) -o $@ -c $(CXXFLAGS)  ../HPL_backendCommon.cpp
-HPL_backendCPU.o          : ../HPL_backendCPU.cpp          $(INCdep)
+HPL_backendCPU.o          : ../HPL_backendCPU.cpp                $(INCdep)
 	$(CXX) -o $@ -c $(CXXFLAGS)  ../HPL_backendCPU.cpp	
 
 # ######################################################################

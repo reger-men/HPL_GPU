@@ -25,6 +25,10 @@ namespace CPU {
                 const double, const double *, const int, 
                 const double *, const int, const double, double *, 
                 const int);
+    void dgemv(const enum HPL_ORDER, const enum HPL_TRANS, const int, const int,
+                const double, const double *, const int, const double *, const int,
+                const double, double *, const int);
+    void acpy(const int, const int, const double *, const int, double *, const int);                
     void atcpy(const int, const int, const double *, const int,
                 double *, const int);                 
 }
