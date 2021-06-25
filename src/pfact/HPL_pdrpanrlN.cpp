@@ -167,9 +167,14 @@ void HPL_pdrpanrlN
  * Factor current panel - Replicated solve - Local update
  */
       HPL_pdrpanrlN( PANEL, m, jb, ioff, WORK );
-      HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
+
+      //Adil
+      HPL_btrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                  HplUnit, jb, n, HPL_rone, Mptr( L1ptr, jj, jj, n0 ),
-                 n0, Mptr( L1ptr, jj, jj+jb, n0 ), n0 );
+                 n0, Mptr( L1ptr, jj, jj+jb, n0 ), n0, T_DEFAULT);
+      /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
+                 HplUnit, jb, n, HPL_rone, Mptr( L1ptr, jj, jj, n0 ),
+                 n0, Mptr( L1ptr, jj, jj+jb, n0 ), n0 );*/
       if( curr != 0 ) { ii += jb; m -= jb; }
 #ifdef HPL_CALL_VSIPL
 /*
@@ -218,10 +223,15 @@ void HPL_pdrpanrlN
       (void) vsip_mdestroy_d( Lv0 );
       (void) vsip_mdestroy_d( Av0 );
 #else
-      HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, n,
+      //Adil
+      HPL_bdgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, n,
                  jb, -HPL_rone, Mptr( Aptr, ii, jj, lda ), lda,
                  Mptr( L1ptr, jj, jj+jb, n0 ), n0, HPL_rone,
-                 Mptr( Aptr, ii, jj+jb, lda ), lda );
+                 Mptr( Aptr, ii, jj+jb, lda ), lda, T_DEFAULT);
+      /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, n,
+                 jb, -HPL_rone, Mptr( Aptr, ii, jj, lda ), lda,
+                 Mptr( L1ptr, jj, jj+jb, n0 ), n0, HPL_rone,
+                 Mptr( Aptr, ii, jj+jb, lda ), lda );*/
 #endif
 /*
  * Copy back upper part of A in current process row - Go the next block

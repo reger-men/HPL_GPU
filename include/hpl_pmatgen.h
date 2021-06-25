@@ -70,7 +70,6 @@ STDC_ARGS( (
    const int,
    const int
 ) );
-
 #endif
 /*
  * End of hpl_pmatgen.h

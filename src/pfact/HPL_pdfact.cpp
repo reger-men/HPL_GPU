@@ -118,9 +118,10 @@ void HPL_pdfact
    HPL_ptimer( HPL_TIMING_RPFACT );
 #endif
    align = PANEL->algo->align;
-   vptr  = (void *)malloc( ( (size_t)(align) + 
-              (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) *
-              sizeof(double) );
+
+   //Adil
+   HPL_bmalloc((void**)&vptr, ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double), T_DEFAULT);
+   //vptr  = (void *)malloc( ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double) );
    if( vptr == NULL )
    { HPL_pabort( __LINE__, "HPL_pdfact", "Memory allocation failed" ); }
 /*

@@ -213,10 +213,15 @@ void HPL_pdrpancrN
       (void) vsip_mdestroy_d( Lv0 );
       (void) vsip_mdestroy_d( Av0 );
 #else
-      HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, jb, jj,
+      //Adil
+      HPL_bdgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, jb, jj,
                  -HPL_rone, Mptr( Aptr, ii, 0, lda ), lda, Mptr( L1ptr,
                  0, jj, n0 ), n0, HPL_rone, Mptr( Aptr, ii, jj, lda ),
-                 lda );
+                 lda, T_DEFAULT );
+      /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, jb, jj,
+                 -HPL_rone, Mptr( Aptr, ii, 0, lda ), lda, Mptr( L1ptr,
+                 0, jj, n0 ), n0, HPL_rone, Mptr( Aptr, ii, jj, lda ),
+                 lda );*/
 #endif
       HPL_pdrpancrN( PANEL, m, jb, ioff, WORK );
 
@@ -255,14 +260,23 @@ void HPL_pdrpancrN
  */
          (void) vsip_mdestroy_d( Lv0 );
 #else
-         HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, jb, n,
+         //Adil
+         HPL_bdgemm( HplColumnMajor, HplNoTrans, HplNoTrans, jb, n,
                     jj, -HPL_rone, Mptr( L1ptr, jj, 0, n0 ), n0,
                     Mptr( L1ptr, 0, jj+jb, n0 ), n0, HPL_rone, 
-                    Mptr( L1ptr, jj, jj+jb, n0 ), n0 );
+                    Mptr( L1ptr, jj, jj+jb, n0 ), n0, T_DEFAULT);
+         /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, jb, n,
+                    jj, -HPL_rone, Mptr( L1ptr, jj, 0, n0 ), n0,
+                    Mptr( L1ptr, 0, jj+jb, n0 ), n0, HPL_rone, 
+                    Mptr( L1ptr, jj, jj+jb, n0 ), n0 );*/
 #endif
-         HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
+         //Adil
+         HPL_btrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, n, HPL_rone, Mptr( L1ptr, jj, jj,
-                    n0 ), n0, Mptr( L1ptr, jj, jj+jb, n0 ), n0 );
+                    n0 ), n0, Mptr( L1ptr, jj, jj+jb, n0 ), n0, T_DEFAULT);
+         /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
+                    HplUnit, jb, n, HPL_rone, Mptr( L1ptr, jj, jj,
+                    n0 ), n0, Mptr( L1ptr, jj, jj+jb, n0 ), n0 );*/
       }
 /*
  * Copy back upper part of A in current process row - Go the next block

@@ -162,8 +162,7 @@ void HPL_pdtest
  * Allocate dynamic memory
  */
    //Adil
-   HPL_malloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), Default);
-
+   HPL_bmalloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_DEFAULT);
    /*vptr = (void*)malloc( ( (size_t)(ALGO->align) + 
                            (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
                          sizeof(double) );
@@ -185,10 +184,11 @@ void HPL_pdtest
 /*
  * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
  */
-   mat.A  = (double *)HPL_PTR( vptr,
-                               ((size_t)(ALGO->align) * sizeof(double) ) );
+   mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
-   HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
+   //Adil
+   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 #ifdef HPL_CALL_VSIPL
    mat.block = vsip_blockbind_d( (vsip_scalar_d *)(mat.A),
                                  (vsip_length)(mat.ld * mat.nq),

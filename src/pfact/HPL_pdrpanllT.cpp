@@ -166,9 +166,13 @@ void HPL_pdrpanllT
 /*
  * Replicated solve - Local update - Factor current panel
  */
-      HPL_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
+      //Adil
+      HPL_btrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
                  HplUnit, jb, jj, HPL_rone, L1ptr, n0, Mptr( L1ptr,
-                 jj, 0, n0 ), n0 );
+                 jj, 0, n0 ), n0, T_DEFAULT);
+      /*HPL_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
+                 HplUnit, jb, jj, HPL_rone, L1ptr, n0, Mptr( L1ptr,
+                 jj, 0, n0 ), n0 );*/
 #ifdef HPL_CALL_VSIPL
 /*
  * Admit the blocks
@@ -216,10 +220,15 @@ void HPL_pdrpanllT
       (void) vsip_mdestroy_d( Lv0 );
       (void) vsip_mdestroy_d( Av0 );
 #else
-      HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, m, jb,
+      //Adil
+      HPL_bdgemm( HplColumnMajor, HplNoTrans, HplTrans, m, jb,
                  jj, -HPL_rone, Mptr( Aptr, ii, 0, lda ), lda,
                  Mptr( L1ptr, jj, 0, n0 ), n0, HPL_rone,
-                 Mptr( Aptr, ii, jj, lda ), lda );
+                 Mptr( Aptr, ii, jj, lda ), lda, T_DEFAULT);
+      /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, m, jb,
+                 jj, -HPL_rone, Mptr( Aptr, ii, 0, lda ), lda,
+                 Mptr( L1ptr, jj, 0, n0 ), n0, HPL_rone,
+                 Mptr( Aptr, ii, jj, lda ), lda );*/
 #endif
       HPL_pdrpanllT( PANEL, m, jb, ioff, WORK );
 /*

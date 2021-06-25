@@ -163,13 +163,18 @@ void HPL_pdrpanrlT
    do
    {
       n -= jb; ioff = ICOFF + jj;
+      printf("%d\n", n);
 /*
  * Factor current panel - Replicated solve - Local update
  */
       HPL_pdrpanrlT( PANEL, m, jb, ioff, WORK );
-      HPL_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
+      //Adil
+      HPL_btrsm(HplColumnMajor, HplRight, HplUpper, HplNoTrans,HplUnit, 
+                 n, jb, HPL_rone, Mptr( L1ptr, jj, jj, n0 ),
+                 n0, Mptr( L1ptr, jj+jb, jj, n0 ), n0, T_DEFAULT);
+      /*HPL_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
                  HplUnit, n, jb, HPL_rone, Mptr( L1ptr, jj, jj, n0 ),
-                 n0, Mptr( L1ptr, jj+jb, jj, n0 ), n0 );
+                 n0, Mptr( L1ptr, jj+jb, jj, n0 ), n0 );*/
       if( curr != 0 ) { ii += jb; m -= jb; }
 #ifdef HPL_CALL_VSIPL
 /*
@@ -218,18 +223,26 @@ void HPL_pdrpanrlT
       (void) vsip_mdestroy_d( Lv0 );
       (void) vsip_mdestroy_d( Av0 );
 #else
-      HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, m, n,
+      //Adil
+      HPL_bdgemm(HplColumnMajor, HplNoTrans, HplTrans, m, n,
                  jb, -HPL_rone, Mptr( Aptr, ii, jj, lda ), lda,
                  Mptr( L1ptr, jj+jb, jj, n0 ), n0, HPL_rone,
-                 Mptr( Aptr, ii, jj+jb, lda ), lda );
+                 Mptr( Aptr, ii, jj+jb, lda ), lda, T_DEFAULT);
+      /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, m, n,
+                 jb, -HPL_rone, Mptr( Aptr, ii, jj, lda ), lda,
+                 Mptr( L1ptr, jj+jb, jj, n0 ), n0, HPL_rone,
+                 Mptr( Aptr, ii, jj+jb, lda ), lda );*/
 #endif
 /*
  * Copy back upper part of A in current process row - Go the next block
  */
       if( curr != 0 )
       {
-         HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
-                      Mptr( A, 0, ioff, lda ), lda );
+         //Adil
+         HPL_batcpy(ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
+                      Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
+         /*HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
+                      Mptr( A, 0, ioff, lda ), lda );*/
       }
       jj += jb; jb = Mmin( n, nb );
 
