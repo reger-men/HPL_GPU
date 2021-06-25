@@ -140,7 +140,9 @@ void HPL_pdlaprnt
    (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
    Acomm = GRID->all_comm; 
    if( ( myrow == 0 ) && ( mycol == 0 ) )
-      buf = (double*)malloc( (size_t)(NB) * sizeof( double ) );
+      //Adil
+      HPL_bmalloc((void**)&buf, (size_t)(NB) * sizeof( double ), T_DEFAULT);
+      /*buf = (double*)malloc( (size_t)(NB) * sizeof( double ) );*/
 
    for( j = 0; j < N; j += NB )
    {

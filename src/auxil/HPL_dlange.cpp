@@ -134,7 +134,9 @@ double HPL_dlange
 /*
  * Find norm_1( A ).
  */
-      work = (double*)malloc( (size_t)(N) * sizeof( double ) );
+      //Adil
+      HPL_bmalloc((void**)&work, (size_t)(N) * sizeof( double ), T_DEFAULT);
+      /*work = (double*)malloc( (size_t)(N) * sizeof( double ) );*/
       if( work == NULL )
       { HPL_abort( __LINE__, "HPL_dlange", "Memory allocation failed" ); }
       else
@@ -157,7 +159,9 @@ double HPL_dlange
 /*
  * Find norm_inf( A )
  */
-      work = (double*)malloc( (size_t)(M) * sizeof( double ) );
+      //Adil
+      HPL_bmalloc((void**)&work, (size_t)(M) * sizeof( double ), T_DEFAULT);
+      /*work = (double*)malloc( (size_t)(M) * sizeof( double ) );*/
       if( work == NULL )
       { HPL_abort( __LINE__, "HPL_dlange", "Memory allocation failed" ); }
       else

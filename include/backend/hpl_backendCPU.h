@@ -10,6 +10,15 @@ extern "C" {
 #include "hpl_blas.h"
 }
 
+//#define HPL_PRINT_INFO
+#ifdef HPL_PRINT_INFO
+#define CPUInfo(string, ...)            \
+{                                     \
+  printf(string "\n", ##__VA_ARGS__); \
+}
+#else
+#define CPUInfo(string, ...)
+#endif
 
 namespace CPU {
     void malloc(void**, size_t);

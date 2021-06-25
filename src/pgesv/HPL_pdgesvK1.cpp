@@ -118,7 +118,9 @@ void HPL_pdgesvK1
 /*
  * Allocate a panel list of length depth + 1 (depth >= 1)
  */
-   panel = (HPL_T_panel **)malloc( (size_t)(depth+1)*sizeof( HPL_T_panel *) );
+   //Adil
+   HPL_bmalloc((void**)&panel, (size_t)(depth+1)*sizeof( HPL_T_panel *), T_DEFAULT);
+   /*panel = (HPL_T_panel **)malloc( (size_t)(depth+1)*sizeof( HPL_T_panel *) );*/
    if( panel == NULL )
    { HPL_pabort( __LINE__, "HPL_pdgesvK1", "Memory allocation failed" ); }
 /*

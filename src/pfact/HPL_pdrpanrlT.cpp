@@ -163,7 +163,6 @@ void HPL_pdrpanrlT
    do
    {
       n -= jb; ioff = ICOFF + jj;
-      printf("%d\n", n);
 /*
  * Factor current panel - Replicated solve - Local update
  */

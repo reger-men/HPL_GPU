@@ -149,8 +149,9 @@ void HPL_pdlaswp00N
 /*
  * Allocate space for temporary W (ldW * jb)
  */
-   vptr = (void*)malloc( 
-      ((size_t)(align) + ((size_t)(jb) * (size_t)(ldW))) * sizeof(double) );
+   //Adil
+   HPL_bmalloc((void**)&vptr, ((size_t)(align) + ((size_t)(jb) * (size_t)(ldW))) * sizeof(double), T_DEFAULT);
+   /*vptr = (void*)malloc(((size_t)(align) + ((size_t)(jb) * (size_t)(ldW))) * sizeof(double) );*/
    if( vptr == NULL )
    { HPL_pabort( __LINE__, "HPL_pdlaswp00N", "Memory allocation failed" ); }
 

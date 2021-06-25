@@ -114,7 +114,9 @@ void HPL_pdgesv0
 /*
  * Allocate a panel list of length 1 - Allocate panel[0] resources
  */
-   panel = (HPL_T_panel **)malloc( sizeof( HPL_T_panel * ) );
+   //Adil
+   HPL_bmalloc((void**)&panel, sizeof( HPL_T_panel * ), T_DEFAULT);
+   /*panel = (HPL_T_panel **)malloc( sizeof( HPL_T_panel * ) );*/
    if( panel == NULL )
    { HPL_pabort( __LINE__, "HPL_pdgesv0", "Memory allocation failed" ); }
 

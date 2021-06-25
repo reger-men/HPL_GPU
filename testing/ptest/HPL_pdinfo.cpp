@@ -638,7 +638,9 @@ label_error:
 /*
  * Broadcast array sizes
  */
-   iwork = (int *)malloc( (size_t)(15) * sizeof( int ) );
+   //Adil
+   HPL_bmalloc((void**)&iwork, (size_t)(15) * sizeof( int ), T_DEFAULT);
+   /*iwork = (int *)malloc( (size_t)(15) * sizeof( int ) );*/
    if( rank == 0 )
    {
       iwork[ 0] = *NS;      iwork[ 1] = *NBS;
@@ -664,7 +666,9 @@ label_error:
  */
    lwork = (*NS) + (*NBS) + 2 * (*NPQS) + (*NPFS) + (*NBMS) + 
            (*NDVS) + (*NRFS) + (*NTPS) + (*NDHS) + 1;
-   iwork = (int *)malloc( (size_t)(lwork) * sizeof( int ) );
+   //Adil
+   HPL_bmalloc((void**)&iwork, (size_t)(lwork) * sizeof( int ), T_DEFAULT);           
+   /*iwork = (int *)malloc( (size_t)(lwork) * sizeof( int ) );*/
    if( rank == 0 )
    {
       j = 0;

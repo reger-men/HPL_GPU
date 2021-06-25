@@ -139,7 +139,10 @@ void HPL_pdpanel_new
 /*
  * Allocate the panel structure - Check for enough memory
  */
-   if( !( p = (HPL_T_panel *)malloc( sizeof( HPL_T_panel ) ) ) )
+   //Adil
+   HPL_bmalloc((void**)&p, sizeof( HPL_T_panel ), T_DEFAULT);
+   /*if( !( p = (HPL_T_panel *)malloc( sizeof( HPL_T_panel ) ) ) )*/
+   if( !( p ))
    {
       HPL_pabort( __LINE__, "HPL_pdpanel_new", "Memory allocation failed" );
    }

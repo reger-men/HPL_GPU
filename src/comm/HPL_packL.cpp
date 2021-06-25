@@ -134,10 +134,15 @@ int HPL_packL
 /*
  * Temporaries to create the type struct.
  */
-   bufs = (void     * * *)malloc( jbp1 * sizeof( void * *     ) );
+   //Adil
+   HPL_bmalloc((void**)&bufs, jbp1 * sizeof( void * *     ), T_DEFAULT);
+   HPL_bmalloc((void**)&blen, jbp1 * sizeof( int          ), T_DEFAULT);
+   HPL_bmalloc((void**)&disp, jbp1 * sizeof( MPI_Aint     ), T_DEFAULT);
+   HPL_bmalloc((void**)&type, jbp1 * sizeof( MPI_Datatype ), T_DEFAULT);
+   /*bufs = (void     * * *)malloc( jbp1 * sizeof( void * *     ) );
    blen = (int          *)malloc( jbp1 * sizeof( int          ) );
    disp = (MPI_Aint     *)malloc( jbp1 * sizeof( MPI_Aint     ) );
-   type = (MPI_Datatype *)malloc( jbp1 * sizeof( MPI_Datatype ) );
+   type = (MPI_Datatype *)malloc( jbp1 * sizeof( MPI_Datatype ) );*/
  
    if( ( bufs != NULL ) && ( blen != NULL ) &&
        ( disp != NULL ) && ( type != NULL ) )

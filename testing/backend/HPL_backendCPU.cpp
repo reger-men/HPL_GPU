@@ -2,7 +2,7 @@
 
 void CPU::malloc(void** ptr, size_t size)
 {
-    printf("allocate memory on CPU of size %ld\n", size);
+    CPUInfo("allocate memory on CPU of size %ld", size);
     *ptr = std::malloc(size);
 }
 
@@ -10,7 +10,7 @@ void CPU::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED)
 {
-    printf("generate matrix on CPU\n");
+    CPUInfo("generate matrix on CPU");
     HPL_pdmatgen(GRID, M, N, NB, A, LDA, ISEED);
 }
 
@@ -19,7 +19,7 @@ void CPU::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
                 const enum HPL_DIAG DIAG, const int M, const int N, 
                 const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
 {
-    printf("TRSM on CPU\n");
+    CPUInfo("TRSM on CPU");
     HPL_dtrsm(ORDER, SIDE, UPLO, TRANSA, DIAG, M, N, ALPHA, A, LDA, B, LDB);
 }
 
@@ -29,7 +29,7 @@ void CPU::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
                 const double *B, const int LDB, const double BETA, double *C, 
                 const int LDC)
 {
-    printf("DGEMM on CPU\n");
+    CPUInfo("DGEMM on CPU");
     HPL_dgemm(ORDER, TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC);
 }
 
@@ -37,20 +37,20 @@ void CPU::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const in
                 const double ALPHA, const double *A, const int LDA, const double *X, const int INCX,
                 const double BETA, double *Y, const int INCY)
 {
-    printf("DGEMV on CPU\n");
+    CPUInfo("DGEMV on CPU");
     HPL_dgemv(ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
 }
 
 void CPU::acpy(const int M, const int N, const double *A, const int LDA,
                   double *B, const int LDB)
 {
-    printf("A copy on CPU\n");
+    CPUInfo("A copy on CPU");
     HPL_dlacpy(M, N, A, LDA, B, LDB);
 }
 
 void CPU::atcpy(const int M, const int N, const double *A, const int LDA,
                 double *B, const int LDB)
 {
-    printf("A transpose copy on CPU\n");
+    CPUInfo("A transpose copy on CPU");
     HPL_dlatcpy(M, N, A, LDA, B, LDB);
 }

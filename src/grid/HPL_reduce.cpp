@@ -123,11 +123,13 @@ int HPL_reduce
    i = size - 1; while( i > 1 ) { i >>= 1; d++; }
 
    if( DTYPE == HPL_INT )
-      buffer = (void *)( (int *)   malloc( (size_t)(COUNT) * 
-                                           sizeof( int    ) ) );
+      //Adil
+      HPL_bmalloc((void**)&buffer, (size_t)(COUNT) * sizeof( int    ), T_DEFAULT);
+      /*buffer = (void *)( (int *)   malloc( (size_t)(COUNT) * sizeof( int    ) ) );*/
    else
-      buffer = (void *)( (double *)malloc( (size_t)(COUNT) *
-                                           sizeof( double ) ) );
+      //Adil
+      HPL_bmalloc((void**)&buffer, (size_t)(COUNT) * sizeof( double ), T_DEFAULT);
+      /*buffer = (void *)( (double *)malloc( (size_t)(COUNT) * sizeof( double ) ) );*/
 
    if( !( buffer ) )
    { HPL_pabort( __LINE__, "HPL_reduce", "Memory allocation failed" ); }

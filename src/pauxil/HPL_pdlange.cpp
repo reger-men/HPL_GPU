@@ -163,7 +163,9 @@ double HPL_pdlange
  */
       if( nq > 0 )
       {
-         work = (double*)malloc( (size_t)(nq) * sizeof( double ) );
+         //Adil
+         HPL_bmalloc((void**)&work, (size_t)(nq) * sizeof( double ), T_DEFAULT);
+         /*work = (double*)malloc( (size_t)(nq) * sizeof( double ) );*/
          if( work == NULL )
          { HPL_pabort( __LINE__, "HPL_pdlange", "Memory allocation failed" ); }
 
@@ -199,7 +201,9 @@ double HPL_pdlange
  */
       if( mp > 0 )
       {
-         work = (double*)malloc( (size_t)(mp) * sizeof( double ) );
+         //Adil
+         HPL_bmalloc((void**)&work, (size_t)(mp) * sizeof( double ), T_DEFAULT);
+         /*work = (double*)malloc( (size_t)(mp) * sizeof( double ) );*/
          if( work == NULL )
          { HPL_pabort( __LINE__, "HPL_pdlange", "Memory allocation failed" ); }
 

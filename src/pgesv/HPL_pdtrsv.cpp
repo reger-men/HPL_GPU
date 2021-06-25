@@ -159,7 +159,9 @@ void HPL_pdtrsv
    n1 = ( npcol - 1 ) * nb; n1 = Mmax( n1, nb );
    if( Anp > 0 )
    {
-      W = (double*)malloc( (size_t)(Mmin( n1, Anp )) * sizeof( double ) );
+      //Adil
+      HPL_bmalloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_DEFAULT);
+      /*W = (double*)malloc( (size_t)(Mmin( n1, Anp )) * sizeof( double ) );*/
       if( W == NULL )
       { HPL_pabort( __LINE__, "HPL_pdtrsv", "Memory allocation failed" ); }
       Wfr = 1;
