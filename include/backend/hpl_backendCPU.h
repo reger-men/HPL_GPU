@@ -12,7 +12,7 @@ extern "C" {
 
 //#define HPL_PRINT_INFO
 #ifdef HPL_PRINT_INFO
-#define CPUInfo(string, ...)            \
+#define CPUInfo(string, ...)          \
 {                                     \
   printf(string "\n", ##__VA_ARGS__); \
 }
@@ -23,9 +23,9 @@ extern "C" {
 namespace CPU {
     void malloc(void**, size_t);
     void matgen(const HPL_T_grid *, const int, const int,
-                 const int, double *, const int,
-                 const int);
-    void trsm( const enum HPL_ORDER, const enum HPL_SIDE, 
+                const int, double *, const int,
+                const int);
+    void trsm(const enum HPL_ORDER, const enum HPL_SIDE, 
                 const enum HPL_UPLO, const enum HPL_TRANS, 
                 const enum HPL_DIAG, const int, const int, 
                 const double, const double *, const int, double *, const int);

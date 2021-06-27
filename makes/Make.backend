@@ -19,12 +19,13 @@ include Make.inc
 # ######################################################################
 #
 INCdep           = \
-   $(INCdir)/backend/hpl_backendWrapper.h  $(INCdir)/backend/hpl_backendCommon.h $(INCdir)/backend/hpl_backendCPU.h
+   $(INCdir)/backend/hpl_backendWrapper.h  $(INCdir)/backend/hpl_backendCommon.h \
+   $(INCdir)/backend/hpl_backendCPU.h  $(INCdir)/backend/hpl_backendHIP.h
 #
 ## Object files ########################################################
 #
 HPL_backobj       = \
-   HPL_backendWrapper.o			HPL_backendCommon.o			HPL_backendCPU.o
+   HPL_backendWrapper.o			HPL_backendCommon.o			HPL_backendCPU.o			HPL_backendHIP.o
 #
 ## Targets #############################################################
 #
@@ -45,6 +46,8 @@ HPL_backendCommon.o          : ../HPL_backendCommon.cpp          $(INCdep)
 	$(CXX) -o $@ -c $(CXXFLAGS)  ../HPL_backendCommon.cpp
 HPL_backendCPU.o          : ../HPL_backendCPU.cpp                $(INCdep)
 	$(CXX) -o $@ -c $(CXXFLAGS)  ../HPL_backendCPU.cpp	
+HPL_backendHIP.o          : ../HPL_backendHIP.cpp                $(INCdep)
+	$(HIPCC) -o $@ -c $(CXXFLAGS)  ../HPL_backendHIP.cpp
 
 # ######################################################################
 #

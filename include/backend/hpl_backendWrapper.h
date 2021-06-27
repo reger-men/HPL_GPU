@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define DO_NOTHING()
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,6 +15,8 @@ extern "C" {
 
 
 enum HPL_TARGET {T_DEFAULT, T_CPU, T_HIP};
+
+void HPL_btinit(size_t, enum HPL_TARGET);
 
 void HPL_bmalloc(void**, size_t, enum HPL_TARGET);
 

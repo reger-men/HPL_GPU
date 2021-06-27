@@ -151,6 +151,12 @@ int main( ARGC, ARGV )
                &npfs, pfaval, &nbms, nbmval, &ndvs, ndvval, &nrfs, rfaval,
                &ntps, topval, &ndhs, ndhval, &fswap, &tswap, &L1notran,
                &Unotran, &equil, &align );
+
+   /*
+   * Init Target Device
+   */
+   HPL_btinit(1, T_HIP);
+
 /*
  * Loop over different process grids - Define process grid. Go to bottom
  * of process grid loop if this case does not use my process.

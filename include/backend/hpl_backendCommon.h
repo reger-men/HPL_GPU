@@ -3,17 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "backend/hpl_backendCPU.h"
-
-/*namespace HPL {
-    int  init();
-    void malloc(void** ptr, size_t size){printf("malloc");};
-    void memcpy();
-    void memset();
-
-    template<typename... Ts, typename... Fns>
-    constexpr auto dispatch(Fns&&... fns);
-}*/
-
+#include "backend/hpl_backendHIP.h"
 
 #ifdef __cplusplus
 

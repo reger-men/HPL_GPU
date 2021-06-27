@@ -1,9 +1,28 @@
+#pragma once
+
 #include "backend/hpl_backendWrapper.h"
 #include "backend/hpl_backendCommon.h"
 
-#include <iostream>
+
 
 extern "C" {
+
+   /*
+   * Initialize the Target device
+   */
+   void HPL_btinit(size_t num_devices, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::init, num_devices);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
    
    /*
    * Allocate memory
@@ -15,7 +34,7 @@ extern "C" {
             HPL::dispatch(CPU::malloc, ptr, size);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::malloc, ptr, size);
             break;
          default:
             HPL::dispatch(CPU::malloc, ptr, size);
@@ -34,7 +53,7 @@ extern "C" {
             HPL::dispatch(CPU::matgen, GRID, M, N, NB, A, LDA, ISEED);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::matgen, GRID, M, N, NB, A, LDA, ISEED);
             break;
          default:
             HPL::dispatch(CPU::matgen, GRID, M, N, NB, A, LDA, ISEED);

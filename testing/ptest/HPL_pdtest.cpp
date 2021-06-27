@@ -162,7 +162,7 @@ void HPL_pdtest
  * Allocate dynamic memory
  */
    //Adil
-   HPL_bmalloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_DEFAULT);
+   HPL_bmalloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_HIP);
    /*vptr = (void*)malloc( ( (size_t)(ALGO->align) + 
                            (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
                          sizeof(double) );
@@ -187,7 +187,7 @@ void HPL_pdtest
    mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
    //Adil
-   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_HIP);
    //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 #ifdef HPL_CALL_VSIPL
    mat.block = vsip_blockbind_d( (vsip_scalar_d *)(mat.A),
