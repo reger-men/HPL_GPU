@@ -100,28 +100,36 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
 int HIP::idamax(const int N, const double *DX, const int INCX)
 {
     GPUInfo("DMAX on HIP");
+    rocblas_int result;
+    ROCBLAS_CHECK_STATUS(rocblas_idamax(_handle, N, DX, INCX, &result));
+    return result;
 }
 
 void HIP::daxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 
                 const int INCY)
 {
     GPUInfo("DAXPY on HIP");
+    ROCBLAS_CHECK_STATUS(rocblas_daxpy(_handle, N, &DA, DX, INCX, DY, INCY));
 }
 
 void HIP::dscal(const int N, const double DA, double *DX, const int INCX)
 {
     GPUInfo("DSCAL on HIP");
+    ROCBLAS_CHECK_STATUS(rocblas_dscal(_handle, N, &DA, DX, INCX));
 }
 
 void HIP::dswap(const int N, double *DX, const int INCX, double *DY, const int INCY)
 {    
     GPUInfo("DSWAP on HIP");
+    ROCBLAS_CHECK_STATUS(rocblas_dswap(_handle, N, DX, INCX, DY, INCY));
 }
 
 void HIP::dger( const enum HPL_ORDER ORDER, const int M, const int N, const double ALPHA, const double *X,
                const int INCX, double *Y, const int INCY, double *A, const int LDA)
 {
     GPUInfo("DGER on HIP");
+    //rocBLAS uses column-major storage for 2D arrays
+    ROCBLAS_CHECK_STATUS(rocblas_dger(_handle, M, N, &ALPHA, X, INCX, Y, INCY, A, LDA));
 }
 
 void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE, 
@@ -179,7 +187,7 @@ __global__ void
 _dlacpy(const int M, const int N, const double *A, const int LDA,
         double *B, const int LDB)
 {
-    
+
 }
 
 /*
