@@ -88,7 +88,9 @@ static void HPL_dgemv0( TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY )
    if( ( M == 0 ) || ( N == 0 ) ||
        ( ( ALPHA == HPL_rzero ) && ( BETA == HPL_rone  ) ) ) return;
  
-   if( ALPHA == HPL_rzero ) { HPL_dscal( M, BETA, Y, INCY ); return; }
+   //Adil
+   if( ALPHA == HPL_rzero ) { HPL_bdscal(M, BETA, Y, INCY, T_CPU); return; }
+   /*if( ALPHA == HPL_rzero ) { HPL_dscal( M, BETA, Y, INCY ); return; }*/
  
    if( TRANS == HplNoTrans )
    {

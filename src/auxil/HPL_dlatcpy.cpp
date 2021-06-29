@@ -155,7 +155,9 @@ void HPL_dlatcpy
    if( ( M <= 0 ) || ( N <= 0 ) ) return;
 
 #ifdef HPL_LATCPY_USE_COPY
-   for( j = 0; j < N; j++, B0 += LDB ) HPL_dcopy( M, A0+j, LDA, B0, 1 );
+   //Adil
+   for( j = 0; j < N; j++, B0 += LDB ) HPL_bcopy( M, A0+j, LDA, B0, 1, T_CPU);
+   /*for( j = 0; j < N; j++, B0 += LDB ) HPL_dcopy( M, A0+j, LDA, B0, 1 );*/
 #else
    mu = (int)( ( (unsigned int)(M) >> HPL_LATCPY_LOG2_M_DEPTH ) <<
                                       HPL_LATCPY_LOG2_M_DEPTH );

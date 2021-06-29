@@ -205,7 +205,9 @@ void HPL_pdpancrT
                     jj, n0 ), 1, HPL_rone, L1ptr, 1 );*/
 #endif
          if( curr != 0 )
-            HPL_dcopy( Nm1, L1ptr, 1, Mptr( A, ii, jj+1, lda ), lda );
+            //Adil
+            HPL_bcopy( Nm1, L1ptr, 1, Mptr( A, ii, jj+1, lda ), lda, T_DEFAULT); 
+            /*HPL_dcopy( Nm1, L1ptr, 1, Mptr( A, ii, jj+1, lda ), lda );*/
       }
 /*
  * Scale current column by its absolute value max entry  -  Update  dia-
@@ -215,7 +217,9 @@ void HPL_pdpancrT
  * could benefit from a specialized blocked implementation.
  */
       if( WORK[0] != HPL_rzero )
-         HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );
+         //Adil
+         HPL_bdscal(Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_DEFAULT);
+         /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 #ifdef HPL_CALL_VSIPL
 /*
  * Create the matrix subviews
@@ -253,7 +257,9 @@ void HPL_pdpancrT
    HPL_pdmxswp(  PANEL, m, ii, jj, WORK );
    HPL_dlocswpT( PANEL,    ii, jj, WORK );
    if( WORK[0] != HPL_rzero )
-      HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );
+      //Adil
+      HPL_bdscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_DEFAULT);
+      /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 #ifdef HPL_CALL_VSIPL
 /*
  * Release the blocks

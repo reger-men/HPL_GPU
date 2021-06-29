@@ -418,7 +418,9 @@ void HPL_pdlaswp00N
       { (void) HPL_send( U, usize, partner, Cmsgid, comm ); }
    }
 
-   if( vptr ) free( vptr );
+   //Adil
+   if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+   /*if( vptr ) free( vptr );*/
 /*
  * Probe for column panel - forward it when available 
  */

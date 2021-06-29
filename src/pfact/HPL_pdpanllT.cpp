@@ -175,8 +175,11 @@ void HPL_pdpanllT
       HPL_dlocswpT( PANEL,    ii, jj, WORK );
 
       L1ptr = Mptr( L1, jj+1, ICOFF, n0 ); kk = jj + 1 - ICOFF;
-      HPL_dtrsv( HplColumnMajor, HplUpper, HplTrans,   HplUnit, kk,
-                 Mptr( L1, ICOFF, ICOFF, n0 ), n0, L1ptr, n0 );
+      //Adil
+      HPL_btrsv( HplColumnMajor, HplUpper, HplTrans,   HplUnit, kk,
+                 Mptr( L1, ICOFF, ICOFF, n0 ), n0, L1ptr, n0, T_DEFAULT);
+      /*HPL_dtrsv( HplColumnMajor, HplUpper, HplTrans,   HplUnit, kk,
+                 Mptr( L1, ICOFF, ICOFF, n0 ), n0, L1ptr, n0 );*/
 /*
  * Scale  current column by its absolute value max entry  -  Update  and 
  * find local  absolute value max  in next column (Only one pass through 
@@ -184,7 +187,9 @@ void HPL_pdpanllT
  * fit from a specialized  blocked implementation.
  */ 
       if( WORK[0] != HPL_rzero )
-         HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );
+         //Adil
+         HPL_bdscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_DEFAULT);
+         /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 #ifdef HPL_CALL_VSIPL
 /*
  * Create the matrix subviews
@@ -213,7 +218,9 @@ void HPL_pdpanllT
       HPL_dlocmax( PANEL, Mm1, iip1, jj+1, WORK );
       if( curr != 0 )
       {
-         HPL_dcopy( kk, L1ptr, n0, Mptr( A, ICOFF, jj+1, lda ), 1 );
+         //Adil
+         HPL_bcopy( kk, L1ptr, n0, Mptr( A, ICOFF, jj+1, lda ), 1, T_DEFAULT); 
+         /*HPL_dcopy( kk, L1ptr, n0, Mptr( A, ICOFF, jj+1, lda ), 1 );*/
          ii = iip1; iip1++; m = Mm1; Mm1--;
       }
       Nm1--; jj++;
@@ -225,7 +232,9 @@ void HPL_pdpanllT
    HPL_pdmxswp(  PANEL, m, ii, jj, WORK );
    HPL_dlocswpT( PANEL,    ii, jj, WORK );
    if( WORK[0] != HPL_rzero )
-      HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );
+      //Adil
+      HPL_bdscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_DEFAULT);
+      /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 
 #ifdef HPL_CALL_VSIPL
 /*

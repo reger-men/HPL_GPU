@@ -161,8 +161,8 @@ void HPL_pdtest
 /*
  * Allocate dynamic memory
  */
-   //Adil
-   HPL_bmalloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_HIP);
+   //Adil_HIP
+   HPL_bmalloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_DEFAULT);
    /*vptr = (void*)malloc( ( (size_t)(ALGO->align) + 
                            (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
                          sizeof(double) );
@@ -178,7 +178,9 @@ void HPL_pdtest
                     "Memory allocation failed for A, x and b. Skip." );
       (TEST->kskip)++;
       /* some processes might have succeeded with allocation */
-      if (vptr) free(vptr);
+      //Adil
+      if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+      /*if (vptr) free(vptr);*/
       return;
    }
 /*
@@ -186,8 +188,8 @@ void HPL_pdtest
  */
    mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
-   //Adil
-   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_HIP);
+   //Adil_HIP
+   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
    //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 #ifdef HPL_CALL_VSIPL
    mat.block = vsip_blockbind_d( (vsip_scalar_d *)(mat.A),
@@ -325,7 +327,14 @@ void HPL_pdtest
  * Quick return, if I am not interested in checking the computations
  */
    if( TEST->thrsh <= HPL_rzero )
-   { (TEST->kpass)++; if( vptr ) free( vptr ); return; }
+   { 
+      (TEST->kpass)++; 
+
+      //Adil
+      if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+      /*if( vptr ) free( vptr ); */
+      return; 
+   }
 /*
  * Check info returned by solve
  */
@@ -335,13 +344,17 @@ void HPL_pdtest
          HPL_pwarn( TEST->outfp, __LINE__, "HPL_pdtest", "%s %d, %s", 
                     "Error code returned by solve is", mat.info, "skip" );
       (TEST->kskip)++;
-      if( vptr ) free( vptr ); return;
+      //Adil
+      if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT); return;
+      /*if( vptr ) free( vptr ); return;*/
    }
 /*
  * Check computation, re-generate [ A | b ], compute norm 1 and inf of A and x,
  * and norm inf of b - A x. Display residual checks.
  */
-   HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
+   //Adil
+   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   /*HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );*/
    Anorm1 = HPL_pdlange( GRID, HPL_NORM_1, N, N, NB, mat.A, mat.ld );
    AnormI = HPL_pdlange( GRID, HPL_NORM_I, N, N, NB, mat.A, mat.ld );
 /*
@@ -441,7 +454,9 @@ void HPL_pdtest
          "||b||_oo . . . . . . . . . . . . . . . . . . . = ", BnormI );
       }
    }
-   if( vptr ) free( vptr );
+   //Adil_HIP
+   if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+   //if( vptr ) free( vptr );
 /*
  * End of HPL_pdtest
  */

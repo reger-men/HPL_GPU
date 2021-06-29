@@ -161,10 +161,17 @@ void HPL_pdmxswp
    if( M > 0 )
    {
       lda = PANEL->lda;
-      HPL_dcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
-                 Wmx, 1 );
+      //Adil
+      HPL_bcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
+                 Wmx, 1, T_DEFAULT);
+      /*HPL_dcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
+                 Wmx, 1 );*/
       if( myrow == icurrow )
-      { HPL_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1 ); }
+      {
+         //Adil
+         HPL_bcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1, T_DEFAULT); 
+         /*HPL_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1 ); */
+      }
    }
    else { for( i = 0; i < n0; i++ ) Wmx[i] = HPL_rzero; }
 /*
@@ -203,7 +210,11 @@ void HPL_pdmxswp
          tmp1 = Mabs( Wwork[0] ); gmax = Mabs( WORK[0] );
          if( ( tmp1 > gmax ) ||
              ( ( tmp1 == gmax ) && ( Wwork[3] < WORK[3] ) ) )
-         { HPL_dcopy( cnt_, Wwork, 1, WORK, 1 ); }
+         { 
+            //Adil
+            HPL_bcopy( cnt_, Wwork, 1, WORK, 1, T_DEFAULT); 
+            /*HPL_dcopy( cnt_, Wwork, 1, WORK, 1 ); */
+         }
       }
    }
 
@@ -239,11 +250,18 @@ void HPL_pdmxswp
          if( ( tmp1 > gmax ) ||
              ( ( tmp1 == gmax ) && ( Wwork[3] < WORK[3] ) ) )
          {
-            HPL_dcopy( ( rcnt == cnt0 ? cnt0 : cnt_ ), Wwork, 1,
-                       WORK, 1 );
+            //Adil
+            HPL_bcopy( ( rcnt == cnt0 ? cnt0 : cnt_ ), Wwork, 1,
+                       WORK, 1, T_DEFAULT); 
+            /*HPL_dcopy( ( rcnt == cnt0 ? cnt0 : cnt_ ), Wwork, 1,
+                       WORK, 1 );*/
          }
          else if( rcnt == cnt0 )
-         { HPL_dcopy( n0, Wwork+cnt_, 1, A0, 1 ); }
+         { 
+            //Adil
+            HPL_bcopy( n0, Wwork+cnt_, 1, A0, 1, T_DEFAULT); 
+            /*HPL_dcopy( n0, Wwork+cnt_, 1, A0, 1 ); */
+         }
  
          ipow <<= 1; k++;
       }

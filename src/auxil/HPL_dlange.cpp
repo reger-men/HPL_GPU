@@ -151,7 +151,9 @@ double HPL_dlange
  * Find maximum sum of columns for 1-norm
  */
          v0 = work[HPL_idamax( N, work, 1 )]; v0 = Mabs( v0 );
-         if( work ) free( work );
+         //Adil
+         if( work ) HPL_bfree((void**)&work, T_DEFAULT);
+         /*if( work ) free( work );*/
       }
    }
    else if( NORM == HPL_NORM_I )

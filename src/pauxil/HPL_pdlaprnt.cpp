@@ -185,7 +185,9 @@ void HPL_pdlaprnt
       icurcol = MModAdd1( icurcol, npcol );
       (void) HPL_barrier( Acomm );
    }
-   if( ( myrow == 0 ) && ( mycol == 0 ) && ( buf ) ) free( buf );
+   //Adil
+   if( ( myrow == 0 ) && ( mycol == 0 ) && ( buf ) ) HPL_bfree((void**)&buf, T_DEFAULT);
+   /*if( ( myrow == 0 ) && ( mycol == 0 ) && ( buf ) ) free( buf );*/
 /*
  * End of HPL_pdlaprnt
  */

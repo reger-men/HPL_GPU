@@ -218,10 +218,16 @@ int HPL_packL
 /*
  * release temporaries
  */
-      if( bufs ) free( bufs );
+      //Adil
+      if( bufs ) HPL_bfree((void**)&bufs, T_DEFAULT);
+      if( blen ) HPL_bfree((void**)&blen, T_DEFAULT);
+      if( disp ) HPL_bfree((void**)&disp, T_DEFAULT);
+      if( type ) HPL_bfree((void**)&type, T_DEFAULT);
+
+      /*if( bufs ) free( bufs );
       if( blen ) free( blen );
       if( disp ) free( disp );
-      if( type ) free( type );
+      if( type ) free( type );*/
 /*
  * commit the type 
  */

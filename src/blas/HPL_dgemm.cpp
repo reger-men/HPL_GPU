@@ -81,7 +81,9 @@ static void HPL_dgemmNN( M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
 
    for( j = 0, jbj = 0, jcj  = 0; j < N; j++, jbj += LDB, jcj += LDC )
    {
-      HPL_dscal( M, BETA, C+jcj, 1 );
+      //Adil
+      HPL_bdscal(M, BETA, C+jcj, 1, T_CPU);
+      /*HPL_dscal( M, BETA, C+jcj, 1 );*/
       for( l = 0, jal = 0, iblj = jbj; l < K; l++, jal += LDA, iblj += 1 )
       {
          t0 = ALPHA * B[iblj];

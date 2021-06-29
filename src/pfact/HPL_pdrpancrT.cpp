@@ -213,7 +213,7 @@ void HPL_pdrpancrT
       (void) vsip_mdestroy_d( Lv0 );
       (void) vsip_mdestroy_d( Av0 );
 #else
-      //Adil
+      //Adil_HIP
       HPL_bdgemm( HplColumnMajor, HplNoTrans, HplTrans, m, jb, jj,
                  -HPL_rone, Mptr( Aptr, ii, 0, lda ), lda, Mptr( L1ptr,
                  jj, 0, n0 ), n0, HPL_rone, Mptr( Aptr, ii, jj, lda ),
@@ -260,7 +260,7 @@ void HPL_pdrpancrT
  */
          (void) vsip_mdestroy_d( Lv0 );
 #else
-         //Adil
+         //Adil_HIP
          HPL_bdgemm(HplColumnMajor, HplNoTrans, HplNoTrans, n, jb,
                     jj, -HPL_rone, Mptr( L1ptr, jj+jb, 0, n0 ), n0,
                     Mptr( L1ptr, 0, jj, n0 ), n0, HPL_rone,
@@ -270,7 +270,7 @@ void HPL_pdrpancrT
                     Mptr( L1ptr, 0, jj, n0 ), n0, HPL_rone,
                     Mptr( L1ptr, jj+jb, jj, n0 ), n0 );*/
 #endif
-         //Adil
+         //Adil_HIP
          HPL_btrsm(HplColumnMajor, HplRight, HplUpper, HplNoTrans,
                     HplUnit, n, jb, HPL_rone, Mptr( L1ptr, jj, jj,
                     n0 ), n0, Mptr( L1ptr, jj+jb, jj, n0 ), n0, T_DEFAULT);
@@ -283,7 +283,7 @@ void HPL_pdrpancrT
  */
       if( curr != 0 )
       {
-         //Adil
+         //Adil_HIP
          HPL_batcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
                       Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
          /*HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,

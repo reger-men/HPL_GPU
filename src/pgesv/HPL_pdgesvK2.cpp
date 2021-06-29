@@ -226,7 +226,9 @@ void HPL_pdgesvK2
    }
    (void) HPL_pdpanel_disp( &panel[depth] );
 
-   if( panel ) free( panel );
+   //Adil
+   if( panel ) HPL_bfree((void**)&panel, T_DEFAULT);
+   /*if( panel ) free( panel );*/
 /*
  * End of HPL_pdgesvK2
  */

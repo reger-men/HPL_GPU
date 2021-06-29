@@ -139,7 +139,7 @@ void HPL_pdpanel_new
 /*
  * Allocate the panel structure - Check for enough memory
  */
-   //Adil
+   //Adil_HIP
    HPL_bmalloc((void**)&p, sizeof( HPL_T_panel ), T_DEFAULT);
    /*if( !( p = (HPL_T_panel *)malloc( sizeof( HPL_T_panel ) ) ) )*/
    if( !( p ))

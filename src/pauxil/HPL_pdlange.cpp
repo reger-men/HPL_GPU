@@ -185,7 +185,9 @@ double HPL_pdlange
  */
          if( myrow == 0 )
          { v0 = work[HPL_idamax( nq, work, 1 )]; v0 = Mabs( v0 ); }
-         if( work ) free( work );
+         //Adil
+         if( work ) HPL_bfree((void**)&work, T_DEFAULT);
+         /*if( work ) free( work );*/
       }
 /*
  * Find max in row 0, store result in process (0,0)
@@ -225,7 +227,8 @@ double HPL_pdlange
  */      
          if( mycol == 0 )
          { v0 = work[HPL_idamax( mp, work, 1 )]; v0 = Mabs( v0 ); }
-         if( work ) free( work );
+         if( work ) HPL_bfree((void**)&work, T_DEFAULT);
+         /*if( work ) free( work );*/
       }
 /*
  * Find max in column 0, store result in process (0,0)

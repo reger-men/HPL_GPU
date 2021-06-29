@@ -42,6 +42,57 @@ extern "C" {
    }
 
    /*
+   * Deallocate the memory of ptr
+   */
+   void HPL_bfree(void** ptr, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::free, ptr);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::free, ptr);
+            break;
+         default:
+            HPL::dispatch(CPU::free, ptr);
+      }
+   }
+
+   /*
+   * Deallocate the panel resources
+   */
+   void HPL_bpanel_free(HPL_T_panel *ptr, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::panel_free, ptr);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::panel_free, ptr);
+            break;
+         default:
+            HPL::dispatch(CPU::panel_free, ptr);
+      }
+   }
+
+   /*
+   * Deallocates  the  panel  structure  and  resources.
+   */
+   void HPL_bpanel_disp(HPL_T_panel **ptr, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::panel_disp, ptr);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::panel_disp, ptr);
+            break;
+         default:
+            HPL::dispatch(CPU::panel_disp, ptr);
+      }
+   }
+
+   /*
    * Matrix generator
    */
    void HPL_bmatgen(const HPL_T_grid *GRID, const int M, const int N,
@@ -60,6 +111,99 @@ extern "C" {
       }
    }
 
+/*
+*  ----------------------------------------------------------------------
+*  - BLAS ---------------------------------------------------------------
+*  ----------------------------------------------------------------------
+*/ 
+
+   /*
+   * Find the index of the first element having maximum absolute value.
+   */
+   int  HPL_bidamax(const int N, const double *DX, const int INCX, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::idamax, N, DX, INCX);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::idamax, N, DX, INCX);
+            break;
+         default:
+            HPL::dispatch(CPU::idamax, N, DX, INCX);
+      }
+   }
+
+   /*
+   * Scale the vector x by alpha and adds it to y.
+   */
+   void HPL_bdaxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 
+                const int INCY, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::daxpy, N, DA, DX, INCX, DY, INCY);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::daxpy, N, DA, DX, INCX, DY, INCY);
+            break;
+         default:
+            HPL::dispatch(CPU::daxpy, N, DA, DX, INCX, DY, INCY);
+      }
+   }
+
+   /*
+   * Scale the vector x by alpha
+   */
+   void HPL_bdscal(const int N, const double DA, double *DX, const int INCX, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::dscal, N, DA, DX, INCX);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dscal, N, DA, DX, INCX);
+            break;
+         default:
+            HPL::dispatch(CPU::dscal, N, DA, DX, INCX);
+      }
+   }
+
+   /*
+   * Swap the vectors x and y.
+   */
+   void HPL_bdswap(const int N, double *DX, const int INCX, double *DY, const int INCY, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::dswap, N, DX, INCX, DY, INCY);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dswap, N, DX, INCX, DY, INCY);
+            break;
+         default:
+            HPL::dispatch(CPU::dswap, N, DX, INCX, DY, INCY);
+      }
+   }
+
+   /*
+   * Perform the rank 1 operation
+   */
+   void HPL_bdger( const enum HPL_ORDER ORDER, const int M, const int N, const double ALPHA, const double *X,
+               const int INCX, double *Y, const int INCY, double *A, const int LDA, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::dger, ORDER, M, N, ALPHA, X, INCX, Y, INCY, A, LDA);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dger, ORDER, M, N, ALPHA, X, INCX, Y, INCY, A, LDA);
+            break;
+         default:
+            HPL::dispatch(CPU::dger, ORDER, M, N, ALPHA, X, INCX, Y, INCY, A, LDA);
+      }
+   }
+
    /*
    * Triangular Solver Matrix
    */
@@ -74,10 +218,30 @@ extern "C" {
             HPL::dispatch(CPU::trsm, ORDER, SIDE, UPLO, TRANSA, DIAG, M, N, ALPHA, A, LDA, B, LDB);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::trsm, ORDER, SIDE, UPLO, TRANSA, DIAG, M, N, ALPHA, A, LDA, B, LDB);
             break;
          default:
             HPL::dispatch(CPU::trsm, ORDER, SIDE, UPLO, TRANSA, DIAG, M, N, ALPHA, A, LDA, B, LDB);
+      }
+   }
+
+   /*
+   * Triangular Solver Vector
+   */
+   void HPL_btrsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
+                const enum HPL_TRANS TRANSA, const enum HPL_DIAG DIAG,
+                const int N, const double *A, const int LDA,
+                double *X, const int INCX, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::trsv, ORDER, UPLO, TRANSA, DIAG, N, A, LDA, X, INCX);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::trsv, ORDER, UPLO, TRANSA, DIAG, N, A, LDA, X, INCX);
+            break;
+         default:
+            HPL::dispatch(CPU::trsv, ORDER, UPLO, TRANSA, DIAG, N, A, LDA, X, INCX);
       }
    }
 
@@ -95,7 +259,7 @@ extern "C" {
             HPL::dispatch(CPU::dgemm, ORDER, TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::dgemm, ORDER, TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC);
             break;
          default:
             HPL::dispatch(CPU::dgemm, ORDER, TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC);
@@ -114,11 +278,28 @@ extern "C" {
             HPL::dispatch(CPU::dgemv, ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::dgemv, ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
             break;
          default:
             HPL::dispatch(CPU::dgemv, ORDER, TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY);
       }   
+   }
+
+   /*
+   * Copies the vector x into the vector y
+   */
+   void HPL_bcopy(const int N, const double *X, const int INCX, double *Y, const int INCY, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::copy, N, X, INCX, Y, INCY);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::copy, N, X, INCX, Y, INCY);
+            break;
+         default:
+            HPL::dispatch(CPU::copy, N, X, INCX, Y, INCY);
+      }
    }
 
    /*
@@ -132,7 +313,7 @@ extern "C" {
             HPL::dispatch(CPU::acpy, M, N, A, LDA, B, LDB);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::acpy, M, N, A, LDA, B, LDB);
             break;
          default:
             HPL::dispatch(CPU::acpy, M, N, A, LDA, B, LDB);
@@ -150,7 +331,7 @@ extern "C" {
             HPL::dispatch(CPU::atcpy, M, N, A, LDA, B, LDB);
             break;
          case T_HIP:
-            printf("NOT IMPLEMENTED!!\n");
+            HPL::dispatch(HIP::atcpy, M, N, A, LDA, B, LDB);
             break;
          default:
             HPL::dispatch(CPU::atcpy, M, N, A, LDA, B, LDB);

@@ -180,8 +180,13 @@ void HPL_pdpanrlN
  * operations could benefit from a specialized blocked implementation.
  */
       if( WORK[0] != HPL_rzero )
-         HPL_dscal( Mm1, HPL_rone / WORK[0], Acur, 1 );
-      HPL_daxpy( Mm1, -WORK[4+jj+1], Acur, 1, Anxt, 1 );
+         //Adil
+         HPL_bdscal( Mm1, HPL_rone / WORK[0], Acur, 1, T_DEFAULT);
+         /*HPL_dscal( Mm1, HPL_rone / WORK[0], Acur, 1 );*/
+
+      //Adil
+      HPL_bdaxpy( Mm1, -WORK[4+jj+1], Acur, 1, Anxt, 1, T_DEFAULT);
+      /*HPL_daxpy( Mm1, -WORK[4+jj+1], Acur, 1, Anxt, 1 );*/
       HPL_dlocmax( PANEL, Mm1, iip1, jj+1, WORK );
 #ifdef HPL_CALL_VSIPL
       if( Nm1 > 1 )
@@ -206,8 +211,11 @@ void HPL_pdpanrlN
       }
 #else
       if( Nm1 > 1 )
-         HPL_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
-                   WORK+4+jj+2, 1, Mptr( Anxt, 0, 1, lda ), lda );
+         //Adil
+         HPL_bdger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
+                   WORK+4+jj+2, 1, Mptr( Anxt, 0, 1, lda ), lda, T_DEFAULT);
+         /*HPL_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
+                   WORK+4+jj+2, 1, Mptr( Anxt, 0, 1, lda ), lda );*/
 #endif
 /*
  * Same thing as above but with worse data access on y (A += x * y^T)
@@ -228,7 +236,9 @@ void HPL_pdpanrlN
    HPL_pdmxswp(  PANEL, m, ii, jj, WORK );
    HPL_dlocswpN( PANEL,    ii, jj, WORK );
    if( WORK[0] != HPL_rzero )
-      HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );
+      //Adil
+      HPL_bdscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 , T_DEFAULT);
+      /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 #ifdef HPL_CALL_VSIPL
 /*
  * Release the blocks

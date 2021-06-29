@@ -38,25 +38,47 @@ void HIP::init(size_t num_gpus)
 
     //Init ROCBlas
     rocblas_initialize();
-    ROCBLAS_CHECK_STATUS(rocblas_create_handle(&handle));
+    ROCBLAS_CHECK_STATUS(rocblas_create_handle(&_handle));
 }
 
 void HIP::release()
 {
-    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(handle));
+    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(_handle));
 }
 
 void HIP::malloc(void** ptr, size_t size)
 {
-    GPUInfo("allocate memory on GPU of size %ld", size);
+    GPUInfo("allocate memory on HIP of size %ld", size);
     HIP_CHECK_ERROR(hipMalloc(ptr, size));
+}
+
+void HIP::free(void** ptr)
+{
+    HIP_CHECK_ERROR(hipFree(*ptr));
+}
+
+int HIP::panel_free(HPL_T_panel *ptr)
+{
+    GPUInfo("deallocate memory on HIP\n");
+    if( ptr->WORK  ) HIP_CHECK_ERROR(hipFree( ptr->WORK  ));
+    if( ptr->IWORK ) HIP_CHECK_ERROR(hipFree( ptr->IWORK ));
+    return( MPI_SUCCESS );
+}
+
+int HIP::panel_disp(HPL_T_panel **ptr)
+{
+    GPUInfo("deallocate the panel structure on CPU\n");
+    int err = HIP::panel_free(*ptr);
+    if(*ptr) HIP_CHECK_ERROR(hipFree( ptr ));
+    *ptr = NULL;
+    return( err );
 }
 
 void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED)
 {
-    GPUInfo("generate matrix on GPU");
+    GPUInfo("generate matrix on HIP");
     int mp, mycol, myrow, npcol, nprow, nq;
     (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
     
@@ -70,8 +92,127 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
     ROCRAND_CHECK_STATUS(rocrand_create_generator(&generator, ROCRAND_RNG_PSEUDO_DEFAULT)); // ROCRAND_RNG_PSEUDO_DEFAULT));
     ROCRAND_CHECK_STATUS(rocrand_set_seed(generator, ISEED));
 
-    //TODO: generate numbers between -0.5 & 0.5
+    //TODO: generate numbers in this range (-0.5, 0.5]
     ROCRAND_CHECK_STATUS(rocrand_generate_normal_double(generator, A, mp*nq, 0, 0.1));
     ROCRAND_CHECK_STATUS(rocrand_destroy_generator(generator));
+}
 
+int HIP::idamax(const int N, const double *DX, const int INCX)
+{
+    GPUInfo("DMAX on HIP");
+}
+
+void HIP::daxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 
+                const int INCY)
+{
+    GPUInfo("DAXPY on HIP");
+}
+
+void HIP::dscal(const int N, const double DA, double *DX, const int INCX)
+{
+    GPUInfo("DSCAL on HIP");
+}
+
+void HIP::dswap(const int N, double *DX, const int INCX, double *DY, const int INCY)
+{    
+    GPUInfo("DSWAP on HIP");
+}
+
+void HIP::dger( const enum HPL_ORDER ORDER, const int M, const int N, const double ALPHA, const double *X,
+               const int INCX, double *Y, const int INCY, double *A, const int LDA)
+{
+    GPUInfo("DGER on HIP");
+}
+
+void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE, 
+                const enum HPL_UPLO UPLO, const enum HPL_TRANS TRANSA, 
+                const enum HPL_DIAG DIAG, const int M, const int N, 
+                const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
+{
+    GPUInfo("TRSM on HIP");
+    //rocBLAS uses column-major storage for 2D arrays
+    ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
+                  (rocblas_diagonal)DIAG, M, N, &ALPHA, A, LDA, B, LDB));
+}
+
+void HIP::trsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
+                const enum HPL_TRANS TRANSA, const enum HPL_DIAG DIAG,
+                const int N, const double *A, const int LDA,
+                double *X, const int INCX)
+{  
+    GPUInfo("TRSV on HIP");
+}
+
+void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA, 
+                const enum HPL_TRANS TRANSB, const int M, const int N, const int K, 
+                const double ALPHA, const double *A, const int LDA, 
+                const double *B, const int LDB, const double BETA, double *C, 
+                const int LDC)
+{
+    GPUInfo("DGEMM on HIP");
+    //rocBLAS uses column-major storage for 2D arrays
+    ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
+                         M, N, K, &ALPHA, A, LDA, B, LDB, &BETA, C, LDC));
+}
+
+void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
+                const double ALPHA, const double *A, const int LDA, const double *X, const int INCX,
+                const double BETA, double *Y, const int INCY)
+{
+    GPUInfo("DGEMV on HIP");
+    //rocBLAS uses column-major storage for 2D arrays
+    ROCBLAS_CHECK_STATUS(rocblas_dgemv(_handle, (rocblas_operation)TRANS,M, N, &ALPHA, A, LDA, X, INCX, &BETA, Y, INCY));
+}
+
+/*
+*  ----------------------------------------------------------------------
+*  - COPY ---------------------------------------------------------------
+*  ----------------------------------------------------------------------
+*/ 
+void HIP::copy(const int N, const double *X, const int INCX, double *Y, const int INCY)
+{
+    GPUInfo("COPY on HIP");
+
+}
+
+__global__ void 
+_dlacpy(const int M, const int N, const double *A, const int LDA,
+        double *B, const int LDB)
+{
+    
+}
+
+/*
+* Copies an array A into an array B.
+*/
+void HIP::acpy(const int M, const int N, const double *A, const int LDA,
+                  double *B, const int LDB)
+{
+    GPUInfo("A copy on HIP");
+    dim3 block_size(64, 1);
+    dim3 grid_size((M+64-1)/64, (N+64-1)/64);
+    _dlacpy<<<block_size, grid_size, 0, 0>>>(M, N, A, LDA, B, LDB);
+}
+
+#define TILE_DIM 64
+#define BLOCK_ROWS 16
+
+__global__ void 
+__launch_bounds__(TILE_DIM *BLOCK_ROWS)  
+_dlatcpy(const int M, const int N, const double* __restrict__ A, const int LDA,
+         double* __restrict__ B, const int LDB) 
+{
+
+}
+
+/*
+* Copies the transpose of an array A into an array B.
+*/
+void HIP::atcpy(const int M, const int N, const double *A, const int LDA,
+                double *B, const int LDB)
+{
+    GPUInfo("A transpose copy on HIP");
+    dim3 grid_size((M+TILE_DIM-1)/TILE_DIM, (N+TILE_DIM-1)/TILE_DIM);
+    dim3 block_size(TILE_DIM, BLOCK_ROWS);
+    _dlatcpy<<<grid_size, block_size, 0, 0>>>(M, N, A, LDA, B, LDB);
 }

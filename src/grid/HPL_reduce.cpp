@@ -172,7 +172,9 @@ int HPL_reduce
          mask ^= ip2; ip2 <<= 1; d--;
       } while( d );
    }
-   if( buffer ) free( buffer );
+   //Adil
+   if( buffer ) HPL_bfree((void**)&buffer, T_DEFAULT);
+   /*if( buffer ) free( buffer );*/
 
    return( hplerr );
 /*
