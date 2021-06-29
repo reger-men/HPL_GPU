@@ -186,7 +186,7 @@ void HPL_pdpanrlT
          /*HPL_dscal( Mm1, HPL_rone / WORK[0], Acur, 1 );*/
 
       //Adil
-      HPL_bdaxpy( Mm1, -(*(Mptr( L1, jj+1, jj, n0 ))), Acur, 1, Anxt, 1, T_DEFAULT);
+      HPL_BE_daxpy( Mm1, -(*(Mptr( L1, jj+1, jj, n0 ))), Acur, 1, Anxt, 1, T_DEFAULT);
       /*HPL_daxpy( Mm1, -(*(Mptr( L1, jj+1, jj, n0 ))), Acur, 1, Anxt, 1 );*/
       HPL_dlocmax( PANEL, Mm1, iip1, jj+1, WORK );
 
@@ -212,7 +212,7 @@ void HPL_pdpanrlT
          (void) vsip_mdestroy_d( Av1 );
 #else
          //Adil
-         HPL_bdger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
+         HPL_BE_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
                    Mptr( L1, jj+2, jj, n0 ), 1, Mptr( Anxt, 0, 1, lda ),
                    lda, T_DEFAULT);
          /*HPL_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,

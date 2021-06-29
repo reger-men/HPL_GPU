@@ -168,7 +168,7 @@ void HPL_pdrpanrlT
  */
       HPL_pdrpanrlT( PANEL, m, jb, ioff, WORK );
       //Adil
-      HPL_btrsm(HplColumnMajor, HplRight, HplUpper, HplNoTrans,HplUnit, 
+      HPL_BE_dtrsm(HplColumnMajor, HplRight, HplUpper, HplNoTrans,HplUnit, 
                  n, jb, HPL_rone, Mptr( L1ptr, jj, jj, n0 ),
                  n0, Mptr( L1ptr, jj+jb, jj, n0 ), n0, T_DEFAULT);
       /*HPL_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
@@ -223,7 +223,7 @@ void HPL_pdrpanrlT
       (void) vsip_mdestroy_d( Av0 );
 #else
       //Adil
-      HPL_bdgemm(HplColumnMajor, HplNoTrans, HplTrans, m, n,
+      HPL_BE_dgemm(HplColumnMajor, HplNoTrans, HplTrans, m, n,
                  jb, -HPL_rone, Mptr( Aptr, ii, jj, lda ), lda,
                  Mptr( L1ptr, jj+jb, jj, n0 ), n0, HPL_rone,
                  Mptr( Aptr, ii, jj+jb, lda ), lda, T_DEFAULT);
@@ -238,7 +238,7 @@ void HPL_pdrpanrlT
       if( curr != 0 )
       {
          //Adil
-         HPL_batcpy(ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
+         HPL_BE_dlatcpy(ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
                       Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
          /*HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
                       Mptr( A, 0, ioff, lda ), lda );*/

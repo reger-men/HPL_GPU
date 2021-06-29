@@ -16,15 +16,15 @@ extern "C" {
 
 enum HPL_TARGET {T_DEFAULT, T_CPU, T_HIP};
 
-void HPL_btinit(size_t, enum HPL_TARGET);
+void HPL_BE_init(size_t, enum HPL_TARGET);
 
-void HPL_bmalloc(void**, size_t, enum HPL_TARGET);
+void HPL_BE_malloc(void**, size_t, enum HPL_TARGET);
 
-void HPL_bfree(void **, enum HPL_TARGET);
-void HPL_bpanel_free(HPL_T_panel *, enum HPL_TARGET);
-void HPL_bpanel_disp(HPL_T_panel**, enum HPL_TARGET);
+void HPL_BE_free(void **, enum HPL_TARGET);
+void HPL_BE_panel_free(HPL_T_panel *, enum HPL_TARGET);
+void HPL_BE_panel_disp(HPL_T_panel**, enum HPL_TARGET);
 
-void HPL_bmatgen(const HPL_T_grid *, const int, const int,
+void HPL_BE_dmatgen(const HPL_T_grid *, const int, const int,
                  const int, double *, const int,
                  const int, enum HPL_TARGET);
 
@@ -34,13 +34,13 @@ void HPL_bmatgen(const HPL_T_grid *, const int, const int,
 *  ----------------------------------------------------------------------
 */ 
 
-int  HPL_bidamax(const int, const double *, const int, enum HPL_TARGET);
-void HPL_bdaxpy(const int, const double, const double *, const int, double *, 
+int  HPL_BE_idamax(const int, const double *, const int, enum HPL_TARGET);
+void HPL_BE_daxpy(const int, const double, const double *, const int, double *, 
                 const int, enum HPL_TARGET);
 void HPL_bdscal(const int, const double, double *, const int, enum HPL_TARGET);
-void HPL_bdswap(const int, double *, const int, double *, const int, enum HPL_TARGET);
+void HPL_BE_dswap(const int, double *, const int, double *, const int, enum HPL_TARGET);
 
-void HPL_bdger( const enum HPL_ORDER, const int, const int, const double, const double *,
+void HPL_BE_dger( const enum HPL_ORDER, const int, const int, const double, const double *,
                const int, double *, const int, double *, const int, enum HPL_TARGET);
 
 
@@ -49,31 +49,31 @@ void HPL_bdger( const enum HPL_ORDER, const int, const int, const double, const 
 
 
 
-void HPL_btrsm(const enum HPL_ORDER, const enum HPL_SIDE, 
+void HPL_BE_dtrsm(const enum HPL_ORDER, const enum HPL_SIDE, 
                 const enum HPL_UPLO, const enum HPL_TRANS, 
                 const enum HPL_DIAG, const int, const int, 
                 const double, const double *, const int, double *, 
                 const int, enum HPL_TARGET);
 
-void HPL_btrsv(const enum HPL_ORDER, const enum HPL_UPLO,
+void HPL_BE_dtrsv(const enum HPL_ORDER, const enum HPL_UPLO,
                 const enum HPL_TRANS, const enum HPL_DIAG,
                 const int, const double *, const int,
                 double *, const int, enum HPL_TARGET);                
 
-void HPL_bdgemm(const enum HPL_ORDER, const enum HPL_TRANS, const enum HPL_TRANS,
+void HPL_BE_dgemm(const enum HPL_ORDER, const enum HPL_TRANS, const enum HPL_TRANS,
                 const int, const int, const int, const double, const double *,
                 const int, const double *, const int, const double, double *, 
                 const int, enum HPL_TARGET);
 
-void HPL_bdgemv(const enum HPL_ORDER, const enum HPL_TRANS, const int, const int,
+void HPL_BE_dgemv(const enum HPL_ORDER, const enum HPL_TRANS, const int, const int,
                 const double, const double *, const int, const double *, const int,
                 const double, double *, const int, enum HPL_TARGET);
 
-void HPL_bcopy(const int, const double *, const int, double *, const int, enum HPL_TARGET);
+void HPL_BE_dcopy(const int, const double *, const int, double *, const int, enum HPL_TARGET);
 
-void HPL_bacpy(const int, const int, const double *, const int, double *, const int, enum HPL_TARGET);
+void HPL_BE_dlacpy(const int, const int, const double *, const int, double *, const int, enum HPL_TARGET);
 
-void HPL_batcpy(const int, const int, const double *, const int,
+void HPL_BE_dlatcpy(const int, const int, const double *, const int,
                 double *, const int, enum HPL_TARGET);
 
 #ifdef __cplusplus

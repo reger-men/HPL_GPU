@@ -119,8 +119,8 @@ void HPL_pdfact
 #endif
    align = PANEL->algo->align;
 
-   //Adil_HIP
-   HPL_bmalloc((void**)&vptr, ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double), T_DEFAULT);
+   //Adil
+   HPL_BE_malloc((void**)&vptr, ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double), T_DEFAULT);
    /*vptr  = (void *)malloc( ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double) );*/
    if( vptr == NULL )
    { HPL_pabort( __LINE__, "HPL_pdfact", "Memory allocation failed" ); }
@@ -130,8 +130,8 @@ void HPL_pdfact
    PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, (double *)HPL_PTR( vptr,
                        ((size_t)(align) * sizeof(double) ) ) );
 
-   //Adil_HIP
-   if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+   //Adil
+   if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
    //if( vptr ) free( vptr );
 
    PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );

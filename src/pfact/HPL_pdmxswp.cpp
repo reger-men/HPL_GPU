@@ -162,14 +162,14 @@ void HPL_pdmxswp
    {
       lda = PANEL->lda;
       //Adil
-      HPL_bcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
+      HPL_BE_dcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
                  Wmx, 1, T_DEFAULT);
       /*HPL_dcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
                  Wmx, 1 );*/
       if( myrow == icurrow )
       {
          //Adil
-         HPL_bcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1, T_DEFAULT); 
+         HPL_BE_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1, T_DEFAULT); 
          /*HPL_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1 ); */
       }
    }
@@ -212,7 +212,7 @@ void HPL_pdmxswp
              ( ( tmp1 == gmax ) && ( Wwork[3] < WORK[3] ) ) )
          { 
             //Adil
-            HPL_bcopy( cnt_, Wwork, 1, WORK, 1, T_DEFAULT); 
+            HPL_BE_dcopy( cnt_, Wwork, 1, WORK, 1, T_DEFAULT); 
             /*HPL_dcopy( cnt_, Wwork, 1, WORK, 1 ); */
          }
       }
@@ -251,7 +251,7 @@ void HPL_pdmxswp
              ( ( tmp1 == gmax ) && ( Wwork[3] < WORK[3] ) ) )
          {
             //Adil
-            HPL_bcopy( ( rcnt == cnt0 ? cnt0 : cnt_ ), Wwork, 1,
+            HPL_BE_dcopy( ( rcnt == cnt0 ? cnt0 : cnt_ ), Wwork, 1,
                        WORK, 1, T_DEFAULT); 
             /*HPL_dcopy( ( rcnt == cnt0 ? cnt0 : cnt_ ), Wwork, 1,
                        WORK, 1 );*/
@@ -259,7 +259,7 @@ void HPL_pdmxswp
          else if( rcnt == cnt0 )
          { 
             //Adil
-            HPL_bcopy( n0, Wwork+cnt_, 1, A0, 1, T_DEFAULT); 
+            HPL_BE_dcopy( n0, Wwork+cnt_, 1, A0, 1, T_DEFAULT); 
             /*HPL_dcopy( n0, Wwork+cnt_, 1, A0, 1 ); */
          }
  

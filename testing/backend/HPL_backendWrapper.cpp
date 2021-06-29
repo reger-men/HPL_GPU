@@ -10,7 +10,7 @@ extern "C" {
    /*
    * Initialize the Target device
    */
-   void HPL_btinit(size_t num_devices, enum HPL_TARGET TR)
+   void HPL_BE_init(size_t num_devices, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -27,7 +27,7 @@ extern "C" {
    /*
    * Allocate memory
    */
-   void HPL_bmalloc(void** ptr, size_t size, HPL_TARGET TR)
+   void HPL_BE_malloc(void** ptr, size_t size, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -44,7 +44,7 @@ extern "C" {
    /*
    * Deallocate the memory of ptr
    */
-   void HPL_bfree(void** ptr, enum HPL_TARGET TR)
+   void HPL_BE_free(void** ptr, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -61,7 +61,7 @@ extern "C" {
    /*
    * Deallocate the panel resources
    */
-   void HPL_bpanel_free(HPL_T_panel *ptr, HPL_TARGET TR)
+   void HPL_BE_panel_free(HPL_T_panel *ptr, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -78,7 +78,7 @@ extern "C" {
    /*
    * Deallocates  the  panel  structure  and  resources.
    */
-   void HPL_bpanel_disp(HPL_T_panel **ptr, HPL_TARGET TR)
+   void HPL_BE_panel_disp(HPL_T_panel **ptr, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -95,7 +95,7 @@ extern "C" {
    /*
    * Matrix generator
    */
-   void HPL_bmatgen(const HPL_T_grid *GRID, const int M, const int N,
+   void HPL_BE_dmatgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED, HPL_TARGET TR)
    {
@@ -120,7 +120,7 @@ extern "C" {
    /*
    * Find the index of the first element having maximum absolute value.
    */
-   int  HPL_bidamax(const int N, const double *DX, const int INCX, enum HPL_TARGET TR)
+   int  HPL_BE_idamax(const int N, const double *DX, const int INCX, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -137,7 +137,7 @@ extern "C" {
    /*
    * Scale the vector x by alpha and adds it to y.
    */
-   void HPL_bdaxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 
+   void HPL_BE_daxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 
                 const int INCY, enum HPL_TARGET TR)
    {
       switch(TR) {
@@ -172,7 +172,7 @@ extern "C" {
    /*
    * Swap the vectors x and y.
    */
-   void HPL_bdswap(const int N, double *DX, const int INCX, double *DY, const int INCY, enum HPL_TARGET TR)
+   void HPL_BE_dswap(const int N, double *DX, const int INCX, double *DY, const int INCY, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -189,7 +189,7 @@ extern "C" {
    /*
    * Perform the rank 1 operation
    */
-   void HPL_bdger( const enum HPL_ORDER ORDER, const int M, const int N, const double ALPHA, const double *X,
+   void HPL_BE_dger( const enum HPL_ORDER ORDER, const int M, const int N, const double ALPHA, const double *X,
                const int INCX, double *Y, const int INCY, double *A, const int LDA, enum HPL_TARGET TR)
    {
       switch(TR) {
@@ -207,7 +207,7 @@ extern "C" {
    /*
    * Triangular Solver Matrix
    */
-   void HPL_btrsm(const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE, 
+   void HPL_BE_dtrsm(const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE, 
                 const enum HPL_UPLO UPLO, const enum HPL_TRANS TRANSA, 
                 const enum HPL_DIAG DIAG, const int M, const int N, 
                 const double ALPHA, const double *A, const int LDA, 
@@ -228,7 +228,7 @@ extern "C" {
    /*
    * Triangular Solver Vector
    */
-   void HPL_btrsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
+   void HPL_BE_dtrsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
                 const enum HPL_TRANS TRANSA, const enum HPL_DIAG DIAG,
                 const int N, const double *A, const int LDA,
                 double *X, const int INCX, HPL_TARGET TR)
@@ -248,7 +248,7 @@ extern "C" {
    /*
    * Douple precision GEMM OP
    */
-   void HPL_bdgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA, 
+   void HPL_BE_dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA, 
                 const enum HPL_TRANS TRANSB, const int M, const int N, const int K, 
                 const double ALPHA, const double *A, const int LDA, 
                 const double *B, const int LDB, const double BETA, double *C, 
@@ -269,7 +269,7 @@ extern "C" {
    /*
    * Douple precision GEMV OP
    */
-   void HPL_bdgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
+   void HPL_BE_dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
                 const double ALPHA, const double *A, const int LDA, const double *X, const int INCX,
                 const double BETA, double *Y, const int INCY, enum HPL_TARGET TR)
    {
@@ -288,7 +288,7 @@ extern "C" {
    /*
    * Copies the vector x into the vector y
    */
-   void HPL_bcopy(const int N, const double *X, const int INCX, double *Y, const int INCY, enum HPL_TARGET TR)
+   void HPL_BE_dcopy(const int N, const double *X, const int INCX, double *Y, const int INCY, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
@@ -305,7 +305,7 @@ extern "C" {
    /*
    * copies array A into an array B.
    */
-   void HPL_bacpy(const int M, const int N, const double *A, const int LDA,
+   void HPL_BE_dlacpy(const int M, const int N, const double *A, const int LDA,
                   double *B, const int LDB, enum HPL_TARGET TR)
    {
       switch(TR) {
@@ -323,7 +323,7 @@ extern "C" {
    /*
    * Copies the transpose of an array A into an array B
    */
-   void HPL_batcpy(const int M, const int N, const double *A, const int LDA,
+   void HPL_BE_dlatcpy(const int M, const int N, const double *A, const int LDA,
                 double *B, const int LDB, enum HPL_TARGET TR)
    {
       switch(TR) {

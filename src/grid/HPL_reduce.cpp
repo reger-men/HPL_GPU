@@ -124,11 +124,11 @@ int HPL_reduce
 
    if( DTYPE == HPL_INT )
       //Adil
-      HPL_bmalloc((void**)&buffer, (size_t)(COUNT) * sizeof( int    ), T_DEFAULT);
+      HPL_BE_malloc((void**)&buffer, (size_t)(COUNT) * sizeof( int    ), T_DEFAULT);
       /*buffer = (void *)( (int *)   malloc( (size_t)(COUNT) * sizeof( int    ) ) );*/
    else
       //Adil
-      HPL_bmalloc((void**)&buffer, (size_t)(COUNT) * sizeof( double ), T_DEFAULT);
+      HPL_BE_malloc((void**)&buffer, (size_t)(COUNT) * sizeof( double ), T_DEFAULT);
       /*buffer = (void *)( (double *)malloc( (size_t)(COUNT) * sizeof( double ) ) );*/
 
    if( !( buffer ) )
@@ -173,7 +173,7 @@ int HPL_reduce
       } while( d );
    }
    //Adil
-   if( buffer ) HPL_bfree((void**)&buffer, T_DEFAULT);
+   if( buffer ) HPL_BE_free((void**)&buffer, T_DEFAULT);
    /*if( buffer ) free( buffer );*/
 
    return( hplerr );

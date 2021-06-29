@@ -164,7 +164,7 @@ double HPL_pdlange
       if( nq > 0 )
       {
          //Adil
-         HPL_bmalloc((void**)&work, (size_t)(nq) * sizeof( double ), T_DEFAULT);
+         HPL_BE_malloc((void**)&work, (size_t)(nq) * sizeof( double ), T_DEFAULT);
          /*work = (double*)malloc( (size_t)(nq) * sizeof( double ) );*/
          if( work == NULL )
          { HPL_pabort( __LINE__, "HPL_pdlange", "Memory allocation failed" ); }
@@ -186,7 +186,7 @@ double HPL_pdlange
          if( myrow == 0 )
          { v0 = work[HPL_idamax( nq, work, 1 )]; v0 = Mabs( v0 ); }
          //Adil
-         if( work ) HPL_bfree((void**)&work, T_DEFAULT);
+         if( work ) HPL_BE_free((void**)&work, T_DEFAULT);
          /*if( work ) free( work );*/
       }
 /*
@@ -204,7 +204,7 @@ double HPL_pdlange
       if( mp > 0 )
       {
          //Adil
-         HPL_bmalloc((void**)&work, (size_t)(mp) * sizeof( double ), T_DEFAULT);
+         HPL_BE_malloc((void**)&work, (size_t)(mp) * sizeof( double ), T_DEFAULT);
          /*work = (double*)malloc( (size_t)(mp) * sizeof( double ) );*/
          if( work == NULL )
          { HPL_pabort( __LINE__, "HPL_pdlange", "Memory allocation failed" ); }
@@ -227,7 +227,7 @@ double HPL_pdlange
  */      
          if( mycol == 0 )
          { v0 = work[HPL_idamax( mp, work, 1 )]; v0 = Mabs( v0 ); }
-         if( work ) HPL_bfree((void**)&work, T_DEFAULT);
+         if( work ) HPL_BE_free((void**)&work, T_DEFAULT);
          /*if( work ) free( work );*/
       }
 /*

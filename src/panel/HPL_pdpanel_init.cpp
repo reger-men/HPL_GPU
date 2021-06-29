@@ -209,8 +209,8 @@ void HPL_pdpanel_init
       if( nprow > 1 )                                 /* space for U */
       { nu = nq - JB; lwork += JB * Mmax( 0, nu ); }
 
-      //Adil_HIP
-      HPL_bmalloc((void**)&PANEL->WORK, (size_t)(lwork) * sizeof( double ), T_DEFAULT);
+      //Adil
+      HPL_BE_malloc((void**)&PANEL->WORK, (size_t)(lwork) * sizeof( double ), T_DEFAULT);
       //if( !( PANEL->WORK = (void *)malloc( (size_t)(lwork) * sizeof( double ) ) ) )
       if(!( PANEL->WORK ))
       {
@@ -244,7 +244,7 @@ void HPL_pdpanel_init
       }
 
       //Adil
-      HPL_bmalloc((void**)&PANEL->WORK, (size_t)(lwork) * sizeof( double ), T_DEFAULT);
+      HPL_BE_malloc((void**)&PANEL->WORK, (size_t)(lwork) * sizeof( double ), T_DEFAULT);
       //if( !( PANEL->WORK = (void *)malloc( (size_t)(lwork) * sizeof( double ) ) ) )
       if(!(PANEL->WORK))
       {
@@ -340,8 +340,8 @@ void HPL_pdpanel_init
       lwork = 4 + (9 * JB) + (3 * nprow) + itmp1;
    }
 
-   //Adil_HIP
-   HPL_bmalloc((void**)&PANEL->IWORK, (size_t)(lwork) * sizeof( int ), T_DEFAULT);
+   //Adil
+   HPL_BE_malloc((void**)&PANEL->IWORK, (size_t)(lwork) * sizeof( int ), T_DEFAULT);
    //PANEL->IWORK = (int *)malloc( (size_t)(lwork) * sizeof( int ) );
 
    if( PANEL->IWORK == NULL )

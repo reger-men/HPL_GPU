@@ -141,7 +141,7 @@ void HPL_pdlaprnt
    Acomm = GRID->all_comm; 
    if( ( myrow == 0 ) && ( mycol == 0 ) )
       //Adil
-      HPL_bmalloc((void**)&buf, (size_t)(NB) * sizeof( double ), T_DEFAULT);
+      HPL_BE_malloc((void**)&buf, (size_t)(NB) * sizeof( double ), T_DEFAULT);
       /*buf = (double*)malloc( (size_t)(NB) * sizeof( double ) );*/
 
    for( j = 0; j < N; j += NB )
@@ -186,7 +186,7 @@ void HPL_pdlaprnt
       (void) HPL_barrier( Acomm );
    }
    //Adil
-   if( ( myrow == 0 ) && ( mycol == 0 ) && ( buf ) ) HPL_bfree((void**)&buf, T_DEFAULT);
+   if( ( myrow == 0 ) && ( mycol == 0 ) && ( buf ) ) HPL_BE_free((void**)&buf, T_DEFAULT);
    /*if( ( myrow == 0 ) && ( mycol == 0 ) && ( buf ) ) free( buf );*/
 /*
  * End of HPL_pdlaprnt

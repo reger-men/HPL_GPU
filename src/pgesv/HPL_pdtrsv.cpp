@@ -159,8 +159,8 @@ void HPL_pdtrsv
    n1 = ( npcol - 1 ) * nb; n1 = Mmax( n1, nb );
    if( Anp > 0 )
    {
-      //Adil_HIP
-      HPL_bmalloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_DEFAULT);
+      //Adil
+      HPL_BE_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_DEFAULT);
       /*W = (double*)malloc( (size_t)(Mmin( n1, Anp )) * sizeof( double ) );*/
       if( W == NULL )
       { HPL_pabort( __LINE__, "HPL_pdtrsv", "Memory allocation failed" ); }
@@ -177,14 +177,14 @@ void HPL_pdtrsv
       Aprev = ( Aptr -= lda * kb ); Anq -= kb; Xdprev = ( Xd = XR + Anq );
       if( myrow == Alrow )
       {
-         //Adil_HIP
-         HPL_btrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
+         //Adil
+         HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1, T_DEFAULT);
          /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1 );*/
 
-         //Adil_HIP
-         HPL_bcopy(kb, XC+Anp, 1, Xd, 1, T_DEFAULT);                    
+         //Adil
+         HPL_BE_dcopy(kb, XC+Anp, 1, Xd, 1, T_DEFAULT);                    
          /*HPL_dcopy( kb, XC+Anp, 1, Xd, 1 );*/
       }
    }
@@ -229,8 +229,8 @@ void HPL_pdtrsv
          if( n1pprev > 0 )
          {
             tmp1 = Anpprev - n1pprev;
-            //Adil_HIP
-            HPL_bdgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
+            //Adil
+            HPL_BE_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
                        -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
                        XC+tmp1, 1, T_DEFAULT);
             /*HPL_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
@@ -258,7 +258,7 @@ void HPL_pdtrsv
          {
             (void) HPL_recv( W, n1pprev, colprev, Rmsgid, Rcomm );
             //Adil
-            HPL_bdaxpy(n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1, T_DEFAULT);
+            HPL_BE_daxpy(n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1, T_DEFAULT);
             /*HPL_daxpy( n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1 );*/
          }
       }
@@ -268,21 +268,21 @@ void HPL_pdtrsv
       if( ( mycol == Alcol ) && ( myrow == Alrow ) )
       {
          //Adil
-         HPL_btrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
+         HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1, T_DEFAULT);
          /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1 );*/
 
          //Adil
-         HPL_bcopy(kb, XC+Anp, 1, XR+Anq, 1, T_DEFAULT);                    
+         HPL_BE_dcopy(kb, XC+Anp, 1, XR+Anq, 1, T_DEFAULT);                    
          /*HPL_dcopy( kb, XC+Anp, 1, XR+Anq, 1 );*/
       }
 /*
 *  Finish previous update
 */
       if( ( mycol == colprev ) && ( ( tmp1 = Anpprev - n1pprev ) > 0 ) )
-         //Adil_HIP
-         HPL_bdgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
+         //Adil
+         HPL_BE_dgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
                     Aprev, lda, Xdprev, 1, HPL_rone, XC, 1, T_DEFAULT);
          /*HPL_dgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
                     Aprev, lda, Xdprev, 1, HPL_rone, XC, 1 );*/
@@ -310,7 +310,7 @@ void HPL_pdtrsv
                             Ccomm );
 
    //Adil
-   if( Wfr ) HPL_bfree((void**)&W, T_DEFAULT);
+   if( Wfr ) HPL_BE_free((void**)&W, T_DEFAULT);
    /*if( Wfr  ) free( W  );*/
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_PTRSV );

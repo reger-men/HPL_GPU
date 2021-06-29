@@ -639,7 +639,7 @@ label_error:
  * Broadcast array sizes
  */
    //Adil
-   HPL_bmalloc((void**)&iwork, (size_t)(15) * sizeof( int ), T_CPU);
+   HPL_BE_malloc((void**)&iwork, (size_t)(15) * sizeof( int ), T_CPU);
    /*iwork = (int *)malloc( (size_t)(15) * sizeof( int ) );*/
    if( rank == 0 )
    {
@@ -661,7 +661,7 @@ label_error:
       *UNOTRAN  = iwork[12]; *EQUIL = iwork[13]; *ALIGN    = iwork[14];
    }
    //Adil
-   if( iwork ) HPL_bfree((void**)&iwork, T_DEFAULT);
+   if( iwork ) HPL_BE_free((void**)&iwork, T_DEFAULT);
    /*if( iwork ) free( iwork );*/
 /*
  * Pack information arrays and broadcast
@@ -669,7 +669,7 @@ label_error:
    lwork = (*NS) + (*NBS) + 2 * (*NPQS) + (*NPFS) + (*NBMS) + 
            (*NDVS) + (*NRFS) + (*NTPS) + (*NDHS) + 1;
    //Adil
-   HPL_bmalloc((void**)&iwork, (size_t)(lwork) * sizeof( int ), T_CPU);           
+   HPL_BE_malloc((void**)&iwork, (size_t)(lwork) * sizeof( int ), T_CPU);           
    /*iwork = (int *)malloc( (size_t)(lwork) * sizeof( int ) );*/
    if( rank == 0 )
    {
@@ -755,7 +755,7 @@ label_error:
       j++;
    }
    //Adil
-   if( iwork ) HPL_bfree((void**)&iwork, T_DEFAULT);
+   if( iwork ) HPL_BE_free((void**)&iwork, T_DEFAULT);
    /*if( iwork ) free( iwork );*/
 /*
  * regurgitate input

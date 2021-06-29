@@ -161,8 +161,8 @@ void HPL_pdtest
 /*
  * Allocate dynamic memory
  */
-   //Adil_HIP
-   HPL_bmalloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_DEFAULT);
+   //Adil
+   HPL_BE_malloc((void**)&vptr, ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double), T_DEFAULT);
    /*vptr = (void*)malloc( ( (size_t)(ALGO->align) + 
                            (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
                          sizeof(double) );
@@ -179,7 +179,7 @@ void HPL_pdtest
       (TEST->kskip)++;
       /* some processes might have succeeded with allocation */
       //Adil
-      if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+      if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
       /*if (vptr) free(vptr);*/
       return;
    }
@@ -188,8 +188,8 @@ void HPL_pdtest
  */
    mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
-   //Adil_HIP
-   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   //Adil
+   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
    //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 #ifdef HPL_CALL_VSIPL
    mat.block = vsip_blockbind_d( (vsip_scalar_d *)(mat.A),
@@ -331,7 +331,7 @@ void HPL_pdtest
       (TEST->kpass)++; 
 
       //Adil
-      if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+      if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
       /*if( vptr ) free( vptr ); */
       return; 
    }
@@ -345,7 +345,7 @@ void HPL_pdtest
                     "Error code returned by solve is", mat.info, "skip" );
       (TEST->kskip)++;
       //Adil
-      if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT); return;
+      if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT); return;
       /*if( vptr ) free( vptr ); return;*/
    }
 /*
@@ -353,7 +353,7 @@ void HPL_pdtest
  * and norm inf of b - A x. Display residual checks.
  */
    //Adil
-   HPL_bmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
    /*HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );*/
    Anorm1 = HPL_pdlange( GRID, HPL_NORM_1, N, N, NB, mat.A, mat.ld );
    AnormI = HPL_pdlange( GRID, HPL_NORM_I, N, N, NB, mat.A, mat.ld );
@@ -390,7 +390,7 @@ void HPL_pdtest
    if( mycol == HPL_indxg2p( N, NB, NB, 0, npcol ) )
    {
       //Adil
-      HPL_bdgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
+      HPL_BE_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1, T_DEFAULT);
       /*HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1 );*/
@@ -398,7 +398,7 @@ void HPL_pdtest
    else if( nq > 0 )
    {
       //Adil
-      HPL_bdgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
+      HPL_BE_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1, T_DEFAULT);
       /*HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1 );*/
@@ -454,8 +454,8 @@ void HPL_pdtest
          "||b||_oo . . . . . . . . . . . . . . . . . . . = ", BnormI );
       }
    }
-   //Adil_HIP
-   if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+   //Adil
+   if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
    //if( vptr ) free( vptr );
 /*
  * End of HPL_pdtest

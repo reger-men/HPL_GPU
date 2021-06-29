@@ -167,7 +167,7 @@ void HPL_pdrpanllT
  * Replicated solve - Local update - Factor current panel
  */
       //Adil
-      HPL_btrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
+      HPL_BE_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
                  HplUnit, jb, jj, HPL_rone, L1ptr, n0, Mptr( L1ptr,
                  jj, 0, n0 ), n0, T_DEFAULT);
       /*HPL_dtrsm( HplColumnMajor, HplRight, HplUpper, HplNoTrans,
@@ -221,7 +221,7 @@ void HPL_pdrpanllT
       (void) vsip_mdestroy_d( Av0 );
 #else
       //Adil
-      HPL_bdgemm( HplColumnMajor, HplNoTrans, HplTrans, m, jb,
+      HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplTrans, m, jb,
                  jj, -HPL_rone, Mptr( Aptr, ii, 0, lda ), lda,
                  Mptr( L1ptr, jj, 0, n0 ), n0, HPL_rone,
                  Mptr( Aptr, ii, jj, lda ), lda, T_DEFAULT);
@@ -237,7 +237,7 @@ void HPL_pdrpanllT
       if( curr != 0 )
       {
          //Adil
-         HPL_batcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
+         HPL_BE_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
                       Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
          /*HPL_dlatcpy( ioff, jb, Mptr( L1, ioff, 0, n0 ), n0,
                       Mptr( A, 0, ioff, lda ), lda );*/

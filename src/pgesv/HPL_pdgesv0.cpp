@@ -114,8 +114,8 @@ void HPL_pdgesv0
 /*
  * Allocate a panel list of length 1 - Allocate panel[0] resources
  */
-   //Adil_HIP
-   HPL_bmalloc((void**)&panel, sizeof( HPL_T_panel * ), T_DEFAULT);
+   //Adil
+   HPL_BE_malloc((void**)&panel, sizeof( HPL_T_panel * ), T_DEFAULT);
    /*panel = (HPL_T_panel **)malloc( sizeof( HPL_T_panel * ) );*/
    if( panel == NULL )
    { HPL_pabort( __LINE__, "HPL_pdgesv0", "Memory allocation failed" ); }
@@ -140,8 +140,8 @@ void HPL_pdgesv0
 /*
  * Release panel resources - re-initialize panel data structure
  */
-      //Adil_HIP
-      (void) HPL_bpanel_free( panel[0], T_DEFAULT);
+      //Adil
+      (void) HPL_BE_panel_free( panel[0], T_DEFAULT);
       //(void) HPL_pdpanel_free( panel[0] );
       HPL_pdpanel_init( GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[0] );
 /*
@@ -162,12 +162,12 @@ void HPL_pdgesv0
 /*
  * Release panel resources and panel list
  */
-   //Adil_HIP
-   (void) HPL_bpanel_disp((void**)&panel[0], T_DEFAULT);
+   //Adil
+   (void) HPL_BE_panel_disp((void**)&panel[0], T_DEFAULT);
    /*(void) HPL_pdpanel_disp( &panel[0] );*/
 
-   //Adil_HIP
-   if( panel ) HPL_bfree((void**)&panel, T_DEFAULT);
+   //Adil
+   if( panel ) HPL_BE_free((void**)&panel, T_DEFAULT);
    //if( panel ) free( panel);
 /*
  * End of HPL_pdgesv0

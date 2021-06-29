@@ -135,7 +135,7 @@ double HPL_dlange
  * Find norm_1( A ).
  */
       //Adil
-      HPL_bmalloc((void**)&work, (size_t)(N) * sizeof( double ), T_DEFAULT);
+      HPL_BE_malloc((void**)&work, (size_t)(N) * sizeof( double ), T_DEFAULT);
       /*work = (double*)malloc( (size_t)(N) * sizeof( double ) );*/
       if( work == NULL )
       { HPL_abort( __LINE__, "HPL_dlange", "Memory allocation failed" ); }
@@ -152,7 +152,7 @@ double HPL_dlange
  */
          v0 = work[HPL_idamax( N, work, 1 )]; v0 = Mabs( v0 );
          //Adil
-         if( work ) HPL_bfree((void**)&work, T_DEFAULT);
+         if( work ) HPL_BE_free((void**)&work, T_DEFAULT);
          /*if( work ) free( work );*/
       }
    }
@@ -162,7 +162,7 @@ double HPL_dlange
  * Find norm_inf( A )
  */
       //Adil
-      HPL_bmalloc((void**)&work, (size_t)(M) * sizeof( double ), T_DEFAULT);
+      HPL_BE_malloc((void**)&work, (size_t)(M) * sizeof( double ), T_DEFAULT);
       /*work = (double*)malloc( (size_t)(M) * sizeof( double ) );*/
       if( work == NULL )
       { HPL_abort( __LINE__, "HPL_dlange", "Memory allocation failed" ); }

@@ -150,7 +150,7 @@ void HPL_pdlaswp00N
  * Allocate space for temporary W (ldW * jb)
  */
    //Adil
-   HPL_bmalloc((void**)&vptr, ((size_t)(align) + ((size_t)(jb) * (size_t)(ldW))) * sizeof(double), T_DEFAULT);
+   HPL_BE_malloc((void**)&vptr, ((size_t)(align) + ((size_t)(jb) * (size_t)(ldW))) * sizeof(double), T_DEFAULT);
    /*vptr = (void*)malloc(((size_t)(align) + ((size_t)(jb) * (size_t)(ldW))) * sizeof(double) );*/
    if( vptr == NULL )
    { HPL_pabort( __LINE__, "HPL_pdlaswp00N", "Memory allocation failed" ); }
@@ -419,7 +419,7 @@ void HPL_pdlaswp00N
    }
 
    //Adil
-   if( vptr ) HPL_bfree((void**)&vptr, T_DEFAULT);
+   if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
    /*if( vptr ) free( vptr );*/
 /*
  * Probe for column panel - forward it when available 

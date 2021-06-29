@@ -135,10 +135,10 @@ int HPL_packL
  * Temporaries to create the type struct.
  */
    //Adil
-   HPL_bmalloc((void**)&bufs, jbp1 * sizeof( void * *     ), T_DEFAULT);
-   HPL_bmalloc((void**)&blen, jbp1 * sizeof( int          ), T_DEFAULT);
-   HPL_bmalloc((void**)&disp, jbp1 * sizeof( MPI_Aint     ), T_DEFAULT);
-   HPL_bmalloc((void**)&type, jbp1 * sizeof( MPI_Datatype ), T_DEFAULT);
+   HPL_BE_malloc((void**)&bufs, jbp1 * sizeof( void * *     ), T_DEFAULT);
+   HPL_BE_malloc((void**)&blen, jbp1 * sizeof( int          ), T_DEFAULT);
+   HPL_BE_malloc((void**)&disp, jbp1 * sizeof( MPI_Aint     ), T_DEFAULT);
+   HPL_BE_malloc((void**)&type, jbp1 * sizeof( MPI_Datatype ), T_DEFAULT);
    /*bufs = (void     * * *)malloc( jbp1 * sizeof( void * *     ) );
    blen = (int          *)malloc( jbp1 * sizeof( int          ) );
    disp = (MPI_Aint     *)malloc( jbp1 * sizeof( MPI_Aint     ) );
@@ -219,10 +219,10 @@ int HPL_packL
  * release temporaries
  */
       //Adil
-      if( bufs ) HPL_bfree((void**)&bufs, T_DEFAULT);
-      if( blen ) HPL_bfree((void**)&blen, T_DEFAULT);
-      if( disp ) HPL_bfree((void**)&disp, T_DEFAULT);
-      if( type ) HPL_bfree((void**)&type, T_DEFAULT);
+      if( bufs ) HPL_BE_free((void**)&bufs, T_DEFAULT);
+      if( blen ) HPL_BE_free((void**)&blen, T_DEFAULT);
+      if( disp ) HPL_BE_free((void**)&disp, T_DEFAULT);
+      if( type ) HPL_BE_free((void**)&type, T_DEFAULT);
 
       /*if( bufs ) free( bufs );
       if( blen ) free( blen );
