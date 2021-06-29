@@ -180,7 +180,7 @@ void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const in
 void HIP::copy(const int N, const double *X, const int INCX, double *Y, const int INCY)
 {
     GPUInfo("COPY on HIP");
-
+    ROCBLAS_CHECK_STATUS(rocblas_dcopy(_handle, N, X, INCX, Y, INCY));
 }
 
 __global__ void 
