@@ -155,7 +155,7 @@ extern "C" {
    /*
    * Scale the vector x by alpha
    */
-   void HPL_bdscal(const int N, const double DA, double *DX, const int INCX, enum HPL_TARGET TR)
+   void HPL_BE_dscal(const int N, const double DA, double *DX, const int INCX, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :

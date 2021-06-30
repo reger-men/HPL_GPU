@@ -11,7 +11,7 @@ extern "C" {
 #include "hpl_panel.h"
 }
 
-//#define HPL_PRINT_INFO
+#define HPL_PRINT_INFO
 #ifdef HPL_PRINT_INFO
 #define CPUInfo(string, ...)          \
 {                                     \

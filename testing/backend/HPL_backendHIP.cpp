@@ -187,7 +187,32 @@ __global__ void
 _dlacpy(const int M, const int N, const double *A, const int LDA,
         double *B, const int LDB)
 {
+    int bdimy = blockDim.y;
 
+    int ind = blockIdx.x*blockDim.x + threadIdx.x;
+    int iby = blockIdx.y*bdimy;
+    
+
+    /* check if full block-column */
+    bool full = (iby + bdimy <= N);
+    /* do only rows inside matrix */
+    if ( ind < M ) {
+        A += ind + iby*LDA;
+        B += ind + iby*LDB;
+        if ( full ) {
+            // full block-column
+            #pragma unroll
+            for( int j=0; j < bdimy; ++j ) {
+                B[j*LDB] = A[j*LDA];
+            }
+        }
+        else {
+            // partial block-column
+            for( int j=0; j < bdimy && iby+j < N; ++j ) {
+                B[j*LDB] = A[j*LDA];
+            }
+        }
+    }
 }
 
 /*
@@ -210,7 +235,29 @@ __launch_bounds__(TILE_DIM *BLOCK_ROWS)
 _dlatcpy(const int M, const int N, const double* __restrict__ A, const int LDA,
          double* __restrict__ B, const int LDB) 
 {
+   __shared__ double s_tile[TILE_DIM][TILE_DIM+1];
 
+   int I = blockIdx.x * TILE_DIM + threadIdx.y;
+   int J = blockIdx.y * TILE_DIM + threadIdx.x;
+
+   if (J<N) {
+      if (I+ 0<M) s_tile[threadIdx.y+ 0][threadIdx.x] = A[((size_t) I+ 0)*LDA + J];
+      if (I+16<M) s_tile[threadIdx.y+16][threadIdx.x] = A[((size_t) I+16)*LDA + J];
+      if (I+32<M) s_tile[threadIdx.y+32][threadIdx.x] = A[((size_t) I+32)*LDA + J];
+      if (I+48<M) s_tile[threadIdx.y+48][threadIdx.x] = A[((size_t) I+48)*LDA + J];
+   }
+   
+   I = blockIdx.x * TILE_DIM + threadIdx.x;
+   J = blockIdx.y * TILE_DIM + threadIdx.y;
+
+   __syncthreads();
+
+   if (I<M) {
+      if (J+ 0<N) B[I + ((size_t) J+ 0)*LDB] = s_tile[threadIdx.x][threadIdx.y+ 0];
+      if (J+16<N) B[I + ((size_t) J+16)*LDB] = s_tile[threadIdx.x][threadIdx.y+16];
+      if (J+32<N) B[I + ((size_t) J+32)*LDB] = s_tile[threadIdx.x][threadIdx.y+32];
+      if (J+48<N) B[I + ((size_t) J+48)*LDB] = s_tile[threadIdx.x][threadIdx.y+48];
+   }
 }
 
 /*

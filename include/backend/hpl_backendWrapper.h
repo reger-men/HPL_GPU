@@ -37,7 +37,7 @@ void HPL_BE_dmatgen(const HPL_T_grid *, const int, const int,
 int  HPL_BE_idamax(const int, const double *, const int, enum HPL_TARGET);
 void HPL_BE_daxpy(const int, const double, const double *, const int, double *, 
                 const int, enum HPL_TARGET);
-void HPL_bdscal(const int, const double, double *, const int, enum HPL_TARGET);
+void HPL_BE_dscal(const int, const double, double *, const int, enum HPL_TARGET);
 void HPL_BE_dswap(const int, double *, const int, double *, const int, enum HPL_TARGET);
 
 void HPL_BE_dger( const enum HPL_ORDER, const int, const int, const double, const double *,
