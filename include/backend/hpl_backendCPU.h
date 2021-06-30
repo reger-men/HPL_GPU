@@ -13,12 +13,12 @@ extern "C" {
 
 #define HPL_PRINT_INFO
 #ifdef HPL_PRINT_INFO
-#define CPUInfo(string, ...)          \
-{                                     \
-  printf(string "\n", ##__VA_ARGS__); \
+#define CPUInfo(msg, ...)                           \
+{                                                   \
+  printf("INFO\t %-15s\t" msg "\n", ##__VA_ARGS__); \
 }
 #else
-#define CPUInfo(string, ...)
+#define CPUInfo(msg, ...)
 #endif
 
 namespace CPU {

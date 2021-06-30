@@ -18,22 +18,21 @@ void HIP::init(size_t num_gpus)
     // Get device properties
     HIP_CHECK_ERROR(hipGetDeviceProperties(&hipDeviceProp, device_id));
 
-    GPUInfo("Using HIP Device %s with Properties:", hipDeviceProp.name);
-    GPUInfo("\ttotalGlobalMem = %lld", (unsigned long long int)hipDeviceProp.totalGlobalMem);
-    GPUInfo("\tsharedMemPerBlock = %lld", (unsigned long long int)hipDeviceProp.sharedMemPerBlock);
-    GPUInfo("\tregsPerBlock = %d", hipDeviceProp.regsPerBlock);
-    GPUInfo("\twarpSize = %d", hipDeviceProp.warpSize);
-    GPUInfo("\tmaxThreadsPerBlock = %d", hipDeviceProp.maxThreadsPerBlock);
-    GPUInfo("\tmaxThreadsDim = %d %d %d", hipDeviceProp.maxThreadsDim[0], hipDeviceProp.maxThreadsDim[1], hipDeviceProp.maxThreadsDim[2]);
-    GPUInfo("\tmaxGridSize = %d %d %d", hipDeviceProp.maxGridSize[0], hipDeviceProp.maxGridSize[1], hipDeviceProp.maxGridSize[2]);
-    GPUInfo("\ttotalConstMem = %lld", (unsigned long long int)hipDeviceProp.totalConstMem);
-    GPUInfo("\tmajor = %d", hipDeviceProp.major);
-    GPUInfo("\tminor = %d", hipDeviceProp.minor);
-    GPUInfo("\tclockRate = %d", hipDeviceProp.clockRate);
-    GPUInfo("\tmemoryClockRate = %d", hipDeviceProp.memoryClockRate);
-    GPUInfo("\tmultiProcessorCount = %d", hipDeviceProp.multiProcessorCount);
-    GPUInfo("\tPCIBusID = %d", hipDeviceProp.pciBusID);
-    GPUInfo(" ");
+    GPUInfo("%-25s %-12s \t%-5s", "[Device]", "Using HIP Device",  hipDeviceProp.name, "With Properties:");
+    GPUInfo("%-25s %-20lld", "[GlobalMem]", "Total Global Memory",  (unsigned long long int)hipDeviceProp.totalGlobalMem);
+    GPUInfo("%-25s %-20lld", "[SharedMem]", "Shared Memory Per Block", (unsigned long long int)hipDeviceProp.sharedMemPerBlock);
+    GPUInfo("%-25s %-20d", "[Regs]", "Registers Per Block", hipDeviceProp.regsPerBlock);
+    GPUInfo("%-25s %-20d", "[WarpSize]", "WaveFront Size", hipDeviceProp.warpSize);
+    GPUInfo("%-25s %-20d", "[MaxThreads]", "Max Threads Per Block", hipDeviceProp.warpSize);
+    GPUInfo("%-25s %-4d %-4d %-4d", "[MaxThreadsDim]", "Max Threads Dimension", hipDeviceProp.maxThreadsDim[0], hipDeviceProp.maxThreadsDim[1], hipDeviceProp.maxThreadsDim[2]);
+    GPUInfo("%-25s %-4d %-4d %-4d", "[MaxGridSize]", "Max Grid Size", hipDeviceProp.maxGridSize[0], hipDeviceProp.maxGridSize[1], hipDeviceProp.maxGridSize[2]);
+    GPUInfo("%-25s %-20lld", "[ConstMem]", "Total Constant Memory",  (unsigned long long int)hipDeviceProp.totalConstMem);
+    GPUInfo("%-25s %-20d", "[Major]", "Major", hipDeviceProp.major);
+    GPUInfo("%-25s %-20d", "[Minor]", "Minor", hipDeviceProp.minor);
+    GPUInfo("%-25s %-20d", "[ClkRate]", "Clock Rate", hipDeviceProp.memoryClockRate);
+    GPUInfo("%-25s %-20d", "[#CUs]", "Multi Processor Count", hipDeviceProp.multiProcessorCount);
+    GPUInfo("%-25s %-20d", "[PCIBusID]", "PCI Bus ID", hipDeviceProp.pciBusID);
+    GPUInfo("----------------------------------------", "----------------------------------------");
 
 
     //Init ROCBlas
@@ -48,7 +47,7 @@ void HIP::release()
 
 void HIP::malloc(void** ptr, size_t size)
 {
-    GPUInfo("allocate memory on HIP of size %ld", size);
+    GPUInfo("%-25s %-12ld (B) \t%-5s", "[Allocate]", "Memory of size",  size, "HIP");
     HIP_CHECK_ERROR(hipMalloc(ptr, size));
 }
 
@@ -59,7 +58,7 @@ void HIP::free(void** ptr)
 
 int HIP::panel_free(HPL_T_panel *ptr)
 {
-    GPUInfo("deallocate memory on HIP\n");
+    GPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel resources", "HIP");
     if( ptr->WORK  ) HIP_CHECK_ERROR(hipFree( ptr->WORK  ));
     if( ptr->IWORK ) HIP_CHECK_ERROR(hipFree( ptr->IWORK ));
     return( MPI_SUCCESS );
@@ -67,7 +66,7 @@ int HIP::panel_free(HPL_T_panel *ptr)
 
 int HIP::panel_disp(HPL_T_panel **ptr)
 {
-    GPUInfo("deallocate the panel structure on CPU\n");
+    GPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel structure", "HIP");
     int err = HIP::panel_free(*ptr);
     if(*ptr) HIP_CHECK_ERROR(hipFree( ptr ));
     *ptr = NULL;
@@ -78,7 +77,7 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED)
 {
-    GPUInfo("generate matrix on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[Generate matrix]", "With A of (R:C)", M, N, "HIP");
     int mp, mycol, myrow, npcol, nprow, nq;
     (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
     
@@ -99,7 +98,7 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
 
 int HIP::idamax(const int N, const double *DX, const int INCX)
 {
-    GPUInfo("DMAX on HIP");
+    GPUInfo("%-25s %-17d \t%-5s", "[IDAMAX]", "With X of (R)", N, "HIP");
     rocblas_int result;
     ROCBLAS_CHECK_STATUS(rocblas_idamax(_handle, N, DX, INCX, &result));
     return result;
@@ -108,26 +107,26 @@ int HIP::idamax(const int N, const double *DX, const int INCX)
 void HIP::daxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 
                 const int INCY)
 {
-    GPUInfo("DAXPY on HIP");
+    GPUInfo("%-25s %-17d \t%-5s", "[DAXPY]", "With X of (R)", N, "HIP");
     ROCBLAS_CHECK_STATUS(rocblas_daxpy(_handle, N, &DA, DX, INCX, DY, INCY));
 }
 
 void HIP::dscal(const int N, const double DA, double *DX, const int INCX)
 {
-    GPUInfo("DSCAL on HIP");
+    GPUInfo("%-25s %-17d \t%-5s", "[DSCAL]", "With X of (R)", N, "HIP");
     ROCBLAS_CHECK_STATUS(rocblas_dscal(_handle, N, &DA, DX, INCX));
 }
 
 void HIP::dswap(const int N, double *DX, const int INCX, double *DY, const int INCY)
 {    
-    GPUInfo("DSWAP on HIP");
+    GPUInfo("%-25s %-17d \t%-5s", "[DSWAP]", "With X of (R)", N, "HIP");
     ROCBLAS_CHECK_STATUS(rocblas_dswap(_handle, N, DX, INCX, DY, INCY));
 }
 
 void HIP::dger( const enum HPL_ORDER ORDER, const int M, const int N, const double ALPHA, const double *X,
                const int INCX, double *Y, const int INCY, double *A, const int LDA)
 {
-    GPUInfo("DGER on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGER]", "With A of (R:C)", M, N, "HIP");
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dger(_handle, M, N, &ALPHA, X, INCX, Y, INCY, A, LDA));
 }
@@ -137,7 +136,7 @@ void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
                 const enum HPL_DIAG DIAG, const int M, const int N, 
                 const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
 {
-    GPUInfo("TRSM on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[TRSM]", "With B of (R:C)", M, N, "HIP");
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
                   (rocblas_diagonal)DIAG, M, N, &ALPHA, A, LDA, B, LDB));
@@ -147,8 +146,11 @@ void HIP::trsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
                 const enum HPL_TRANS TRANSA, const enum HPL_DIAG DIAG,
                 const int N, const double *A, const int LDA,
                 double *X, const int INCX)
-{  
-    GPUInfo("TRSV on HIP");
+{ 
+    GPUInfo("%-25s %-17d \t%-5s", "[TRSV]", "With A of (R)", N, "HIP");
+    //rocBLAS uses column-major storage for 2D arrays
+    ROCBLAS_CHECK_STATUS(rocblas_dtrsv(_handle, (rocblas_fill)UPLO, (rocblas_operation)TRANSA,
+                    (rocblas_diagonal)DIAG, N, A, LDA, X, INCX));
 }
 
 void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA, 
@@ -157,7 +159,7 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
                 const double *B, const int LDB, const double BETA, double *C, 
                 const int LDC)
 {
-    GPUInfo("DGEMM on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", M, N, "HIP");
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
                          M, N, K, &ALPHA, A, LDA, B, LDB, &BETA, C, LDC));
@@ -167,7 +169,7 @@ void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const in
                 const double ALPHA, const double *A, const int LDA, const double *X, const int INCX,
                 const double BETA, double *Y, const int INCY)
 {
-    GPUInfo("DGEMV on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGEMV]", "With A of (R:C)", M, N, "HIP");
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dgemv(_handle, (rocblas_operation)TRANS,M, N, &ALPHA, A, LDA, X, INCX, &BETA, Y, INCY));
 }
@@ -179,7 +181,7 @@ void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const in
 */ 
 void HIP::copy(const int N, const double *X, const int INCX, double *Y, const int INCY)
 {
-    GPUInfo("COPY on HIP");
+    GPUInfo("%-25s %-17d \t%-5s", "[COPY]", "With X of (R)", N, "HIP");
     ROCBLAS_CHECK_STATUS(rocblas_dcopy(_handle, N, X, INCX, Y, INCY));
 }
 
@@ -187,32 +189,7 @@ __global__ void
 _dlacpy(const int M, const int N, const double *A, const int LDA,
         double *B, const int LDB)
 {
-    int bdimy = blockDim.y;
 
-    int ind = blockIdx.x*blockDim.x + threadIdx.x;
-    int iby = blockIdx.y*bdimy;
-    
-
-    /* check if full block-column */
-    bool full = (iby + bdimy <= N);
-    /* do only rows inside matrix */
-    if ( ind < M ) {
-        A += ind + iby*LDA;
-        B += ind + iby*LDB;
-        if ( full ) {
-            // full block-column
-            #pragma unroll
-            for( int j=0; j < bdimy; ++j ) {
-                B[j*LDB] = A[j*LDA];
-            }
-        }
-        else {
-            // partial block-column
-            for( int j=0; j < bdimy && iby+j < N; ++j ) {
-                B[j*LDB] = A[j*LDA];
-            }
-        }
-    }
 }
 
 /*
@@ -221,7 +198,7 @@ _dlacpy(const int M, const int N, const double *A, const int LDA,
 void HIP::acpy(const int M, const int N, const double *A, const int LDA,
                   double *B, const int LDB)
 {
-    GPUInfo("A copy on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[LACOPY]", "With A of (R:C)", M, N, "HIP");
     dim3 block_size(64, 1);
     dim3 grid_size((M+64-1)/64, (N+64-1)/64);
     _dlacpy<<<block_size, grid_size, 0, 0>>>(M, N, A, LDA, B, LDB);
@@ -235,29 +212,7 @@ __launch_bounds__(TILE_DIM *BLOCK_ROWS)
 _dlatcpy(const int M, const int N, const double* __restrict__ A, const int LDA,
          double* __restrict__ B, const int LDB) 
 {
-   __shared__ double s_tile[TILE_DIM][TILE_DIM+1];
 
-   int I = blockIdx.x * TILE_DIM + threadIdx.y;
-   int J = blockIdx.y * TILE_DIM + threadIdx.x;
-
-   if (J<N) {
-      if (I+ 0<M) s_tile[threadIdx.y+ 0][threadIdx.x] = A[((size_t) I+ 0)*LDA + J];
-      if (I+16<M) s_tile[threadIdx.y+16][threadIdx.x] = A[((size_t) I+16)*LDA + J];
-      if (I+32<M) s_tile[threadIdx.y+32][threadIdx.x] = A[((size_t) I+32)*LDA + J];
-      if (I+48<M) s_tile[threadIdx.y+48][threadIdx.x] = A[((size_t) I+48)*LDA + J];
-   }
-   
-   I = blockIdx.x * TILE_DIM + threadIdx.x;
-   J = blockIdx.y * TILE_DIM + threadIdx.y;
-
-   __syncthreads();
-
-   if (I<M) {
-      if (J+ 0<N) B[I + ((size_t) J+ 0)*LDB] = s_tile[threadIdx.x][threadIdx.y+ 0];
-      if (J+16<N) B[I + ((size_t) J+16)*LDB] = s_tile[threadIdx.x][threadIdx.y+16];
-      if (J+32<N) B[I + ((size_t) J+32)*LDB] = s_tile[threadIdx.x][threadIdx.y+32];
-      if (J+48<N) B[I + ((size_t) J+48)*LDB] = s_tile[threadIdx.x][threadIdx.y+48];
-   }
 }
 
 /*
@@ -266,7 +221,7 @@ _dlatcpy(const int M, const int N, const double* __restrict__ A, const int LDA,
 void HIP::atcpy(const int M, const int N, const double *A, const int LDA,
                 double *B, const int LDB)
 {
-    GPUInfo("A transpose copy on HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[LATCOPY]", "With A of (R:C)", M, N, "HIP");
     dim3 grid_size((M+TILE_DIM-1)/TILE_DIM, (N+TILE_DIM-1)/TILE_DIM);
     dim3 block_size(TILE_DIM, BLOCK_ROWS);
     _dlatcpy<<<grid_size, block_size, 0, 0>>>(M, N, A, LDA, B, LDB);

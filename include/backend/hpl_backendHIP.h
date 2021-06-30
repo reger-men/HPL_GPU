@@ -52,9 +52,9 @@ extern "C" {
     }
 
 #define GPUError(...) GPUInfo(__VA_ARGS__)
-#define GPUInfo(string, ...)                          \
+#define GPUInfo(msg, ...)                             \
 {                                                     \
-  printf(string "\n", ##__VA_ARGS__);                 \
+  printf("INFO\t %-15s\t" msg "\n", ##__VA_ARGS__);   \
 }
 
 
