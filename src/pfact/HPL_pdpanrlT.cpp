@@ -182,11 +182,11 @@ void HPL_pdpanrlT
  */
       if( WORK[0] != HPL_rzero )
          //Adil
-         HPL_BE_dscal(  Mm1, HPL_rone / WORK[0], Acur, 1 , T_DEFAULT);
+         HPL_BE_dscal(  Mm1, HPL_rone / WORK[0], Acur, 1 , T_TEMPO);
          /*HPL_dscal( Mm1, HPL_rone / WORK[0], Acur, 1 );*/
 
       //Adil
-      HPL_BE_daxpy( Mm1, -(*(Mptr( L1, jj+1, jj, n0 ))), Acur, 1, Anxt, 1, T_DEFAULT);
+      HPL_BE_daxpy( Mm1, -(*(Mptr( L1, jj+1, jj, n0 ))), Acur, 1, Anxt, 1, T_TEMPO);
       /*HPL_daxpy( Mm1, -(*(Mptr( L1, jj+1, jj, n0 ))), Acur, 1, Anxt, 1 );*/
       HPL_dlocmax( PANEL, Mm1, iip1, jj+1, WORK );
 
@@ -214,7 +214,7 @@ void HPL_pdpanrlT
          //Adil
          HPL_BE_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
                    Mptr( L1, jj+2, jj, n0 ), 1, Mptr( Anxt, 0, 1, lda ),
-                   lda, T_DEFAULT);
+                   lda, T_TEMPO);
          /*HPL_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
                    Mptr( L1, jj+2, jj, n0 ), 1, Mptr( Anxt, 0, 1, lda ),
                    lda );*/
@@ -232,7 +232,7 @@ void HPL_pdpanrlT
    HPL_dlocswpT( PANEL,    ii, jj, WORK );
    if( WORK[0] != HPL_rzero )
       //Adil
-      HPL_BE_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_DEFAULT);
+      HPL_BE_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_TEMPO);
       /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 #ifdef HPL_CALL_VSIPL
 /*

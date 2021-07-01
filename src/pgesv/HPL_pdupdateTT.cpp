@@ -226,7 +226,7 @@ void HPL_pdupdateTT
 #endif
          //Adil
          HPL_BE_dtrsm(HplColumnMajor, HplLeft, HplUpper, HplTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_TEMPO);
 
          /*HPL_dtrsm( HplColumnMajor, HplLeft, HplUpper, HplTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
@@ -248,7 +248,7 @@ void HPL_pdupdateTT
          //Adil
          HPL_BE_dgemm(HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
+                    Mptr( Aptr, jb, 0, lda ), lda, T_TEMPO);
          /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda );*/

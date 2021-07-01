@@ -4,16 +4,14 @@
 #include "backend/hpl_backendCommon.h"
 
 
-
 extern "C" {
-
    /*
    * Initialize the Target device
    */
    void HPL_BE_init(size_t num_devices, enum HPL_TARGET TR)
    {
       switch(TR) {
-         case T_CPU :
+         case T_CPU:
             DO_NOTHING();
             break;
          case T_HIP:
@@ -124,13 +122,13 @@ extern "C" {
    {
       switch(TR) {
          case T_CPU :
-            HPL::dispatch(CPU::idamax, N, DX, INCX);
+            return HPL::dispatch(CPU::idamax, N, DX, INCX);
             break;
          case T_HIP:
-            HPL::dispatch(HIP::idamax, N, DX, INCX);
+            return HPL::dispatch(HIP::idamax, N, DX, INCX);
             break;
          default:
-            HPL::dispatch(CPU::idamax, N, DX, INCX);
+            return HPL::dispatch(CPU::idamax, N, DX, INCX);
       }
    }
 

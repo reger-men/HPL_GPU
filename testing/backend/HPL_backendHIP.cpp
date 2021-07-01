@@ -73,6 +73,18 @@ int HIP::panel_disp(HPL_T_panel **ptr)
     return( err );
 }
 
+void gPrintMat(const int M, const int N, const int LDA, const double *A)
+{
+    // Last row is the vector b
+    for(int y=0;y<M+1; y++){
+        for(int x=0;x<N-1; x++){
+            int index = x+y*LDA;
+            printf("%-4d:%-8lf\t", index, A[index]);
+        }
+        printf("\n");
+    }
+}
+
 void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED)
@@ -94,6 +106,7 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
     //TODO: generate numbers in this range (-0.5, 0.5]
     ROCRAND_CHECK_STATUS(rocrand_generate_normal_double(generator, A, mp*nq, 0, 0.1));
     ROCRAND_CHECK_STATUS(rocrand_destroy_generator(generator));
+    //gPrintMat(M,N,LDA,A);
 }
 
 int HIP::idamax(const int N, const double *DX, const int INCX)
@@ -189,7 +202,7 @@ __global__ void
 _dlacpy(const int M, const int N, const double *A, const int LDA,
         double *B, const int LDB)
 {
-
+ 
 }
 
 /*
@@ -226,3 +239,4 @@ void HIP::atcpy(const int M, const int N, const double *A, const int LDA,
     dim3 block_size(TILE_DIM, BLOCK_ROWS);
     _dlatcpy<<<grid_size, block_size, 0, 0>>>(M, N, A, LDA, B, LDB);
 }
+

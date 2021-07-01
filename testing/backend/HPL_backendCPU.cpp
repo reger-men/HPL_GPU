@@ -23,18 +23,31 @@ int CPU::panel_disp(HPL_T_panel **ptr)
     return HPL_pdpanel_disp( ptr );
 }
 
+void printMat(const int M, const int N, const int LDA, const double *A)
+{
+    // Last row is the vector b
+    for(int y=0;y<M+1; y++){
+        for(int x=0;x<N-1; x++){
+            int index = x+y*LDA;
+            printf("%-4d:%-8lf\t", index, A[index]);
+        }
+        printf("\n");
+    }
+}
+
 void CPU::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED)
 {
     CPUInfo("%-25s %-8d%-8d \t%-5s", "[Generate matrix]", "With A of (R:C)", M, N, "CPU");
     HPL_pdmatgen(GRID, M, N, NB, A, LDA, ISEED);
+    //printMat(M,N,LDA,A);
 }
 
 int CPU::idamax(const int N, const double *DX, const int INCX)
 {
     CPUInfo("%-25s %-17d \t%-5s", "[IDAMAX]", "With X of (R)", N, "CPU");
-    HPL_idamax( N, DX, INCX );
+    return HPL_idamax( N, DX, INCX );
 }
 
 void CPU::daxpy(const int N, const double DA, const double *DX, const int INCX, double *DY, 

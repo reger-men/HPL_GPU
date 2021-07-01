@@ -14,7 +14,7 @@ extern "C" {
 #include "hpl_blas.h"
 #include "hpl_panel.h"
 
-enum HPL_TARGET {T_DEFAULT, T_CPU, T_HIP};
+enum HPL_TARGET {T_DEFAULT, T_CPU, T_HIP, T_TEMPO};
 
 void HPL_BE_init(size_t, enum HPL_TARGET);
 

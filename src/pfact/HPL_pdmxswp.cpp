@@ -163,13 +163,13 @@ void HPL_pdmxswp
       lda = PANEL->lda;
       //Adil
       HPL_BE_dcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
-                 Wmx, 1, T_DEFAULT);
+                 Wmx, 1, T_TEMPO);
       /*HPL_dcopy( n0, Mptr( PANEL->A, II+(int)(WORK[1]), 0, lda ), lda,
                  Wmx, 1 );*/
       if( myrow == icurrow )
       {
          //Adil
-         HPL_BE_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1, T_DEFAULT); 
+         HPL_BE_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1, T_TEMPO); 
          /*HPL_dcopy( n0, Mptr( PANEL->A, II, 0, lda ), lda, A0, 1 ); */
       }
    }

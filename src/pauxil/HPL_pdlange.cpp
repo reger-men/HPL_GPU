@@ -204,7 +204,7 @@ double HPL_pdlange
       if( mp > 0 )
       {
          //Adil
-         HPL_BE_malloc((void**)&work, (size_t)(mp) * sizeof( double ), T_DEFAULT);
+         HPL_BE_malloc((void**)&work, (size_t)(mp) * sizeof( double ), T_TEMPO);
          /*work = (double*)malloc( (size_t)(mp) * sizeof( double ) );*/
          if( work == NULL )
          { HPL_pabort( __LINE__, "HPL_pdlange", "Memory allocation failed" ); }
@@ -225,9 +225,11 @@ double HPL_pdlange
 /*       
  * Find maximum sum of rows for inf-norm
  */      
-         if( mycol == 0 )
-         { v0 = work[HPL_idamax( mp, work, 1 )]; v0 = Mabs( v0 ); }
-         if( work ) HPL_BE_free((void**)&work, T_DEFAULT);
+         if( mycol == 0 ){
+            v0 = work[HPL_BE_idamax( mp, work, 1, T_TEMPO)];
+            v0 = Mabs( v0 ); 
+         }
+         if( work ) HPL_BE_free((void**)&work, T_TEMPO);
          /*if( work ) free( work );*/
       }
 /*

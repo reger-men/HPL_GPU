@@ -11,7 +11,7 @@ namespace HPL
 {
   template<typename Func, typename... Args> 
   constexpr auto dispatch(Func&& func, Args... args) {
-    func(args...);
+    return func(args...);
   }
 };
 

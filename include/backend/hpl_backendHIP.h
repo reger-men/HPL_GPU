@@ -51,11 +51,18 @@ extern "C" {
         exit(EXIT_FAILURE);                           \
     }
 
+
 #define GPUError(...) GPUInfo(__VA_ARGS__)
+
+//#define HPL_PRINT_INFO
+#ifdef HPL_PRINT_INFO
 #define GPUInfo(msg, ...)                             \
 {                                                     \
   printf("INFO\t %-15s\t" msg "\n", ##__VA_ARGS__);   \
 }
+#else
+#define GPUInfo(msg, ...)
+#endif
 
 
 

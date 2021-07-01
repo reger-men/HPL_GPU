@@ -160,7 +160,7 @@ void HPL_pdtrsv
    if( Anp > 0 )
    {
       //Adil
-      HPL_BE_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_DEFAULT);
+      HPL_BE_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_TEMPO);
       /*W = (double*)malloc( (size_t)(Mmin( n1, Anp )) * sizeof( double ) );*/
       if( W == NULL )
       { HPL_pabort( __LINE__, "HPL_pdtrsv", "Memory allocation failed" ); }
@@ -179,12 +179,12 @@ void HPL_pdtrsv
       {
          //Adil
          HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1, T_DEFAULT);
+                    kb, Aptr+Anp, lda, XC+Anp, 1, T_TEMPO);
          /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1 );*/
 
          //Adil
-         HPL_BE_dcopy(kb, XC+Anp, 1, Xd, 1, T_DEFAULT);                    
+         HPL_BE_dcopy(kb, XC+Anp, 1, Xd, 1, T_TEMPO);                    
          /*HPL_dcopy( kb, XC+Anp, 1, Xd, 1 );*/
       }
    }
@@ -310,7 +310,7 @@ void HPL_pdtrsv
                             Ccomm );
 
    //Adil
-   if( Wfr ) HPL_BE_free((void**)&W, T_DEFAULT);
+   if( Wfr ) HPL_BE_free((void**)&W, T_TEMPO);
    /*if( Wfr  ) free( W  );*/
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_PTRSV );
