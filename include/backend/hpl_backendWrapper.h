@@ -15,6 +15,12 @@ extern "C" {
 #include "hpl_panel.h"
 
 enum HPL_TARGET {T_DEFAULT, T_CPU, T_HIP, T_TEMPO};
+enum HPL_MOVE_DIRECTION {M_H2H = 0,
+                         M_H2D = 1,
+                         M_D2H = 2,
+                         M_D2D = 3,
+                         M_DEFAULT = 4};
+
 
 void HPL_BE_init(size_t, enum HPL_TARGET);
 
@@ -75,6 +81,8 @@ void HPL_BE_dlacpy(const int, const int, const double *, const int, double *, co
 
 void HPL_BE_dlatcpy(const int, const int, const double *, const int,
                 double *, const int, enum HPL_TARGET);
+
+void HPL_BE_move_data(double *, const double *, const size_t, enum HPL_MOVE_DIRECTION, enum HPL_TARGET);                
 
 #ifdef __cplusplus
 }

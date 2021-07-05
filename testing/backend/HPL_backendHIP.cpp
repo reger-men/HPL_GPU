@@ -23,7 +23,7 @@ void HIP::init(size_t num_gpus)
     GPUInfo("%-25s %-20lld", "[SharedMem]", "Shared Memory Per Block", (unsigned long long int)hipDeviceProp.sharedMemPerBlock);
     GPUInfo("%-25s %-20d", "[Regs]", "Registers Per Block", hipDeviceProp.regsPerBlock);
     GPUInfo("%-25s %-20d", "[WarpSize]", "WaveFront Size", hipDeviceProp.warpSize);
-    GPUInfo("%-25s %-20d", "[MaxThreads]", "Max Threads Per Block", hipDeviceProp.warpSize);
+    GPUInfo("%-25s %-20d", "[MaxThreads]", "Max Threads Per Block", hipDeviceProp.maxThreadsPerBlock);
     GPUInfo("%-25s %-4d %-4d %-4d", "[MaxThreadsDim]", "Max Threads Dimension", hipDeviceProp.maxThreadsDim[0], hipDeviceProp.maxThreadsDim[1], hipDeviceProp.maxThreadsDim[2]);
     GPUInfo("%-25s %-4d %-4d %-4d", "[MaxGridSize]", "Max Grid Size", hipDeviceProp.maxGridSize[0], hipDeviceProp.maxGridSize[1], hipDeviceProp.maxGridSize[2]);
     GPUInfo("%-25s %-20lld", "[ConstMem]", "Total Constant Memory",  (unsigned long long int)hipDeviceProp.totalConstMem);
@@ -38,6 +38,12 @@ void HIP::init(size_t num_gpus)
     //Init ROCBlas
     rocblas_initialize();
     ROCBLAS_CHECK_STATUS(rocblas_create_handle(&_handle));
+
+    _memcpyKind[0] = "H2H";
+    _memcpyKind[1] = "H2D";
+    _memcpyKind[2] = "D2H";
+    _memcpyKind[3] = "D2D";
+    _memcpyKind[4] = "DEFAULT";
 }
 
 void HIP::release()
@@ -106,7 +112,7 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
     //TODO: generate numbers in this range (-0.5, 0.5]
     ROCRAND_CHECK_STATUS(rocrand_generate_normal_double(generator, A, mp*nq, 0, 0.1));
     ROCRAND_CHECK_STATUS(rocrand_destroy_generator(generator));
-    //gPrintMat(M,N,LDA,A);
+    //gPrintMat(5,5,LDA,A);
 }
 
 int HIP::idamax(const int N, const double *DX, const int INCX)
@@ -150,9 +156,26 @@ void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
                 const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
 {
     GPUInfo("%-25s %-8d%-8d \t%-5s", "[TRSM]", "With B of (R:C)", M, N, "HIP");
+#if 0
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
                   (rocblas_diagonal)DIAG, M, N, &ALPHA, A, LDA, B, LDB));
+#else
+    double * d_A, * d_B;
+    HIP::malloc((void**)&d_A, LDA*M*sizeof(double));
+    HIP::malloc((void**)&d_B, LDB*N*sizeof(double));
+
+    HIP::move_data(d_A, A, LDA*M*sizeof(double), 1);
+    HIP::move_data(d_B, B, LDB*N*sizeof(double), 1);
+    
+    ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
+                  (rocblas_diagonal)DIAG, M, N, &ALPHA, d_A, LDA, d_B, LDB));
+                  
+    HIP::move_data(B, d_B, LDB*N*sizeof(double), 2);
+
+    HIP::free((void**)&d_A);
+    HIP::free((void**)&d_B);
+#endif
 }
 
 void HIP::trsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
@@ -172,10 +195,32 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
                 const double *B, const int LDB, const double BETA, double *C, 
                 const int LDC)
 {
-    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", M, N, "HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", LDC, N, "HIP");
+#if 0
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
                          M, N, K, &ALPHA, A, LDA, B, LDB, &BETA, C, LDC));
+#else
+    double                    * d_A, * d_B, * d_C;
+    HIP::malloc((void**)&d_A, LDA*K*sizeof(double));
+    HIP::malloc((void**)&d_B, LDB*N*sizeof(double));
+    HIP::malloc((void**)&d_C, LDC*N*sizeof(double));
+
+    HIP::move_data(d_A, A, LDA*K*sizeof(double), 1);
+    HIP::move_data(d_B, B, LDB*N*sizeof(double), 1);
+    HIP::move_data(d_C, C, LDC*N*sizeof(double), 1);
+
+    ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
+                         M, N, K, &ALPHA, d_A, LDA, d_B, LDB, &BETA, d_C, LDC));
+
+    HIP::move_data(C, d_C, LDC*N*sizeof(double), 2);
+
+    HIP::free((void**)&d_A);
+    HIP::free((void**)&d_B);
+    HIP::free((void**)&d_C);
+#endif
+
+    hipDeviceSynchronize();                         
 }
 
 void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
@@ -240,3 +285,9 @@ void HIP::atcpy(const int M, const int N, const double *A, const int LDA,
     _dlatcpy<<<grid_size, block_size, 0, 0>>>(M, N, A, LDA, B, LDB);
 }
 
+void HIP::move_data(double *DST, const double *SRC, const size_t SIZE, const int KIND)
+{
+    char title[25] = "[MOVE_"; strcat(title,_memcpyKind[KIND]); strcat(title,"]");
+    GPUInfo("%-25s %-12ld (B) \t%-5s", title, "Memory of size",  SIZE, "HIP");
+    HIP_CHECK_ERROR(hipMemcpy(DST, SRC, SIZE, (hipMemcpyKind)KIND));
+}

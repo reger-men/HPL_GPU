@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <map>
+#include <string>
 
 extern "C" {
 #include "hpl_pmatgen.h"
@@ -118,8 +120,11 @@ namespace HIP {
     void atcpy(const int, const int, const double *, const int,
                 double *, const int);  
 
+    void move_data(double *, const double *, const size_t, const int);
+
     // BLAS members
     namespace {
       rocblas_handle _handle;
+      std::map<int, const char*> _memcpyKind;
     }
 }

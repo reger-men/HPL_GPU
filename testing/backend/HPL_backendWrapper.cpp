@@ -335,4 +335,19 @@ extern "C" {
             HPL::dispatch(CPU::atcpy, M, N, A, LDA, B, LDB);
       }
    }
+
+   void HPL_BE_move_data(double *DST, const double *SRC, const size_t SIZE, 
+                     enum HPL_MOVE_DIRECTION KIND, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::move_data, DST, SRC, SIZE, (int)KIND);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
 } //extern "C"
