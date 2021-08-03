@@ -156,7 +156,7 @@ void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
                 const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
 {
     GPUInfo("%-25s %-8d%-8d \t%-5s", "[TRSM]", "With B of (R:C)", M, N, "HIP");
-#if 0
+#if 1
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
                   (rocblas_diagonal)DIAG, M, N, &ALPHA, A, LDA, B, LDB));
@@ -196,7 +196,7 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
                 const int LDC)
 {
     GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", LDC, N, "HIP");
-#if 0
+#if 1
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
                          M, N, K, &ALPHA, A, LDA, B, LDB, &BETA, C, LDC));
@@ -290,4 +290,15 @@ void HIP::move_data(double *DST, const double *SRC, const size_t SIZE, const int
     char title[25] = "[MOVE_"; strcat(title,_memcpyKind[KIND]); strcat(title,"]");
     GPUInfo("%-25s %-12ld (B) \t%-5s", title, "Memory of size",  SIZE, "HIP");
     HIP_CHECK_ERROR(hipMemcpy(DST, SRC, SIZE, (hipMemcpyKind)KIND));
+    gPrintMat(4,5,24,DST);
+}
+
+
+void HIP::move_array(double *DST, const size_t DP, const double *SRC, const size_t SP, 
+                    const size_t width, const size_t height, const int KIND)
+{
+    char title[25] = "[MOVE_"; strcat(title,_memcpyKind[KIND]); strcat(title,"]");
+    GPUInfo("%-25s %-12ld (B) \t%-5s", title, "Memory of size",  SIZE, "HIP");
+    HIP_CHECK_ERROR(hipMemcpy2D(DST,DP,SRC,SP,width,height,(hipMemcpyKind)KIND));
+    gPrintMat(4,5,24,DST);
 }

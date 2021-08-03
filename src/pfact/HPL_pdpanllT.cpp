@@ -233,7 +233,10 @@ void HPL_pdpanllT
    HPL_dlocswpT( PANEL,    ii, jj, WORK );
    if( WORK[0] != HPL_rzero )
       //Adil
+      printf("%d\n", jj);
+      A[76] = 0;
       HPL_BE_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1, T_DEFAULT);
+      printf("%lf\n", A[0]);
       /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
 
 #ifdef HPL_CALL_VSIPL

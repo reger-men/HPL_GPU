@@ -246,9 +246,20 @@ void HPL_pdupdateTT
          (void) vsip_mdestroy_d( Uv1 );
 #else
          //Adil
+         double *trrr =malloc(8); trrr[0]=1e-321;
          HPL_BE_dgemm(HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                    jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
+                    jb, -HPL_rone, trrr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda, T_TEMPO);
+{
+    // Last row is the vector b
+    for(int y=0;y<1; y++){
+        for(int x=0;x<lda; x++){
+            int index = x+y*lda;
+            printf("%-4d:%-8lf\t", index, Mptr( Aptr, jb, 0, lda )[index]);
+        }
+        printf("\n");
+    }
+}                    
          /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda );*/

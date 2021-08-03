@@ -350,4 +350,19 @@ extern "C" {
             DO_NOTHING();
       }
    }
+
+   void HPL_BE_move_array(double *DST, const size_t DP, const double *SRC, const size_t SP, 
+                    const size_t width, const size_t height, const int KIND, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::move_array, DST, DP, SRC, SP, width, height, (int)KIND);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
 } //extern "C"

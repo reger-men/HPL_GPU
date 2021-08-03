@@ -147,7 +147,45 @@ void HPL_pdgesv0
 /*
  * Factor and broadcast current panel - update
  */
+      //Adil: move data D2H
+      //HPL_BE_move_data(panel[0]->A, panel[0]->d_A,)
+{
+    // Last row is the vector b
+    for(int y=0;y<5; y++){
+        for(int x=0;x<5; x++){
+            int index = x+y*panel[0]->lda;
+            printf("%-4d:%-8lf\t", index, panel[0]->A[index]);
+        }
+        printf("\n");
+    }
+}
+#if GPUFACT
+      //Adil: Move Panel->d_A to Panel->A
+      if(panel[0]->A) free(panel[0]->A);
+      HPL_BE_move_array(panel[0]->A, panel[0]->lda * sizeof(double), panel[0]->d_A, panel[0]->lda * sizeof(double),
+                        panel[0]->mp * sizeof(double), panel[0]->jb+1, M_D2H, T_HIP);
+#endif
+{
+    // Last row is the vector b
+    for(int y=0;y<5; y++){
+        for(int x=0;x<4; x++){
+            int index = x+y*panel[0]->lda;
+            printf("%-4d:%-8lf\t", index, panel[0]->A[index]);
+        }
+        printf("\n");
+    }
+}                        
       HPL_pdfact(               panel[0] );
+{
+    // Last row is the vector b
+    for(int y=0;y<5; y++){
+        for(int x=0;x<4; x++){
+            int index = x+y*panel[0]->lda;
+            printf("%-4d:%-8lf\t", index, panel[0]->A[index]);
+        }
+        printf("\n");
+    }
+}
       (void) HPL_binit(         panel[0] );
       do
       { (void) HPL_bcast(       panel[0], &test ); }

@@ -193,20 +193,22 @@ void HPL_pdtest
    HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_CPU);
    //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 
-#if 0
+#if 1
    mat.d_A  = (double *)HPL_PTR( d_vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.d_X  = Mptr( mat.d_A, 0, mat.nq, mat.ld );
-   HPL_BE_move_data(mat.d_A, mat.A, (N*(N+1)) * sizeof(double), M_H2D, T_HIP);
-   /*{
+   HPL_BE_move_array(mat.d_A, mat.ld * sizeof(double), mat.A, mat.ld * sizeof(double), 
+                     N * sizeof(double), N+1, M_H2D, T_HIP);
+   //free(vptr);
+   {
     // Last row is the vector b
-    for(int y=0;y<6; y++){
-        for(int x=0;x<4; x++){
+    for(int y=0;y<5; y++){
+        for(int x=0;x<8; x++){
             int index = x+y*mat.ld;
-            printf("%-4d:%-8lf\t", index, mat.d_A[index]);
+            printf("%-4d:%-8lf\t", index, mat.A[index]);
         }
         printf("\n");
     }
-   }*/
+   }
 #endif
 
 #ifdef HPL_CALL_VSIPL

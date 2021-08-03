@@ -147,6 +147,8 @@ void HPL_pdpanel_new
       HPL_pabort( __LINE__, "HPL_pdpanel_new", "Memory allocation failed" );
    }
 
+   //Adil: Init some ptrs
+   p->A = NULL;
    HPL_pdpanel_init( GRID, ALGO, M, N, JB, A, IA, JA, TAG, p );
    *PANEL = p;
 /*

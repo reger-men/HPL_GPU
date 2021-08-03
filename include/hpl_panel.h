@@ -97,6 +97,8 @@ typedef struct HPL_S_panel
    vsip_block_d        * L2block;                         /* L2 block */
    vsip_block_d        * Ublock;                           /* U block */
 #endif
+   double              * d_A;              /* ptr to trailing part of A */
+   int                 d_lda;           /* local leading dim of array A */
 } HPL_T_panel;
 
 /*

@@ -72,6 +72,7 @@
  * Include files
  * ---------------------------------------------------------------------
  */
+#define GPUFACT 1
 #include "backend/hpl_backendWrapper.h"
 
 #include "hpl_misc.h"

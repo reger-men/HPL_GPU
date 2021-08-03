@@ -82,7 +82,10 @@ void HPL_BE_dlacpy(const int, const int, const double *, const int, double *, co
 void HPL_BE_dlatcpy(const int, const int, const double *, const int,
                 double *, const int, enum HPL_TARGET);
 
-void HPL_BE_move_data(double *, const double *, const size_t, enum HPL_MOVE_DIRECTION, enum HPL_TARGET);                
+void HPL_BE_move_data(double *, const double *, const size_t, enum HPL_MOVE_DIRECTION, enum HPL_TARGET);
+void HPL_BE_move_array(double *, const size_t, const double *, const size_t , 
+                    const size_t, const size_t, const int, enum HPL_TARGET TR);
+void HPL_BE_move_data2D(HPL_T_panel *PANEL, enum HPL_TARGET TR);
 
 #ifdef __cplusplus
 }

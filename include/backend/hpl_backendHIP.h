@@ -121,6 +121,9 @@ namespace HIP {
                 double *, const int);  
 
     void move_data(double *, const double *, const size_t, const int);
+    void move_array(double *, const size_t, const double *, const size_t, 
+                    const size_t, const size_t, const int);
+
 
     // BLAS members
     namespace {

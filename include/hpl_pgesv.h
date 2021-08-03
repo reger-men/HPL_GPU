@@ -104,6 +104,9 @@ typedef struct HPL_S_pmat
    int                 mp;                    /* local number of rows */
    int                 nq;                 /* local number of columns */
    int                 info;                    /* computational flag */
+   //Adil
+   double              * d_A;            /* pointer to local piece of A */
+   double              * d_X;             /* pointer to solution vector */
 } HPL_T_pmat;
 /*
  * ---------------------------------------------------------------------

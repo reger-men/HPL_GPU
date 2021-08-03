@@ -134,7 +134,18 @@ void HPL_pdfact
    if( vptr ) HPL_BE_free((void**)&vptr, T_TEMPO);
    //if( vptr ) free( vptr );
 
+{
+    // Last row is the vector b
+    for(int y=0;y<5; y++){
+        for(int x=0;x<4; x++){
+            int index = x+y*PANEL->lda;
+            printf("%-4d:%-8lf\t", index, PANEL->A[index]);
+        }
+        printf("\n");
+    }
+}
    PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
+
    PANEL->nq -= jb; PANEL->jj += jb;
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_RPFACT );

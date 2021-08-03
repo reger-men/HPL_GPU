@@ -156,8 +156,27 @@ void HPL_pdpanel_init
                 nprow, npcol, &ii, &jj, &icurrow, &icurcol );
    mp = HPL_numrocI( M, IA, nb, nb, myrow, 0, nprow );
    nq = HPL_numrocI( N, JA, nb, nb, mycol, 0, npcol );
-                                         /* ptr to trailing part of A */
+
+   //Adil: Allocate the A in the Host where the date will be moved later from Device
+#if GPUFACT
+   PANEL->d_A     = Mptr( (double *)(A->d_A), ii, jj, A->ld );
+   if(PANEL->A) free(PANEL->A);
+   HPL_BE_malloc((void**)&PANEL->A, (size_t)(A->ld*JB) * sizeof( double ), T_CPU);
+   {
+    // Last row is the vector b
+    for(int y=0;y<5; y++){
+        for(int x=0;x<4; x++){
+            int index = x+y*24;
+            printf("%-4d:%-8lf\t", index, PANEL->A[index]);
+        }
+        printf("\n");
+    }
+   }
+#else
+   /* ptr to trailing part of A */
    PANEL->A       = Mptr( (double *)(A->A), ii, jj, A->ld );
+#endif
+
 /*
  * Workspace pointers are initialized to NULL.
  */
@@ -221,7 +240,7 @@ void HPL_pdpanel_init
  * Initialize the pointers of the panel structure  -  Always re-use A in
  * the only process column
  */
-      PANEL->L2    = PANEL->A + ( myrow == icurrow ? JB : 0 );
+      PANEL->L2    = PANEL->d_A + ( myrow == icurrow ? JB : 0 );
       PANEL->ldl2  = A->ld;
       PANEL->L1    = (double *)HPL_PTR( PANEL->WORK, dalign );
       PANEL->DPIV  = PANEL->L1    + JB * JB;
