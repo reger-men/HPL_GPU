@@ -163,7 +163,7 @@ void HPL_pdgesv0
  * Release panel resources and panel list
  */
    //Adil
-   (void) HPL_BE_panel_disp((void**)&panel[0], T_TEMPO);
+   (void) HPL_BE_panel_disp(&panel[0], T_TEMPO);
    /*(void) HPL_pdpanel_disp( &panel[0] );*/
 
    //Adil
