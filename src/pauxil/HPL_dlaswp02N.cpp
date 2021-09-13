@@ -142,7 +142,7 @@ void HPL_dlaswp02N
    const int                  incA = (int)( (unsigned int)(LDA) <<
                                             HPL_LASWP02N_LOG2_DEPTH );
    int                        nr, nu;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */

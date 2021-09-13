@@ -115,10 +115,10 @@ void HPL_daxpy
    cblas_daxpy( N, ALPHA, X, INCX, Y, INCY );
 #endif
 #ifdef HPL_CALL_VSIPL
-   register const double     alpha = ALPHA;
-   register double           x0, x1, x2, x3, y0, y1, y2, y3;
+   const double     alpha = ALPHA;
+   double           x0, x1, x2, x3, y0, y1, y2, y3;
    const double              * StX;
-   register int              i;
+   int              i;
    int                       nu;
    const int                 incX2 = 2 * INCX, incY2 = 2 * INCY,
                              incX3 = 3 * INCX, incY3 = 3 * INCY,

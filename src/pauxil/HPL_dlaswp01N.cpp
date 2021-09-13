@@ -146,7 +146,7 @@ void HPL_dlaswp01N
                               incU = (int)( (unsigned int)(LDU) <<
                                             HPL_LASWP01N_LOG2_DEPTH );
    int                        lda1, nu, nr;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */

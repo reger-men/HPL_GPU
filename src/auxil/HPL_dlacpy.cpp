@@ -128,7 +128,7 @@ void HPL_dlacpy
  * .. Local Variables ..
  */
 #ifdef HPL_LACPY_USE_COPY
-   register int               j;
+   int               j;
 #else
 #if   ( HPL_LACPY_N_DEPTH ==  1 )
    const double               * A0 = A;
@@ -149,7 +149,7 @@ void HPL_dlacpy
                               incA0 = (unsigned int)(LDA) - M,
                               incB0 = (unsigned int)(LDB) - M;
    int                        mu, nu;
-   register int               i, j;
+   int               i, j;
 #endif
 /* ..
  * .. Executable Statements ..

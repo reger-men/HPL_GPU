@@ -96,7 +96,7 @@ void HPL_sum
 /*
  * .. Local Variables ..
  */
-   register int               i;
+   int               i;
 /* ..
  * .. Executable Statements ..
  */

@@ -131,7 +131,7 @@ void HPL_dlaswp03T
    double                     * u0;
    const int                  incU = ( 1 << HPL_LASWP03T_LOG2_DEPTH );
    int                        nr, nu;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */

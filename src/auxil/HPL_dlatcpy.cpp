@@ -128,7 +128,7 @@ void HPL_dlatcpy
  * .. Local Variables ..
  */
 #ifdef HPL_LATCPY_USE_COPY
-   register int               j;
+   int               j;
 #else
 #if   ( HPL_LATCPY_N_DEPTH == 1 )
    const double               * A0 = A;
@@ -147,7 +147,7 @@ void HPL_dlatcpy
                                        HPL_LATCPY_LOG2_N_DEPTH ) - M,
                               incA0 = -M * LDA + 1, incB0 = LDB - M;
    int                        mu, nu;
-   register int               i, j;
+   int               i, j;
 #endif
 /* ..
  * .. Executable Statements ..

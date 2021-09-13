@@ -108,9 +108,9 @@ void HPL_dcopy
    cblas_dcopy( N, X, INCX, Y, INCY );
 #endif
 #ifdef HPL_CALL_VSIPL
-   register double           x0, x1, x2, x3, x4, x5, x6, x7;
+   double           x0, x1, x2, x3, x4, x5, x6, x7;
    const double              * StX;
-   register int              i;
+   int              i;
    int                       nu;
    const int                 incX2 = 2 * INCX, incY2 = 2 * INCY,
                              incX3 = 3 * INCX, incY3 = 3 * INCY,

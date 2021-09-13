@@ -115,7 +115,7 @@ void HPL_dlaswp10N
    double                     * a0, * a1;
    const int                  incA = ( 1 << HPL_LASWP10N_LOG2_DEPTH );
    int                        jp, mr, mu;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */
