@@ -1,7 +1,5 @@
-#pragma once
 
-#include "backend/hpl_backendWrapper.h"
-#include "backend/hpl_backendCommon.h"
+#include <hpl.h>
 
 
 extern "C" {

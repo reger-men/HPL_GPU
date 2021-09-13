@@ -1,4 +1,5 @@
-#include "backend/hpl_backendHIP.h"
+
+#include <hpl.h>
 
 
 void HIP::init(size_t num_gpus)
