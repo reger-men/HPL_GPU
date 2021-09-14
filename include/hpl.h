@@ -72,6 +72,10 @@
  * Include files
  * ---------------------------------------------------------------------
  */
+
+#include "hplhip_config.h"
+
+#include "backend/hpl_backendHIP.h"
 #include "backend/hpl_backendWrapper.h"
 
 #include "hpl_misc.h"

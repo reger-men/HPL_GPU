@@ -1,12 +1,13 @@
 #pragma once
 
-#include "hip/hip_runtime.h"
-#include "rocrand/rocrand.h"
-#include "rocblas.h"
+#include <hip/hip_runtime.h>
+#if defined(HPLHIP_USE_ROCRAND)
+#include <rocrand.h>
+#endif
+#include <rocblas.h>
 
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <map>
 #include <string>
 

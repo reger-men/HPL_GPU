@@ -1,0 +1,7 @@
+/* HPLHIP config options */
+
+#cmakedefine HPLHIP_BRANCH
+
+#cmakedefine HPLHIP_COMMIT
+
+#cmakedefine HPLHIP_USE_ROCRAND
