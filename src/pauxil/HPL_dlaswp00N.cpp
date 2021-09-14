@@ -112,12 +112,12 @@ void HPL_dlaswp00N
 /*
  * .. Local Variables ..
  */
-   register double            r;
+   double            r;
    double                     * a0, * a1;
    const int                  incA = (int)( (unsigned int)(LDA) <<
                                             HPL_LASWP00N_LOG2_DEPTH );
    int                        ip, nr, nu;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */

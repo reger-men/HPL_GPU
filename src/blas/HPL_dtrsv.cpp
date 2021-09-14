@@ -70,7 +70,7 @@ static void HPL_dtrsvLNN( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx, ldap1 = LDA + 1;
-   register double            t0;
+   double            t0;
 
    for( j = 0, jaj = 0, jx  = 0; j < N; j++, jaj += ldap1, jx += INCX )
    {
@@ -97,7 +97,7 @@ static void HPL_dtrsvLNU( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx, ldap1 = LDA + 1;
-   register double            t0;
+   double            t0;
 
    for( j = 0, jaj = 0, jx = 0; j < N; j++, jaj += ldap1, jx += INCX )
    {
@@ -124,7 +124,7 @@ static void HPL_dtrsvLTN( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx, ldap1 = LDA + 1;
-   register double            t0;
+   double            t0;
 
    for( j = N-1,     jaj  = (N-1)*(ldap1), jx  = (N-1)*INCX;
         j >= 0; j--, jaj -= ldap1,         jx -= INCX )
@@ -153,7 +153,7 @@ static void HPL_dtrsvLTU( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx, ldap1 = LDA + 1;
-   register double            t0;
+   double            t0;
 
    for( j = N-1,     jaj  = (N-1)*(ldap1), jx  = (N-1)*INCX;
         j >= 0; j--, jaj -= ldap1,         jx -= INCX )
@@ -183,7 +183,7 @@ static void HPL_dtrsvUNN( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx;
-   register double            t0;
+   double            t0;
 
    for( j = N-1,     jaj  = (N-1)*LDA, jx  = (N-1)*INCX;
         j >= 0; j--, jaj -= LDA,       jx -= INCX )
@@ -212,7 +212,7 @@ static void HPL_dtrsvUNU( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx;
-   register double            t0;
+   double            t0;
 
    for( j = N-1,     jaj  = (N-1)*LDA, jx  = (N-1)*INCX;
         j >= 0; j--, jaj -= LDA,       jx -= INCX )
@@ -241,7 +241,7 @@ static void HPL_dtrsvUTN( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx;
-   register double            t0;
+   double            t0;
 
    for( j = 0, jaj = 0,jx = 0; j < N; j++, jaj += LDA, jx += INCX )
    {
@@ -269,7 +269,7 @@ static void HPL_dtrsvUTU( N, A, LDA, X, INCX )
 #endif
 {
    int                        i, iaij, ix, j, jaj, jx;
-   register double            t0;
+   double            t0;
 
    for( j = 0, jaj = 0, jx = 0; j < N; j++, jaj += LDA, jx += INCX )
    {

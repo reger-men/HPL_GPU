@@ -96,7 +96,7 @@ void HPL_min
 /*
  * .. Local Variables ..
  */
-   register int               i;
+   int               i;
 /* ..
  * .. Executable Statements ..
  */

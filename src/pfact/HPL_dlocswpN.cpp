@@ -114,7 +114,7 @@ void HPL_dlocswpN
    double                     gmax;
    double                     * A1, * A2, * L, * Wr0, * Wmx;
    int                        ilindx, lda, myrow, n0, nr, nu;
-   register int               i;
+   int               i;
 /* ..
  * .. Executable Statements ..
  */

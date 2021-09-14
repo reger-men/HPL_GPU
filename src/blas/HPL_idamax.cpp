@@ -94,10 +94,10 @@ int HPL_idamax
    return( (int)(cblas_idamax( N, X, INCX )) );
 #endif
 #ifdef HPL_CALL_VSIPL
-   register double           absxi, smax = HPL_rzero, x0, x1, x2, x3,
+   double           absxi, smax = HPL_rzero, x0, x1, x2, x3,
                              x4, x5, x6, x7;
    const double              * StX;
-   register int              imax = 0, i = 0, j;
+   int              imax = 0, i = 0, j;
    int                       nu;
    const int                 incX2 = 2 * INCX, incX3 = 3 * INCX,
                              incX4 = 4 * INCX, incX5 = 5 * INCX,

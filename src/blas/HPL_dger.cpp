@@ -145,7 +145,7 @@ void HPL_dger
    cblas_dger( ORDER, M, N, ALPHA, X, INCX, Y, INCY, A, LDA );
 #endif
 #ifdef HPL_CALL_VSIPL
-   register double           t0;
+   double           t0;
    int                       i, iaij, ix, iy, j, jaj, jx, jy;
 
    if( ( M == 0 ) || ( N == 0 ) || ( ALPHA == HPL_rzero ) ) return;

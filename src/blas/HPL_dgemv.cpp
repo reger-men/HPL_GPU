@@ -81,7 +81,7 @@ static void HPL_dgemv0( TRANS, M, N, ALPHA, A, LDA, X, INCX, BETA, Y, INCY )
  * .. Local Variables ..
  */
    int                        i, iaij, ix, iy, j, jaj, jx, jy;
-   register double            t0;
+   double            t0;
 /* ..
  * .. Executable Statements ..
  */

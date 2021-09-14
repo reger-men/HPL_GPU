@@ -146,7 +146,7 @@ void HPL_dlaswp01T
                                             HPL_LASWP01T_LOG2_DEPTH ),
                               incU = ( 1 << HPL_LASWP01T_LOG2_DEPTH );
    int                        nu, nr;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */

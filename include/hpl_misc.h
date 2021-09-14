@@ -51,7 +51,9 @@
  * ---------------------------------------------------------------------
  */
 #ifdef __STDC__
+#ifndef STDC_HEADERS
 #define STDC_HEADERS
+#endif
 #endif
 
 #include <stdio.h>

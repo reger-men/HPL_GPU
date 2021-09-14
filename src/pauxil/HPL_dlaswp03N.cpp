@@ -132,7 +132,7 @@ void HPL_dlaswp03N
    const int                  incU = (int)( (unsigned int)(LDU) <<
                                             HPL_LASWP03N_LOG2_DEPTH );
    int                        nr, nu;
-   register int               i, j;
+   int               i, j;
 /* ..
  * .. Executable Statements ..
  */

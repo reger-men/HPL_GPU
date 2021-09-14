@@ -103,10 +103,10 @@ void HPL_dscal
    cblas_dscal( N, ALPHA, X, INCX );
 #endif
 #ifdef HPL_CALL_VSIPL
-   register double           x0, x1, x2, x3, x4, x5, x6, x7;
-   register const double     alpha = ALPHA;
+   double           x0, x1, x2, x3, x4, x5, x6, x7;
+   const double     alpha = ALPHA;
    const double              * StX;
-   register int              i;
+   int              i;
    int                       nu;
    const int                 incX2 = 2 * INCX, incX3 = 3 * INCX,
                              incX4 = 4 * INCX, incX5 = 5 * INCX,

@@ -139,7 +139,7 @@ static void HPL_dtrsmLLTN( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iaki, ibij, ibkj, j, jai, jbj, k;
 
    for( j = 0, jbj = 0; j < N; j++, jbj += LDB )
@@ -176,7 +176,7 @@ static void HPL_dtrsmLLTU( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iaki, ibij, ibkj, j, jai, jbj, k;
 
    for( j = 0, jbj = 0; j < N; j++, jbj += LDB )
@@ -284,7 +284,7 @@ static void HPL_dtrsmLUTN( M, N, ALPHA, A, LDA, B, LDB )
 #endif
 {
    int                        i, iaki, ibij, ibkj, j, jai, jbj, k;
-   register double            t0;
+   double            t0;
 
    for( j = 0, jbj  = 0; j < N; j++, jbj += LDB )
    {
@@ -319,7 +319,7 @@ static void HPL_dtrsmLUTU( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iaki, ibij, ibkj, j, jai, jbj, k;
 
    for( j = 0, jbj  = 0; j < N; j++, jbj += LDB )
@@ -425,7 +425,7 @@ static void HPL_dtrsmRLTN( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iajk, ibij, ibik, j, jak, jbj, jbk, k;
 
    for( k = 0, jak = 0, jbk = 0; k < N; k++, jak += LDA, jbk += LDB )
@@ -462,7 +462,7 @@ static void HPL_dtrsmRLTU( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iajk, ibij, ibik, j, jak, jbj, jbk, k;
 
    for( k = 0, jak = 0, jbk = 0; k < N; k++, jak += LDA, jbk += LDB )
@@ -565,7 +565,7 @@ static void HPL_dtrsmRUTN( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iajk, ibij, ibik, j, jak, jbj, jbk, k;
 
    for( k = N-1,     jak  = (N-1)*LDA, jbk  = (N-1)*LDB;
@@ -601,7 +601,7 @@ static void HPL_dtrsmRUTU( M, N, ALPHA, A, LDA, B, LDB )
    double                     * B;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iajk, ibij, ibik, j, jak, jbj, jbk, k;
 
    for( k = N-1,     jak  = (N-1)*LDA, jbk  = (N-1)*LDB;

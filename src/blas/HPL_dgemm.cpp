@@ -76,7 +76,7 @@ static void HPL_dgemmNN( M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
    double                     * C;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iail, iblj, icij, j, jal, jbj, jcj, l;
 
    for( j = 0, jbj = 0, jcj  = 0; j < N; j++, jbj += LDB, jcj += LDC )
@@ -116,7 +116,7 @@ static void HPL_dgemmNT( M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
    double                     * C;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iail, ibj, ibjl, icij, j, jal, jcj, l;
 
    for( j = 0, ibj  = 0, jcj  = 0; j < N; j++, ibj += 1, jcj += LDC )
@@ -154,7 +154,7 @@ static void HPL_dgemmTN( M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
    double                     * C;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iai, iail, iblj, icij, j, jbj, jcj, l;
 
    for( j = 0, jbj = 0, jcj = 0; j < N; j++, jbj += LDB, jcj += LDC )
@@ -194,7 +194,7 @@ static void HPL_dgemmTT( M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
    double                     * C;
 #endif
 {
-   register double            t0;
+   double            t0;
    int                        i, iali, ibj, ibjl, icij, j, jai, jcj, l;
 
    for( j = 0, ibj = 0, jcj  = 0; j < N; j++, ibj += 1, jcj += LDC )
