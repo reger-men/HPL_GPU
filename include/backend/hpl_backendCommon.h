@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "backend/hpl_backendWrapper.h"
 #include "backend/hpl_backendCPU.h"
 #include "backend/hpl_backendHIP.h"
 
