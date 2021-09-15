@@ -1,7 +1,7 @@
 /* HPLHIP config options */
 
-#cmakedefine HPLHIP_BRANCH
+#cmakedefine HPLHIP_GIT_BRANCH "@HPLHIP_GIT_BRANCH@"
 
-#cmakedefine HPLHIP_COMMIT
+#cmakedefine HPLHIP_GIT_HASH "@HPLHIP_GIT_HASH@"
 
 #cmakedefine HPLHIP_USE_ROCRAND
