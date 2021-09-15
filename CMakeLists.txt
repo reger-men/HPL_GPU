@@ -20,6 +20,7 @@ EXECUTE_PROCESS(
 
 # Add rocM root dir to CMAKE_PREFIX_PATH, usually /opt/rocm
 find_package( hip REQUIRED )
+find_package( rocblas REQUIRED )
 
 # switch compiler and linker on non-Windows
 if(NOT WIN32)
@@ -50,14 +51,27 @@ else ()
     endif ()
 endif ()
 
+find_package( BLAS REQUIRED )
+
+# append math library, if found
+find_library(MATH_LIBRARY m)
+if( MATH_LIBRARY )
+  # OpenBLAS needs to link C math library (usually -lm) but MKL doesn't
+  set(BLAS_LIBRARIES ${BLAS_LIBRARIES} ${MATH_LIBRARY})
+endif( MATH_LIBRARY )
+
 add_executable( xhplhip testing/ptest/HPL_pddriver.cpp
 testing/ptest/HPL_pdinfo.cpp testing/ptest/HPL_pdtest.cpp
+testing/pmatgen/HPL_pdmatgen.cpp testing/matgen/HPL_jumpit.cpp
+testing/matgen/HPL_rand.cpp testing/matgen/HPL_setran.cpp
+testing/matgen/HPL_xjumpm.cpp testing/matgen/HPL_lmul.cpp
+testing/matgen/HPL_ladd.cpp
 src/auxil/HPL_dlamch.cpp src/auxil/HPL_fprintf.cpp src/grid/HPL_grid_exit.cpp
 src/grid/HPL_all_reduce.cpp src/grid/HPL_broadcast.cpp
 src/grid/HPL_grid_info.cpp src/grid/HPL_grid_init.cpp src/grid/HPL_max.cpp
 src/grid/HPL_min.cpp src/grid/HPL_sum.cpp src/grid/HPL_barrier.cpp
 src/pauxil/HPL_pdlamch.cpp src/pauxil/HPL_numroc.cpp src/pauxil/HPL_numrocI.cpp
- src/pauxil/HPL_pdlange.cpp src/pauxil/HPL_indxg2p.cpp src/pauxil/HPL_infog2l.cpp
+src/pauxil/HPL_pdlange.cpp src/pauxil/HPL_indxg2p.cpp src/pauxil/HPL_infog2l.cpp
 src/pfact/HPL_pdpancrN.cpp src/pfact/HPL_pdpancrT.cpp
 src/pfact/HPL_pdpanllN.cpp src/pfact/HPL_pdpanllT.cpp
 src/pfact/HPL_pdpanrlN.cpp src/pfact/HPL_pdpanrlT.cpp
@@ -94,11 +108,16 @@ src/pgesv/HPL_spreadN.cpp src/pgesv/HPL_spreadT.cpp
 src/pgesv/HPL_logsort.cpp src/pgesv/HPL_perm.cpp
 src/pgesv/HPL_pdgesv.cpp src/pgesv/HPL_pdgesv0.cpp src/pgesv/HPL_pdgesvK2.cpp
 src/pgesv/HPL_pdtrsv.cpp src/blas/HPL_idamax.cpp
+src/blas/HPL_daxpy.cpp src/blas/HPL_dscal.cpp src/blas/HPL_dswap.cpp
+src/blas/HPL_dger.cpp src/blas/HPL_dtrsm.cpp src/blas/HPL_dtrsv.cpp
+src/blas/HPL_dgemm.cpp src/blas/HPL_dgemv.cpp src/blas/HPL_dcopy.cpp
+src/auxil/HPL_dlacpy.cpp src/auxil/HPL_dlatcpy.cpp
 testing/ptimer/HPL_ptimer_walltime.cpp testing/ptimer/HPL_ptimer.cpp
 testing/ptimer/HPL_ptimer_cputime.cpp
 src/panel/HPL_pdpanel_new.cpp src/panel/HPL_pdpanel_init.cpp
 src/panel/HPL_pdpanel_free.cpp src/panel/HPL_pdpanel_disp.cpp
-testing/backend/HPL_backendWrapper.cpp testing/backend/HPL_backendHIP.cpp)
+testing/backend/HPL_backendWrapper.cpp testing/backend/HPL_backendHIP.cpp
+testing/backend/HPL_backendCPU.cpp)
 
 target_include_directories( xhplhip PUBLIC hip:device
     ${HIP_ROOT_DIR}/include
@@ -107,7 +126,7 @@ target_include_directories( xhplhip PUBLIC hip:device
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries( xhplhip ${MPI_CXX_LIBRARIES})
+target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
 configure_file( include/hplhip_config.hin ${CMAKE_CURRENT_SOURCE_DIR}/include/hplhip_config.h @ONLY NEWLINE_STYLE LF )
 
