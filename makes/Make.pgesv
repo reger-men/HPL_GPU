@@ -80,53 +80,53 @@ lib.grd : $(HPL_pgeobj)
 # ######################################################################
 #
 HPL_pipid.o            : ../HPL_pipid.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pipid.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pipid.cpp
 HPL_plindx0.o          : ../HPL_plindx0.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_plindx0.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_plindx0.cpp
 HPL_pdlaswp00N.o       : ../HPL_pdlaswp00N.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp00N.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp00N.cpp
 HPL_pdlaswp00T.o       : ../HPL_pdlaswp00T.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp00T.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp00T.cpp
 HPL_perm.o             : ../HPL_perm.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_perm.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_perm.cpp
 HPL_logsort.o          : ../HPL_logsort.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_logsort.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_logsort.cpp
 HPL_plindx10.o         : ../HPL_plindx10.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_plindx10.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_plindx10.cpp
 HPL_plindx1.o          : ../HPL_plindx1.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_plindx1.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_plindx1.cpp
 HPL_spreadN.o          : ../HPL_spreadN.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_spreadN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_spreadN.cpp
 HPL_spreadT.o          : ../HPL_spreadT.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_spreadT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_spreadT.cpp
 HPL_rollN.o            : ../HPL_rollN.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_rollN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_rollN.cpp
 HPL_rollT.o            : ../HPL_rollT.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_rollT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_rollT.cpp
 HPL_equil.o            : ../HPL_equil.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_equil.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_equil.cpp
 HPL_pdlaswp01N.o       : ../HPL_pdlaswp01N.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp01N.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp01N.cpp
 HPL_pdlaswp01T.o       : ../HPL_pdlaswp01T.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp01T.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdlaswp01T.cpp
 HPL_pdupdateNN.o       : ../HPL_pdupdateNN.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdupdateNN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdupdateNN.cpp
 HPL_pdupdateNT.o       : ../HPL_pdupdateNT.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdupdateNT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdupdateNT.cpp
 HPL_pdupdateTN.o       : ../HPL_pdupdateTN.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdupdateTN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdupdateTN.cpp
 HPL_pdupdateTT.o       : ../HPL_pdupdateTT.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdupdateTT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdupdateTT.cpp
 HPL_pdtrsv.o           : ../HPL_pdtrsv.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdtrsv.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdtrsv.cpp
 HPL_pdgesv0.o          : ../HPL_pdgesv0.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdgesv0.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdgesv0.cpp
 HPL_pdgesvK1.o         : ../HPL_pdgesvK1.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdgesvK1.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdgesvK1.cpp
 HPL_pdgesvK2.o         : ../HPL_pdgesvK2.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdgesvK2.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdgesvK2.cpp
 HPL_pdgesv.o           : ../HPL_pdgesv.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdgesv.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdgesv.cpp
 #
 # ######################################################################
 #

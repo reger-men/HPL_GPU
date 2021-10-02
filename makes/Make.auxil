@@ -76,21 +76,21 @@ lib.grd : $(HPL_auxobj)
 # ######################################################################
 #
 HPL_dlacpy.o           : ../HPL_dlacpy.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlacpy.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlacpy.cpp
 HPL_dlatcpy.o          : ../HPL_dlatcpy.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlatcpy.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlatcpy.cpp
 HPL_fprintf.o          : ../HPL_fprintf.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_fprintf.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_fprintf.cpp
 HPL_warn.o             : ../HPL_warn.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_warn.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_warn.cpp
 HPL_abort.o            : ../HPL_abort.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_abort.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_abort.cpp
 HPL_dlaprnt.o          : ../HPL_dlaprnt.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlaprnt.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlaprnt.cpp
 HPL_dlange.o           : ../HPL_dlange.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlange.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlange.cpp
 HPL_dlamch.o           : ../HPL_dlamch.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCNOOPT)  ../HPL_dlamch.cpp
+	$(CC) -o $@ -c $(CCNOOPT)  ../HPL_dlamch.cpp
 #
 # ######################################################################
 #

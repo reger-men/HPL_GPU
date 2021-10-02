@@ -74,13 +74,13 @@ lib.grd : $(HPL_panobj)
 # ######################################################################
 #
 HPL_pdpanel_new.o      : ../HPL_pdpanel_new.cpp      $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_new.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_new.cpp
 HPL_pdpanel_init.o     : ../HPL_pdpanel_init.cpp     $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_init.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_init.cpp
 HPL_pdpanel_disp.o     : ../HPL_pdpanel_disp.cpp     $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_disp.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_disp.cpp
 HPL_pdpanel_free.o     : ../HPL_pdpanel_free.cpp     $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_free.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanel_free.cpp
 #
 # ######################################################################
 #

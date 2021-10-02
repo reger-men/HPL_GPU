@@ -70,11 +70,11 @@ lib.grd : $(HPL_timobj)
 # ######################################################################
 #
 HPL_timer.o            : ../HPL_timer.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_timer.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_timer.cpp
 HPL_timer_cputime.o    : ../HPL_timer_cputime.cpp    $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_timer_cputime.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_timer_cputime.cpp
 HPL_timer_walltime.o   : ../HPL_timer_walltime.cpp   $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_timer_walltime.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_timer_walltime.cpp
 #
 # ######################################################################
 #

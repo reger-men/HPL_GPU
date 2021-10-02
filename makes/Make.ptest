@@ -80,11 +80,11 @@ dexe.grd: $(HPL_pteobj) $(HPLlib)
 # ######################################################################
 #
 HPL_pddriver.o         : ../HPL_pddriver.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pddriver.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pddriver.cpp
 HPL_pdinfo.o           : ../HPL_pdinfo.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdinfo.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdinfo.cpp
 HPL_pdtest.o           : ../HPL_pdtest.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdtest.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdtest.cpp
 #
 # ######################################################################
 #

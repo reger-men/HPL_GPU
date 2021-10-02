@@ -71,7 +71,7 @@ lib.grd : $(HPL_pmaobj)
 # ######################################################################
 #
 HPL_pdmatgen.o         : ../HPL_pdmatgen.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdmatgen.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdmatgen.cpp
 #
 # ######################################################################
 #

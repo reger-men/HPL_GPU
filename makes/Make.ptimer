@@ -70,11 +70,11 @@ lib.grd : $(HPL_ptiobj)
 # ######################################################################
 #
 HPL_ptimer.o           : ../HPL_ptimer.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_ptimer.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_ptimer.cpp
 HPL_ptimer_cputime.o   : ../HPL_ptimer_cputime.cpp   $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_ptimer_cputime.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_ptimer_cputime.cpp
 HPL_ptimer_walltime.o  : ../HPL_ptimer_walltime.cpp  $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_ptimer_walltime.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_ptimer_walltime.cpp
 #
 # ######################################################################
 #

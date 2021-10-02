@@ -56,7 +56,8 @@ INCdep           = \
 HPL_blaobj       = \
    HPL_dcopy.o            HPL_daxpy.o            HPL_dscal.o            \
    HPL_idamax.o           HPL_dgemv.o            HPL_dtrsv.o            \
-   HPL_dger.o             HPL_dgemm.o            HPL_dtrsm.o
+   HPL_dger.o             HPL_dgemm.o            HPL_dtrsm.o			\
+   HPL_dswap.o
 #
 ## Targets #############################################################
 #
@@ -72,23 +73,25 @@ lib.grd : $(HPL_blaobj)
 # ######################################################################
 #
 HPL_dcopy.o            : ../HPL_dcopy.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dcopy.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dcopy.cpp
 HPL_daxpy.o            : ../HPL_daxpy.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_daxpy.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_daxpy.cpp
 HPL_dscal.o            : ../HPL_dscal.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dscal.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dscal.cpp
 HPL_idamax.o           : ../HPL_idamax.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_idamax.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_idamax.cpp
 HPL_dgemv.o            : ../HPL_dgemv.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dgemv.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dgemv.cpp
 HPL_dtrsv.o            : ../HPL_dtrsv.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dtrsv.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dtrsv.cpp
 HPL_dger.o             : ../HPL_dger.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dger.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dger.cpp
 HPL_dgemm.o            : ../HPL_dgemm.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dgemm.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dgemm.cpp
 HPL_dtrsm.o            : ../HPL_dtrsm.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dtrsm.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dtrsm.cpp
+HPL_dswap.o			   : ../HPL_dswap.cpp            $(INCdep)
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dswap.cpp
 #
 # ######################################################################
 #

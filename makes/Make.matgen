@@ -73,19 +73,19 @@ lib.grd : $(HPL_matobj)
 # ######################################################################
 #
 HPL_dmatgen.o          : ../HPL_dmatgen.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dmatgen.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dmatgen.cpp
 HPL_ladd.o             : ../HPL_ladd.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_ladd.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_ladd.cpp
 HPL_lmul.o             : ../HPL_lmul.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_lmul.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_lmul.cpp
 HPL_xjumpm.o           : ../HPL_xjumpm.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_xjumpm.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_xjumpm.cpp
 HPL_jumpit.o           : ../HPL_jumpit.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_jumpit.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_jumpit.cpp
 HPL_rand.o             : ../HPL_rand.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_rand.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_rand.cpp
 HPL_setran.o           : ../HPL_setran.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_setran.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_setran.cpp
 #
 # ######################################################################
 #

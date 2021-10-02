@@ -75,33 +75,33 @@ lib.grd : $(HPL_comobj)
 # ######################################################################
 #
 HPL_1ring.o            : ../HPL_1ring.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_1ring.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_1ring.cpp
 HPL_1rinM.o            : ../HPL_1rinM.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_1rinM.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_1rinM.cpp
 HPL_2ring.o            : ../HPL_2ring.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_2ring.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_2ring.cpp
 HPL_2rinM.o            : ../HPL_2rinM.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_2rinM.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_2rinM.cpp
 HPL_blong.o            : ../HPL_blong.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_blong.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_blong.cpp
 HPL_blonM.o            : ../HPL_blonM.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_blonM.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_blonM.cpp
 HPL_packL.o            : ../HPL_packL.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_packL.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_packL.cpp
 HPL_copyL.o            : ../HPL_copyL.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_copyL.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_copyL.cpp
 HPL_binit.o            : ../HPL_binit.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_binit.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_binit.cpp
 HPL_bcast.o            : ../HPL_bcast.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_bcast.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_bcast.cpp
 HPL_bwait.o            : ../HPL_bwait.cpp            $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_bwait.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_bwait.cpp
 HPL_send.o             : ../HPL_send.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_send.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_send.cpp
 HPL_recv.o             : ../HPL_recv.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_recv.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_recv.cpp
 HPL_sdrv.o             : ../HPL_sdrv.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_sdrv.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_sdrv.cpp
 #
 # ######################################################################
 # 

@@ -73,27 +73,27 @@ lib.grd : $(HPL_griobj)
 # ######################################################################
 #
 HPL_grid_init.o        : ../HPL_grid_init.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_grid_init.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_grid_init.cpp
 HPL_pnum.o             : ../HPL_pnum.cpp             $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pnum.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pnum.cpp
 HPL_grid_info.o        : ../HPL_grid_info.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_grid_info.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_grid_info.cpp
 HPL_grid_exit.o        : ../HPL_grid_exit.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_grid_exit.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_grid_exit.cpp
 HPL_broadcast.o        : ../HPL_broadcast.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_broadcast.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_broadcast.cpp
 HPL_reduce.o           : ../HPL_reduce.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_reduce.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_reduce.cpp
 HPL_all_reduce.o       : ../HPL_all_reduce.cpp       $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_all_reduce.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_all_reduce.cpp
 HPL_barrier.o          : ../HPL_barrier.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_barrier.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_barrier.cpp
 HPL_min.o              : ../HPL_min.cpp              $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_min.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_min.cpp
 HPL_max.o              : ../HPL_max.cpp              $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_max.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_max.cpp
 HPL_sum.o              : ../HPL_sum.cpp              $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_sum.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_sum.cpp
 #
 # ######################################################################
 #

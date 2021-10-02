@@ -76,39 +76,39 @@ lib.grd          : $(HPL_pfaobj)
 # ######################################################################
 #
 HPL_dlocmax.o          : ../HPL_dlocmax.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlocmax.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlocmax.cpp
 HPL_dlocswpN.o         : ../HPL_dlocswpN.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlocswpN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlocswpN.cpp
 HPL_dlocswpT.o         : ../HPL_dlocswpT.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_dlocswpT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_dlocswpT.cpp
 HPL_pdmxswp.o          : ../HPL_pdmxswp.cpp          $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdmxswp.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdmxswp.cpp
 HPL_pdpancrN.o         : ../HPL_pdpancrN.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpancrN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpancrN.cpp
 HPL_pdpancrT.o         : ../HPL_pdpancrT.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpancrT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpancrT.cpp
 HPL_pdpanllN.o         : ../HPL_pdpanllN.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanllN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanllN.cpp
 HPL_pdpanllT.o         : ../HPL_pdpanllT.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanllT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanllT.cpp
 HPL_pdpanrlN.o         : ../HPL_pdpanrlN.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanrlN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanrlN.cpp
 HPL_pdpanrlT.o         : ../HPL_pdpanrlT.cpp         $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdpanrlT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdpanrlT.cpp
 HPL_pdrpanllN.o        : ../HPL_pdrpanllN.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdrpanllN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdrpanllN.cpp
 HPL_pdrpanllT.o        : ../HPL_pdrpanllT.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdrpanllT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdrpanllT.cpp
 HPL_pdrpancrN.o        : ../HPL_pdrpancrN.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdrpancrN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdrpancrN.cpp
 HPL_pdrpancrT.o        : ../HPL_pdrpancrT.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdrpancrT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdrpancrT.cpp
 HPL_pdrpanrlN.o        : ../HPL_pdrpanrlN.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdrpanrlN.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdrpanrlN.cpp
 HPL_pdrpanrlT.o        : ../HPL_pdrpanrlT.cpp        $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdrpanrlT.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdrpanrlT.cpp
 HPL_pdfact.o           : ../HPL_pdfact.cpp           $(INCdep)
-	$(CC) -x c -o $@ -c $(CCFLAGS)  ../HPL_pdfact.cpp
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_pdfact.cpp
 #
 # ######################################################################
 #
