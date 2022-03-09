@@ -18,7 +18,11 @@ EXECUTE_PROCESS(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+
+
+
 # Add rocM root dir to CMAKE_PREFIX_PATH, usually /opt/rocm
+list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
 find_package( hip REQUIRED )
 find_package( rocblas REQUIRED )
 
@@ -31,8 +35,11 @@ endif()
 set( CMAKE_CXX_STANDARD 14 )
 
 # don't need MPI C++ bindings, now deprecated
+list(APPEND CMAKE_PREFIX_PATH "/home/lulu/hpl-lib/ompi")
 set( MPI_CXX_SKIP_MPICXX ON )
 find_package( MPI REQUIRED )
+include_directories(/home/lulu//hpl-lib/ompi/include)
+
 
 # search for rocRAND/hipRAND-config.cmake in CMAKE_PREFIX_PATH
 find_package(rocrand)
@@ -51,6 +58,7 @@ else ()
     endif ()
 endif ()
 
+list(APPEND CMAKE_PREFIX_PATH "/home/lulu/hpl-lib/openblas")
 find_package( BLAS REQUIRED )
 
 # append math library, if found
@@ -119,6 +127,8 @@ src/panel/HPL_pdpanel_free.cpp src/panel/HPL_pdpanel_disp.cpp
 testing/backend/HPL_backendWrapper.cpp testing/backend/HPL_backendHIP.cpp
 testing/backend/HPL_backendCPU.cpp)
 
+
+
 target_include_directories( xhplhip PUBLIC hip:device
     ${HIP_ROOT_DIR}/include
     ${HPLHIP_DEVRAND_INCLUDE_DIRS}
@@ -128,6 +138,10 @@ target_include_directories( xhplhip PUBLIC hip:device
 
 target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES})
 
+
+
 configure_file( include/hplhip_config.hin ${CMAKE_CURRENT_SOURCE_DIR}/include/hplhip_config.h @ONLY NEWLINE_STYLE LF )
 
+
 install(TARGETS xhplhip RUNTIME DESTINATION bin)
+

@@ -86,11 +86,12 @@ int HPL_pdpanel_disp
 /*
  * Deallocate the panel resources and panel structure
  */
-   mpierr = HPL_pdpanel_free( *PANEL );
-   if( *PANEL ) free( *PANEL );
+   // mpierr = HPL_pdpanel_free( *PANEL, T_TEMPO );
+    (void) HPL_BE_panel_free(*PANEL, T_TEMPO);
+   // if( *PANEL ) HPL_BE_free(PANEL, T_TEMPO);
    *PANEL = NULL;
 
-   return( mpierr );
+   return( MPI_SUCCESS );
 /*
  * End of HPL_pdpanel_disp
  */

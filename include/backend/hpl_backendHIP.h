@@ -57,7 +57,7 @@ extern "C" {
 
 #define GPUError(...) GPUInfo(__VA_ARGS__)
 
-//#define HPL_PRINT_INFO
+#define HPL_PRINT_INFO
 #ifdef HPL_PRINT_INFO
 #define GPUInfo(msg, ...)                             \
 {                                                     \
@@ -125,6 +125,7 @@ namespace HIP {
 
     // BLAS members
     namespace {
+      static char     host_name[MPI_MAX_PROCESSOR_NAME];
       rocblas_handle _handle;
       std::map<int, const char*> _memcpyKind;
     }

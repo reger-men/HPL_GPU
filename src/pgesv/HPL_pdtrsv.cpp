@@ -160,7 +160,7 @@ void HPL_pdtrsv
    if( Anp > 0 )
    {
       //Adil
-      HPL_BE_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_TEMPO);
+      HPL_BE_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_DEFAULT);
       /*W = (double*)malloc( (size_t)(Mmin( n1, Anp )) * sizeof( double ) );*/
       if( W == NULL )
       { HPL_pabort( __LINE__, "HPL_pdtrsv", "Memory allocation failed" ); }
@@ -179,12 +179,12 @@ void HPL_pdtrsv
       {
          //Adil
          HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1, T_TEMPO);
+                    kb, Aptr+Anp, lda, XC+Anp, 1, T_HIP);
          /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1 );*/
 
          //Adil
-         HPL_BE_dcopy(kb, XC+Anp, 1, Xd, 1, T_TEMPO);                    
+         HPL_BE_dcopy(kb, XC+Anp, 1, Xd, 1, T_HIP);                    
          /*HPL_dcopy( kb, XC+Anp, 1, Xd, 1 );*/
       }
    }
@@ -232,7 +232,7 @@ void HPL_pdtrsv
             //Adil
             HPL_BE_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
                        -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
-                       XC+tmp1, 1, T_DEFAULT);
+                       XC+tmp1, 1, T_HIP);
             /*HPL_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
                        -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
                        XC+tmp1, 1 );*/
@@ -258,7 +258,7 @@ void HPL_pdtrsv
          {
             (void) HPL_recv( W, n1pprev, colprev, Rmsgid, Rcomm );
             //Adil
-            HPL_BE_daxpy(n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1, T_DEFAULT);
+            HPL_BE_daxpy(n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1, T_HIP);
             /*HPL_daxpy( n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1 );*/
          }
       }
@@ -269,12 +269,12 @@ void HPL_pdtrsv
       {
          //Adil
          HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1, T_DEFAULT);
+                    kb, Aptr+Anp, lda, XC+Anp, 1, T_HIP);
          /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
                     kb, Aptr+Anp, lda, XC+Anp, 1 );*/
 
          //Adil
-         HPL_BE_dcopy(kb, XC+Anp, 1, XR+Anq, 1, T_DEFAULT);                    
+         HPL_BE_dcopy(kb, XC+Anp, 1, XR+Anq, 1, T_HIP);                    
          /*HPL_dcopy( kb, XC+Anp, 1, XR+Anq, 1 );*/
       }
 /*

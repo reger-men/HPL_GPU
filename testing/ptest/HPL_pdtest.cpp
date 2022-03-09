@@ -48,7 +48,6 @@
  * Include files
  */
 #include "hpl.h"
-
 #ifdef STDC_HEADERS
 void HPL_pdtest
 (
@@ -136,6 +135,10 @@ void HPL_pdtest
 /* ..
  * .. Executable Statements ..
  */
+// rocblas_handle handle;
+
+//    rocblas_create_handle(&handle);
+
    (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
 
    mat.n  = N; mat.nb = NB; mat.info = 0;
@@ -164,9 +167,9 @@ void HPL_pdtest
    //Adil: temp: generate mat on CPU and move it to the CPU. FIXME: Generate the correct Matrix.
    size_t bytes = ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double);
 
-   void * d_vptr = NULL;
-   HPL_BE_malloc((void**)&d_vptr, bytes, T_HIP);
-   vptr = (void*)malloc(bytes);
+   // void * d_vptr = NULL;
+   HPL_BE_malloc((void**)&vptr, bytes, T_CPU);
+   // vptr = (void*)malloc(bytes);
 
    info[0] = (vptr == NULL); info[1] = myrow; info[2] = mycol;
    (void) HPL_all_reduce( (void *)(info), 3, HPL_INT, HPL_max,
@@ -183,6 +186,11 @@ void HPL_pdtest
       if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
       /*if (vptr) free(vptr);*/
       return;
+   }
+
+    if( ( myrow == 0 ) && ( mycol == 0 ) )
+   {
+      printf("Allocating %g GBs of storage on CPU...", ((double) bytes)/(1024*1024*1024)); fflush(stdout);
    }
 /*
  * generate matrix and right-hand-side, [ A | b ] which is N by N+1.

@@ -49,6 +49,7 @@
  */
 #include "hpl.h"
 
+
 #ifdef STDC_HEADERS
 void HPL_pdupdateNN
 (
@@ -180,8 +181,9 @@ void HPL_pdupdateNN
 #else
          HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
 #endif
+
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
          /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
 #ifdef HPL_CALL_VSIPL
@@ -200,9 +202,11 @@ void HPL_pdupdateNN
          (void) vsip_mdestroy_d( Uv1 );
 #else
          //Adil
+        
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
+                    Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
+
          /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda );*/
@@ -214,6 +218,7 @@ void HPL_pdupdateNN
 /*
  * The panel has been forwarded at that point, finish the update
  */
+      // printf("nn = %d\n",  n - nq0);
       if( ( nn = n - nq0 ) > 0 )
       {
 #ifdef HPL_DETAILED_TIMING
@@ -224,8 +229,10 @@ void HPL_pdupdateNN
          HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
 #endif
          //Adil
+           
+
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
          /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
 #ifdef HPL_CALL_VSIPL
@@ -244,9 +251,37 @@ void HPL_pdupdateNN
          (void) vsip_mdestroy_d( Uv1 );
 #else
          //Adil
+        
+
+         // double *d_L2ptr, *d_Aptr1, *d_Mptr;
+         // hipMalloc((void**)&d_L2ptr, jb * ldl2 * sizeof(double));
+         // hipMalloc((void**)&d_Aptr1, nn * lda * sizeof(double));
+         // hipMalloc((void**)&d_Mptr, nn * lda * sizeof(double));
+
+
+         // hipMemcpy(d_L2ptr, L2ptr, jb * ldl2 * sizeof(double), hipMemcpyHostToDevice);
+         // hipMemcpy(d_Aptr1, Aptr,  nn * lda * sizeof(double), hipMemcpyHostToDevice);         hipMemcpy(d_Mptr,  Mptr( Aptr, jb, 0, lda ),  nn * lda * sizeof(double), hipMemcpyHostToDevice);
+
+         // const double mone = -1.0;
+         // rocblas_dgemm(handle, rocblas_operation_none, rocblas_operation_none,
+         //             mp, nn, jb, &mone,
+         //             d_L2ptr, ldl2, d_Aptr, lda, &one,
+         //             d_Mptr, lda );
+
+         // hipMemcpy(L2ptr, d_L2ptr, jb * ldl2 * sizeof(double), hipMemcpyDeviceToHost);
+         // hipMemcpy(Aptr, d_Aptr1, nn * lda * sizeof(double), hipMemcpyDeviceToHost);
+         // hipMemcpy(Mptr( Aptr, jb, 0, lda ),  d_Mptr,  nn * lda * sizeof(double), hipMemcpyHostToDevice); 
+
+
+         // hipFree(d_Aptr);
+         // hipFree(d_L2ptr);
+         // hipFree(d_Mptr);
+
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
+                    Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
+
+
          /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda );*/

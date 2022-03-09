@@ -156,6 +156,8 @@ int main( ARGC, ARGV )
    * Init Target Device
    */
    HPL_BE_init(1, T_HIP);
+   // rocblas_handle handle;
+
 
 /*
  * Loop over different process grids - Define process grid. Go to bottom
@@ -225,6 +227,7 @@ int main( ARGC, ARGV )
 
               algo.fswap = fswap; algo.fsthr = tswap;
               algo.equil = equil; algo.align = align;
+
 
               HPL_pdtest( &test, &grid, &algo, nval[in], nbval[inb] );
 

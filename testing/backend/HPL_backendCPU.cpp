@@ -1,20 +1,29 @@
 #include "backend/hpl_backendCPU.h"
+#include <hpl.h>
 
 void CPU::malloc(void** ptr, size_t size)
 {
     CPUInfo("%-25s %-12ld (B) \t%-5s", "[Allocate]", "Memory of size",  size, "CPU");
+    #if 0
     *ptr = std::malloc(size);
+    #endif
+    hipHostMalloc(ptr, size, hipHostMallocDefault);
+
 }
 
 void CPU::free(void** ptr)
 {
-    std::free(*ptr);
+    //std::free(*ptr);
+    hipHostFree(*ptr);
 }
 
 int CPU::panel_free(HPL_T_panel *ptr)
 {
     CPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel resources", "CPU");
-    return HPL_pdpanel_free( ptr );
+    if( ptr->WORK  ) HIP_CHECK_ERROR(hipHostFree( ptr->WORK  ));
+    if( ptr->IWORK ) HIP_CHECK_ERROR(hipHostFree( ptr->IWORK ));
+    return( MPI_SUCCESS );
+    // return HPL_pdpanel_free( ptr );
 }
 
 int CPU::panel_disp(HPL_T_panel **ptr)
