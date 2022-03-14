@@ -27,8 +27,17 @@ void HPL_BE_init(size_t, enum HPL_TARGET);
 void HPL_BE_malloc(void**, size_t, enum HPL_TARGET);
 
 void HPL_BE_free(void **, enum HPL_TARGET);
+
+void HPL_BE_panel_new(HPL_T_grid *, HPL_T_palg *, const int, const int, const int,
+                        HPL_T_pmat *, const int, const int, const int, HPL_T_panel * *, enum HPL_TARGET);
+void HPL_BE_panel_init(HPL_T_grid *, HPL_T_palg *, const int,
+                    const int, const int, HPL_T_pmat *,
+                    const int, const int, const int, HPL_T_panel *, enum HPL_TARGET);
 void HPL_BE_panel_free(HPL_T_panel *, enum HPL_TARGET);
 void HPL_BE_panel_disp(HPL_T_panel**, enum HPL_TARGET);
+
+void HPL_BE_panel_send_to_device(HPL_T_panel*, enum HPL_TARGET);
+void HPL_BE_panel_send_to_host(HPL_T_panel*, enum HPL_TARGET);
 
 void HPL_BE_dmatgen(const HPL_T_grid *, const int, const int,
                  const int, double *, const int,
@@ -84,6 +93,7 @@ void HPL_BE_dlatcpy(const int, const int, const double *, const int,
 
 void HPL_BE_move_data(double *, const double *, const size_t, enum HPL_MOVE_DIRECTION, enum HPL_TARGET);                
 
+void HPL_BE_dlaswp00N(const int, const int, double *, const int, const int *, enum HPL_TARGET);
 #ifdef __cplusplus
 }
 #endif

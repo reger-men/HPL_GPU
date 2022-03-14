@@ -98,6 +98,10 @@ void HPL_pdgesv
 
    A->info = 0;
 
+#ifdef ROCM
+   // Our current computation on GPU is only working with HPL_pdgesvK2.
+   HPL_pdgesvK2( GRID, ALGO, A );
+#else
    if( ( ALGO->depth == 0 ) || ( GRID->npcol == 1 ) )
    {
       HPL_pdgesv0(  GRID, ALGO, A );
@@ -106,6 +110,7 @@ void HPL_pdgesv
    {
       HPL_pdgesvK2( GRID, ALGO, A );
    }
+#endif
 /*
  * Solve upper triangular system
  */

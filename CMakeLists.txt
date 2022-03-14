@@ -19,6 +19,7 @@ EXECUTE_PROCESS(
 )
 
 # Add rocM root dir to CMAKE_PREFIX_PATH, usually /opt/rocm
+list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
 find_package( hip REQUIRED )
 find_package( rocblas REQUIRED )
 
@@ -30,9 +31,16 @@ endif()
 
 set( CMAKE_CXX_STANDARD 14 )
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+set(CMAKE_CXX_FLAGS_Release "${CMAKE_C_FLAGS_Release} -O3")
+ADD_DEFINITIONS(-DROCM=1)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/HPL.dat
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # don't need MPI C++ bindings, now deprecated
+list(APPEND CMAKE_PREFIX_PATH "/home/lulu/binbin/mylib/ompi")
 set( MPI_CXX_SKIP_MPICXX ON )
 find_package( MPI REQUIRED )
+include_directories(/home/lulu/binbin/mylib/ompi/include)
 
 # search for rocRAND/hipRAND-config.cmake in CMAKE_PREFIX_PATH
 find_package(rocrand)
@@ -51,6 +59,7 @@ else ()
     endif ()
 endif ()
 
+list(APPEND CMAKE_PREFIX_PATH "/home/lulu/binbin/mylib/openblas")
 find_package( BLAS REQUIRED )
 
 # append math library, if found

@@ -142,8 +142,13 @@ void HPL_pdupdateNN
  */
    if( PANEL->grid->nprow == 1 )
    {
+#ifdef ROCM
+      Aptr = PANEL->dA;       L2ptr = PANEL->dL2;   L1ptr = PANEL->dL1;
+      ldl2 = PANEL->ldl2;    dpiv  = PANEL->DPIV; ipiv  = PANEL->dIWORK;
+#else
       Aptr = PANEL->A;       L2ptr = PANEL->L2;   L1ptr = PANEL->L1;
       ldl2 = PANEL->ldl2;    dpiv  = PANEL->DPIV; ipiv  = PANEL->IWORK;
+#endif
       mp   = PANEL->mp - jb; iroff = PANEL->ii;   nq0   = 0; 
 #ifdef HPL_CALL_VSIPL
 /*
@@ -161,7 +166,10 @@ void HPL_pdupdateNN
  */
       Lv1 = vsip_msubview_d( Lv0, 0, 0, mp, jb );
 #endif
+
+#ifndef ROCM
       for( i = 0; i < jb; i++ ) { ipiv[i] = (int)(dpiv[i]) - iroff; }
+#endif
 /*
  * So far we have not updated anything -  test availability of the panel
  * to be forwarded - If detected forward it and finish the update in one
@@ -175,13 +183,16 @@ void HPL_pdupdateNN
  */
 #ifdef HPL_DETAILED_TIMING
          HPL_ptimer( HPL_TIMING_LASWP );
-         HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
+         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
          HPL_ptimer( HPL_TIMING_LASWP );
 #else
-         HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
+         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
 #endif
+
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
          /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
 #ifdef HPL_CALL_VSIPL
@@ -199,10 +210,13 @@ void HPL_pdupdateNN
          (void) vsip_mdestroy_d( Av1 );
          (void) vsip_mdestroy_d( Uv1 );
 #else
-         //Adil
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
+                    Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
+         // //Adil
+         // HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
+         //            jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
+         //            Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
          /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda );*/
@@ -218,14 +232,18 @@ void HPL_pdupdateNN
       {
 #ifdef HPL_DETAILED_TIMING
          HPL_ptimer( HPL_TIMING_LASWP );
-         HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
+         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
          HPL_ptimer( HPL_TIMING_LASWP );
 #else
-         HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
+         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
 #endif
-         //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
+         // //Adil
+         // HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
+         //            HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
          /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
 #ifdef HPL_CALL_VSIPL
@@ -243,10 +261,13 @@ void HPL_pdupdateNN
          (void) vsip_mdestroy_d( Av1 );
          (void) vsip_mdestroy_d( Uv1 );
 #else
-         //Adil
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
+                    Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
+         // //Adil
+         // HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
+         //            jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
+         //            Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
          /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda );*/
@@ -466,6 +487,9 @@ void HPL_pdupdateNN
 #endif
    }
 
+#ifdef ROCM
+   PANEL->dA = Mptr( PANEL->dA, 0, n, lda ); 
+#endif
    PANEL->A = Mptr( PANEL->A, 0, n, lda ); PANEL->nq -= n; PANEL->jj += n;
 /*
  * return the outcome of the probe  (should always be  HPL_SUCCESS,  the

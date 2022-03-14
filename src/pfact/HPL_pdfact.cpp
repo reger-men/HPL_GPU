@@ -135,6 +135,10 @@ void HPL_pdfact
    //if( vptr ) free( vptr );
 
    PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
+#ifdef ROCM
+   PANEL->dA   = Mptr( PANEL->dA, 0, jb, PANEL->lda );
+#endif
+
    PANEL->nq -= jb; PANEL->jj += jb;
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_RPFACT );

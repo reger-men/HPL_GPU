@@ -1,5 +1,7 @@
-export MPI_HOME=/opt/mpi/ompi
-export BLAS_HOME=/home/hpl/hpl/local/blis/install
+# export MPI_HOME=/opt/mpi/ompi
+# export BLAS_HOME=/home/hpl/hpl/local/blis/install
+export MPI_HOME=/home/lulu/binbin/mylib/ompi
+export BLAS_HOME=/home/lulu/binbin/mylib/openblas
 
 export PATH=$PATH:$MPI_HOME/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MPI_HOME/lib:$BLAS_HOME/lib

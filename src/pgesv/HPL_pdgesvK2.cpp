@@ -131,8 +131,10 @@ void HPL_pdgesvK2
    for( k = 0; k < depth; k++ )
    {
       jb = Mmin( nn, nb );
-      HPL_pdpanel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
-                       tag, &panel[k] );
+      HPL_BE_panel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
+                       tag, &panel[k], T_HIP);
+      // HPL_pdpanel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
+      //                  tag, &panel[k] );
       nn -= jb; jstart += jb;
       if( mycol == icurcol ) { jj += jb; nq -= jb; }
       icurcol = MModAdd1( icurcol, npcol );
@@ -141,8 +143,10 @@ void HPL_pdgesvK2
 /*
  * Create last depth+1 panel
  */
-   HPL_pdpanel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
-                    jstart, tag, &panel[depth] );
+   HPL_BE_panel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
+                    jstart, tag, &panel[depth], T_HIP);
+   // HPL_pdpanel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
+   //                  jstart, tag, &panel[depth] );
    tag = MNxtMgid( tag, MSGID_BEGIN_FACT, MSGID_END_FACT );
 /*
  * Initialize the lookahead - Factor jstart columns: panel[0..depth-1]
@@ -153,12 +157,18 @@ void HPL_pdgesvK2
 /*
  * Factor and broadcast k-th panel
  */
+#ifdef ROCM
+      HPL_BE_panel_send_to_host( panel[k], T_HIP );
+#endif
       HPL_pdfact(         panel[k] );
       (void) HPL_binit(   panel[k] );
       do
       { (void) HPL_bcast( panel[k], &test ); }
       while( test != HPL_SUCCESS );
       (void) HPL_bwait(   panel[k] );
+#ifdef ROCM
+      HPL_BE_panel_send_to_device( panel[k], T_HIP );
+#endif
 /*
  * Partial update of the depth-k-1 panels in front of me
  */
@@ -187,15 +197,23 @@ void HPL_pdgesvK2
  * Initialize current panel - Finish latest update, Factor and broadcast
  * current panel
  */
-      (void) HPL_pdpanel_free( panel[depth] );
-      HPL_pdpanel_init( GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth] );
+      HPL_BE_panel_free(panel[depth], T_HIP);
+      HPL_BE_panel_init(GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth], T_HIP);
+      // (void) HPL_pdpanel_free( panel[depth] );
+      // HPL_pdpanel_init( GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth] );
 
       if( mycol == icurcol )
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
          for( k = 0; k < depth; k++ )   /* partial updates 0..depth-1 */
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
+#ifdef ROCM
+         HPL_BE_panel_send_to_host( panel[depth], T_HIP);
+#endif
          HPL_pdfact(       panel[depth] );    /* factor current panel */
+#ifdef ROCM
+         HPL_BE_panel_send_to_device(panel[depth], T_HIP);   
+#endif
       }
       else { nn = 0; }
           /* Finish the latest update and broadcast the current panel */
@@ -222,9 +240,11 @@ void HPL_pdgesvK2
    for( k = 0; k < depth; k++ )
    {
       (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-      (void) HPL_pdpanel_disp(  &panel[k] );
+      (void) HPL_BE_panel_disp(  &panel[k], T_HIP);
+      // (void) HPL_pdpanel_disp(  &panel[k] );
    }
-   (void) HPL_pdpanel_disp( &panel[depth] );
+   (void) HPL_BE_panel_disp( &panel[depth], T_HIP);
+   // (void) HPL_pdpanel_disp( &panel[depth] );
 
    //Adil
    if( panel ) HPL_BE_free((void**)&panel, T_DEFAULT);

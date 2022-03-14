@@ -54,6 +54,42 @@ extern "C" {
       }
    }
 
+    /*
+   * Allocate the panel resources
+   */
+   void HPL_BE_panel_new(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB,
+                         HPL_T_pmat *A, const int IA, const int JA, const int TAG, HPL_T_panel **PANEL, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::panel_new, GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::panel_new, GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+            break;
+         default:
+            HPL::dispatch(CPU::panel_new, GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+      }
+   }
+    
+    /*
+   * Initialize the panel resources
+   */
+   void HPL_BE_panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB,
+                         HPL_T_pmat *A, const int IA, const int JA, const int TAG, HPL_T_panel *PANEL, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::panel_init, GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::panel_init, GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+            break;
+         default:
+            HPL::dispatch(CPU::panel_init, GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+      }
+   }
+
    /*
    * Deallocate the panel resources
    */
@@ -68,6 +104,34 @@ extern "C" {
             break;
          default:
             HPL::dispatch(CPU::panel_free, ptr);
+      }
+   }
+
+   void HPL_BE_panel_send_to_device(HPL_T_panel* PANEL, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::panel_send_to_device, PANEL);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+
+   void HPL_BE_panel_send_to_host(HPL_T_panel* PANEL, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::panel_send_to_host, PANEL);
+            break;
+         default:
+            DO_NOTHING();
       }
    }
 
@@ -346,6 +410,19 @@ extern "C" {
             break;
          default:
             DO_NOTHING();
+      }
+   }
+   void HPL_BE_dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV, enum HPL_TARGET TR) 
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::dlaswp00N, M, N, A, LDA, IPIV);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dlaswp00N, M, N, A, LDA, IPIV);
+            break;
+         default:
+            HPL::dispatch(CPU::dlaswp00N, M, N, A, LDA, IPIV);
       }
    }
 } //extern "C"
