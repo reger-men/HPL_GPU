@@ -1,29 +1,34 @@
 #include "backend/hpl_backendCPU.h"
-#include <hpl.h>
 
 void CPU::malloc(void** ptr, size_t size)
 {
     CPUInfo("%-25s %-12ld (B) \t%-5s", "[Allocate]", "Memory of size",  size, "CPU");
-    #if 0
     *ptr = std::malloc(size);
-    #endif
-    hipHostMalloc(ptr, size, hipHostMallocDefault);
-
 }
 
 void CPU::free(void** ptr)
 {
-    //std::free(*ptr);
-    hipHostFree(*ptr);
+    std::free(*ptr);
+}
+
+void CPU::panel_new(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB, HPL_T_pmat *A,
+               const int IA, const int JA, const int TAG, HPL_T_panel **PANEL)
+{
+    CPUInfo("%-40s \t%-5s", "[Allocate]", "Panel new", "CPU");
+    HPL_pdpanel_new(GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
+}
+
+void CPU::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB, 
+                        HPL_T_pmat *A, const int IA, const int JA, const int TAG, HPL_T_panel *PANEL)
+{
+    CPUInfo("%-40s \t%-5s", "[Allocate]", "Panel init", "CPU");
+    HPL_pdpanel_init(GRID, ALGO, M, N, JB, A, IA, JA, TAG, PANEL);
 }
 
 int CPU::panel_free(HPL_T_panel *ptr)
 {
     CPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel resources", "CPU");
-    if( ptr->WORK  ) HIP_CHECK_ERROR(hipHostFree( ptr->WORK  ));
-    if( ptr->IWORK ) HIP_CHECK_ERROR(hipHostFree( ptr->IWORK ));
-    return( MPI_SUCCESS );
-    // return HPL_pdpanel_free( ptr );
+    return HPL_pdpanel_free( ptr );
 }
 
 int CPU::panel_disp(HPL_T_panel **ptr)
@@ -139,4 +144,10 @@ void CPU::atcpy(const int M, const int N, const double *A, const int LDA,
 {
     CPUInfo("%-25s %-8d%-8d \t%-5s", "[LATCOPY]", "With A of (R:C)", M, N, "CPU");
     HPL_dlatcpy(M, N, A, LDA, B, LDB);
+}
+
+void CPU::dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV)
+{
+    CPUInfo("%-25s %-8d%-8d \t%-5s", "[DLASWP00N]", "With A of (R:C)", M, N, "CPU");
+    HPL_dlaswp00N( M, N, A, LDA, IPIV);
 }

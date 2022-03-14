@@ -48,6 +48,7 @@
  * Include files
  */
 #include "hpl.h"
+
 #ifdef STDC_HEADERS
 void HPL_pdtest
 (
@@ -135,10 +136,6 @@ void HPL_pdtest
 /* ..
  * .. Executable Statements ..
  */
-// rocblas_handle handle;
-
-//    rocblas_create_handle(&handle);
-
    (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
 
    mat.n  = N; mat.nb = NB; mat.info = 0;
@@ -164,11 +161,18 @@ void HPL_pdtest
 /*
  * Allocate dynamic memory
  */
+#ifdef ROCM
+   size_t bytes = (((size_t)( (size_t)(ALGO->align) +
+                                 (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
+                                  sizeof(double)+(size_t)4095)/(size_t)4096)*(size_t)4096;
+#else
    //Adil: temp: generate mat on CPU and move it to the CPU. FIXME: Generate the correct Matrix.
    size_t bytes = ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double);
+#endif
 
-   // void * d_vptr = NULL;
-   HPL_BE_malloc((void**)&vptr, bytes, T_CPU);
+   void * d_vptr = NULL;
+   HPL_BE_malloc((void**)&d_vptr, bytes, T_HIP);
+   hipHostMalloc(&vptr, bytes,0); 
    // vptr = (void*)malloc(bytes);
 
    info[0] = (vptr == NULL); info[1] = myrow; info[2] = mycol;
@@ -187,24 +191,20 @@ void HPL_pdtest
       /*if (vptr) free(vptr);*/
       return;
    }
-
-    if( ( myrow == 0 ) && ( mycol == 0 ) )
-   {
-      printf("Allocating %g GBs of storage on CPU...", ((double) bytes)/(1024*1024*1024)); fflush(stdout);
-   }
 /*
  * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
  */
    mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
    //Adil
-   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_CPU);
+   // HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_CPU);
    //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 
-#if 0
+#if 1
    mat.d_A  = (double *)HPL_PTR( d_vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.d_X  = Mptr( mat.d_A, 0, mat.nq, mat.ld );
-   HPL_BE_move_data(mat.d_A, mat.A, (N*(N+1)) * sizeof(double), M_H2D, T_HIP);
+   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);
+   HPL_BE_move_data(mat.A, mat.d_A, (N*mat.ld) * sizeof(double), M_H2D, T_HIP);
    /*{
     // Last row is the vector b
     for(int y=0;y<6; y++){
@@ -379,8 +379,11 @@ void HPL_pdtest
  * and norm inf of b - A x. Display residual checks.
  */
    //Adil
-   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   // HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
    /*HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );*/
+   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);   
+   hipMemcpy(vptr, d_vptr, bytes, hipMemcpyDeviceToHost);
+
    Anorm1 = HPL_pdlange( GRID, HPL_NORM_1, N, N, NB, mat.A, mat.ld );
    AnormI = HPL_pdlange( GRID, HPL_NORM_I, N, N, NB, mat.A, mat.ld );
 /*
@@ -481,7 +484,8 @@ void HPL_pdtest
       }
    }
    //Adil
-   if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
+   // if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
+   if( vptr ) HIP_CHECK_ERROR(hipHostFree((vptr)));
    //if( vptr ) free( vptr );
 /*
  * End of HPL_pdtest

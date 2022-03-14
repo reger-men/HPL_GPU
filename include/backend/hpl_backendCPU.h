@@ -9,6 +9,7 @@ extern "C" {
 #include "hpl_pmatgen.h"
 #include "hpl_blas.h"
 #include "hpl_panel.h"
+#include "hpl_pauxil.h"
 }
 
 //#define HPL_PRINT_INFO
@@ -24,6 +25,11 @@ extern "C" {
 namespace CPU {
     void malloc(void**, size_t);
     void free(void **);
+    void panel_new(HPL_T_grid *, HPL_T_palg *, const int, const int, const int, HPL_T_pmat *,
+                   const int, const int, const int, HPL_T_panel **);
+    void panel_init(HPL_T_grid *, HPL_T_palg *, const int,
+                    const int, const int, HPL_T_pmat *,
+                    const int, const int, const int, HPL_T_panel *);
     int panel_free(HPL_T_panel *);
     int panel_disp(HPL_T_panel**);
 
@@ -69,4 +75,5 @@ namespace CPU {
     void acpy(const int, const int, const double *, const int, double *, const int);                
     void atcpy(const int, const int, const double *, const int,
                 double *, const int);                 
+    void dlaswp00N(const int, const int, double *, const int, const int *);
 }

@@ -153,11 +153,7 @@ void HPL_pdgesv0
       { (void) HPL_bcast(       panel[0], &test ); }
       while( test != HPL_SUCCESS );
       (void) HPL_bwait(         panel[0] );
-
       HPL_pdupdate( NULL, NULL, panel[0], -1 );
-
-
-      // hipDeviceSynchronize();
 /*
  * Update message id for next factorization
  */
