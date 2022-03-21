@@ -184,17 +184,13 @@ void HPL_pdupdateNN
 #ifdef HPL_DETAILED_TIMING
          HPL_ptimer( HPL_TIMING_LASWP );
          HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
-         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
          HPL_ptimer( HPL_TIMING_LASWP );
 #else
          HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
-         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
 #endif
 
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
-         /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
 #ifdef HPL_CALL_VSIPL
 /*
  * Create the matrix subviews
@@ -213,13 +209,6 @@ void HPL_pdupdateNN
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
-         // //Adil
-         // HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-         //            jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-         //            Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
-         /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                    jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda );*/
 #endif
          Aptr = Mptr( Aptr, 0, nn, lda ); nq0 += nn; 
 
@@ -233,19 +222,14 @@ void HPL_pdupdateNN
 #ifdef HPL_DETAILED_TIMING
          HPL_ptimer( HPL_TIMING_LASWP );
          HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
-         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
          HPL_ptimer( HPL_TIMING_LASWP );
 #else
          HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
-         // HPL_dlaswp00N( jb, nn, Aptr, lda, ipiv );
+
 #endif
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
-         // //Adil
-         // HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-         //            HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_DEFAULT);
-         /*HPL_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda );*/
+
 #ifdef HPL_CALL_VSIPL
 /*
  * Create the matrix subviews
@@ -264,13 +248,9 @@ void HPL_pdupdateNN
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
                     Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
-         // //Adil
-         // HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-         //            jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-         //            Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
-         /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                    jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda );*/
+
+
+
 #endif
       }
 #ifdef HPL_CALL_VSIPL
@@ -338,8 +318,7 @@ void HPL_pdupdateNN
          //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplLeft,  HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Uptr, LDU, T_DEFAULT);
-         /*HPL_dtrsm( HplColumnMajor, HplLeft,  HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Uptr, LDU );*/
+
          if( curr != 0 )
          {
 #ifdef HPL_CALL_VSIPL
@@ -361,13 +340,10 @@ void HPL_pdupdateNN
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
-            /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                       jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Mptr( Aptr, jb, 0, lda ), lda );*/
+
+
 #endif
-            //Adil
             HPL_BE_dlacpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
-            /*HPL_dlacpy( jb, nn, Uptr, LDU, Aptr, lda );*/
          }
          else
          {
@@ -386,13 +362,11 @@ void HPL_pdupdateNN
             (void) vsip_mdestroy_d( Av1 );
             (void) vsip_mdestroy_d( Uv1 );
 #else
-            //Adil
+
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Aptr, lda, T_DEFAULT);
-            /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                       jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Aptr, lda );*/
+
 #endif
          }
          Uptr = Mptr( Uptr, 0, nn, LDU );
@@ -403,6 +377,7 @@ void HPL_pdupdateNN
 /*
  * The panel has been forwarded at that point, finish the update
  */
+      printf("nn = %d\n", n - nq0);
       if( ( nn = n - nq0 ) > 0 )
       {
          //Adil
@@ -428,16 +403,11 @@ void HPL_pdupdateNN
             (void) vsip_mdestroy_d( Av1 );
             (void) vsip_mdestroy_d( Uv1 );
 #else
-            //Adil
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
-            /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                       jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Mptr( Aptr, jb, 0, lda ), lda );*/
 #endif
-            //Adil
-            HPL_BE_dlacpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
+         HPL_BE_dlacpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
             /*HPL_dlacpy( jb, nn, Uptr, LDU, Aptr, lda );*/
          }
          else
@@ -457,13 +427,9 @@ void HPL_pdupdateNN
             (void) vsip_mdestroy_d( Av1 );
             (void) vsip_mdestroy_d( Uv1 );
 #else
-            //Adil
-            HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
+         HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Aptr, lda, T_DEFAULT);
-            /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
-                       jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Aptr, lda );*/
 #endif
          }
       }
@@ -502,4 +468,11 @@ void HPL_pdupdateNN
 /*
  * End of HPL_pdupdateNN
  */
+      //  hipDeviceSynchronize();
+
+      //    printf("After DGEMM ..........   \n");
+      //     for(int i = 0; i < 8; i++){
+      //       printf("A[%d] = %f    ", i, PANEL->dA[i]);
+      //    }
+      //    printf("\n\n");  
 }

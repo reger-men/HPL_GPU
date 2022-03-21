@@ -170,6 +170,10 @@ extern "C" {
             HPL::dispatch(CPU::matgen, GRID, M, N, NB, A, LDA, ISEED);
       }
    }
+   // void HPL_BE_event_record(enum HPL_EVENT _event, HPL_TARGET TR)
+   // {
+   //    HPL::dispatch(HIP::event_record, _event);
+   // }
 
 /*
 *  ----------------------------------------------------------------------

@@ -2,22 +2,48 @@
 #include <hpl.h>
 
 
+
 void HIP::init(size_t num_gpus)
 {
-    int rank, size, count;    
+    int rank, size, count, namelen; 
+    size_t bytes;
+    char (*host_names)[MPI_MAX_PROCESSOR_NAME];
+
+
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
+    printf("rank = %d,  size = %d\n", rank, size);
+    MPI_Get_processor_name(host_name,&namelen);
+
+    bytes = size * sizeof(char[MPI_MAX_PROCESSOR_NAME]);
+    host_names = (char (*)[MPI_MAX_PROCESSOR_NAME])std::malloc(bytes);
+
+
+    strcpy(host_names[rank], host_name);
+
+    for (int n=0; n < size; n++){
+        MPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD);
+    }
+    int localRank = 0;
+    for (int n = 0; n < rank; n++){
+        if (!strcmp(host_name, host_names[n])) localRank++;
+    }
+    int localSize = 0;
+    for (int n = 0; n < size; n++){
+        if (!strcmp(host_name, host_names[n])) localSize++;
+    }
+
 
     hipDeviceProp_t hipDeviceProp;
     HIP_CHECK_ERROR(hipGetDeviceCount(&count));
-    
     //TODO: set dynamic device id
-    int device_id = 0; 
-
+    int device_id = localRank % count; 
     HIP_CHECK_ERROR(hipSetDevice(device_id));
 
     // Get device properties
     HIP_CHECK_ERROR(hipGetDeviceProperties(&hipDeviceProp, device_id));
+    printf ("Assigning device %d on node %s to rank %d \n", localRank % count,  host_name, rank);
+
 
     GPUInfo("%-25s %-12s \t%-5s", "[Device]", "Using HIP Device",  hipDeviceProp.name, "With Properties:");
     GPUInfo("%-25s %-20lld", "[GlobalMem]", "Total Global Memory",  (unsigned long long int)hipDeviceProp.totalGlobalMem);
@@ -39,6 +65,20 @@ void HIP::init(size_t num_gpus)
     //Init ROCBlas
     rocblas_initialize();
     ROCBLAS_CHECK_STATUS(rocblas_create_handle(&_handle));
+    rocblas_set_pointer_mode(_handle, rocblas_pointer_mode_host);
+    HIP_CHECK_ERROR(hipStreamCreate(&computeStream));
+    HIP_CHECK_ERROR(hipStreamCreate(&dataStream));
+    
+    ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
+    
+    HIP_CHECK_ERROR(hipEventCreate(&panelUpdate));
+    HIP_CHECK_ERROR(hipEventCreate(&panelCopy));
+    HIP_CHECK_ERROR(hipEventCreate(&dlaswpStart));
+    HIP_CHECK_ERROR(hipEventCreate(&dlaswpStop));
+    HIP_CHECK_ERROR(hipEventCreate(&dtrsmStart));
+    HIP_CHECK_ERROR(hipEventCreate(&dtrsmStop));
+    HIP_CHECK_ERROR(hipEventCreate(&dgemmStart));
+    HIP_CHECK_ERROR(hipEventCreate(&dgemmStop));
 
     _memcpyKind[0] = "H2H";
     _memcpyKind[1] = "H2D";
@@ -61,6 +101,9 @@ void HIP::malloc(void** ptr, size_t size)
 void HIP::free(void** ptr)
 {
     HIP_CHECK_ERROR(hipFree(*ptr));
+    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(_handle));
+    HIP_CHECK_ERROR(hipStreamDestroy(computeStream));
+    HIP_CHECK_ERROR(hipStreamDestroy(dataStream));
 }
 
 void HIP::panel_new(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB, HPL_T_pmat *A,
@@ -274,43 +317,7 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
         PANEL->dU    = PANEL->dL1   + JB * JB;;
     }
 
-    /*
-    * If nprow is 1, we just allocate an array of JB integers for the swap.
-    * When nprow > 1, we allocate the space for the index arrays immediate-
-    * ly. The exact size of this array depends on the swapping routine that
-    * will be used, so we allocate the maximum:
-    *
-    *    IWORK[0] is of size at most 1      +
-    *    IPL      is of size at most 1      +
-    *    IPID     is of size at most 4 * JB +
-    *
-    *    For HPL_pdlaswp00:
-    *       lindxA   is of size at most 2 * JB +
-    *       lindxAU  is of size at most 2 * JB +
-    *       llen     is of size at most NPROW  +
-    *       llen_sv  is of size at most NPROW.
-    *
-    *    For HPL_pdlaswp01:
-    *       ipA      is of size ar most 1      +
-    *       lindxA   is of size at most 2 * JB +
-    *       lindxAU  is of size at most 2 * JB +
-    *       iplen    is of size at most NPROW  + 1 +
-    *       ipmap    is of size at most NPROW  +
-    *       ipmapm1  is of size at most NPROW  +
-    *       permU    is of size at most JB     +
-    *       iwork    is of size at most MAX( 2*JB, NPROW+1 ).
-    *
-    * that is  3 + 8*JB + MAX(2*NPROW, 3*NPROW+1+JB+MAX(2*JB,NPROW+1))
-    *       =  4 + 9*JB + 3*NPROW + MAX( 2*JB, NPROW+1 ).
-    *
-    * We use the fist entry of this to work array  to indicate  whether the
-    * the  local  index arrays have already been computed,  and if yes,  by
-    * which function:
-    *    IWORK[0] = -1: no index arrays have been computed so far;
-    *    IWORK[0] =  0: HPL_pdlaswp00 already computed those arrays;
-    *    IWORK[0] =  1: HPL_pdlaswp01 already computed those arrays;
-    * This allows to save some redundant and useless computations.
-    */
+
     if( nprow == 1 ) { lwork = 3*JB; }
     else
     {
@@ -355,11 +362,16 @@ void HIP::panel_send_to_host(HPL_T_panel *PANEL)
 {
     int jb = PANEL->jb;
     
-    if( ( PANEL->grid->mycol != PANEL->pcol ) || ( jb <= 0 ) ) return;;
-    hipMemcpy2D(PANEL->A,  PANEL->lda*sizeof(double),
+    if( ( PANEL->grid->mycol != PANEL->pcol ) || ( jb <= 0 ) ) return;
+    hipMemcpy2DAsync(PANEL->A,  PANEL->lda*sizeof(double),
                     PANEL->dA, PANEL->lda*sizeof(double),
                     PANEL->mp*sizeof(double), jb,
-                    hipMemcpyDeviceToHost);
+                    hipMemcpyDeviceToHost, dataStream);
+    // hipMemcpy2D(PANEL->A,  PANEL->lda*sizeof(double),
+    //                 PANEL->dA, PANEL->lda*sizeof(double),
+    //                 PANEL->mp*sizeof(double), jb,
+    //                 hipMemcpyDeviceToHost);
+
 }
 
 void HIP::panel_send_to_device(HPL_T_panel *PANEL)
@@ -376,34 +388,44 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
 
         // copy A and/or L2
 #ifdef HPL_COPY_L
-#error "HPL_COPY_L not supported with ROCM"
 #else
     if (PANEL->grid->mycol == PANEL->pcol)
     { // L2 reuses A
         A = Mptr(PANEL->A, 0, -jb, PANEL->lda);
         dA = Mptr(PANEL->dA, 0, -jb, PANEL->lda);
 
-        hipMemcpy2D(dA, PANEL->lda * sizeof(double),
+        hipMemcpy2DAsync(dA, PANEL->lda * sizeof(double),
                          A, PANEL->lda * sizeof(double),
                          PANEL->mp * sizeof(double), jb,
-                         hipMemcpyHostToDevice);
+                         hipMemcpyHostToDevice, dataStream);
+        // hipMemcpy2D(dA, PANEL->lda * sizeof(double),
+        //                  A, PANEL->lda * sizeof(double),
+        //                  PANEL->mp * sizeof(double), jb,
+        //                  hipMemcpyHostToDevice);
     }
     else
     {
         ml2 = (PANEL->grid->myrow == PANEL->prow ? PANEL->mp - jb : PANEL->mp);
         if (ml2 > 0)
-            hipMemcpy2D(PANEL->dL2, PANEL->ldl2 * sizeof(double),
+            hipMemcpy2DAsync(PANEL->dL2, PANEL->ldl2 * sizeof(double),
                              PANEL->L2, PANEL->ldl2 * sizeof(double),
                              ml2 * sizeof(double), jb,
-                             hipMemcpyHostToDevice);
+                             hipMemcpyHostToDevice, dataStream);
+            // hipMemcpy2D(PANEL->dL2, PANEL->ldl2 * sizeof(double),
+            //                  PANEL->L2, PANEL->ldl2 * sizeof(double),
+            //                  ml2 * sizeof(double), jb,
+            //                  hipMemcpyHostToDevice);
     }
 #endif
     // copy L1
-    hipMemcpy2D(PANEL->dL1, jb * sizeof(double),
+    hipMemcpy2DAsync(PANEL->dL1, jb * sizeof(double),
                      PANEL->L1, jb * sizeof(double),
                      jb * sizeof(double), jb,
-                     hipMemcpyHostToDevice);
-
+                     hipMemcpyHostToDevice, dataStream);
+    // hipMemcpy2D(PANEL->dL1, jb * sizeof(double),
+    //                  PANEL->L1, jb * sizeof(double),
+    //                  jb * sizeof(double), jb,
+    //                  hipMemcpyHostToDevice);
     // unroll pivoting and send to device
     int *ipiv = PANEL->IWORK;
     int *dipiv = PANEL->dIWORK;
@@ -441,14 +463,23 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
         }
     }
 
-    hipMemcpy2D(dipiv, jb * sizeof(int),
+    hipMemcpy2DAsync(dipiv, jb * sizeof(int),
                      upiv, jb * sizeof(int),
                      jb * sizeof(int), 1,
-                     hipMemcpyHostToDevice);
-    hipMemcpy2D(dipiv_ex, jb * sizeof(int),
+                     hipMemcpyHostToDevice, dataStream);
+    hipMemcpy2DAsync(dipiv_ex, jb * sizeof(int),
                      ipiv_ex, jb * sizeof(int),
                      jb * sizeof(int), 1,
-                     hipMemcpyHostToDevice);
+                     hipMemcpyHostToDevice, dataStream);
+
+    // hipMemcpy2D(dipiv, jb * sizeof(int),
+    //                  upiv, jb * sizeof(int),
+    //                  jb * sizeof(int), 1,
+    //                  hipMemcpyHostToDevice);
+    // hipMemcpy2D(dipiv_ex, jb * sizeof(int),
+    //                  ipiv_ex, jb * sizeof(int),
+    //                  jb * sizeof(int), 1,
+    //                  hipMemcpyHostToDevice);
 }
 
 int HIP::panel_free(HPL_T_panel *PANEL)
@@ -524,15 +555,6 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
     if( ( mp <= 0 ) || ( nq <= 0 ) ) return;
     mp = (mp<LDA) ? LDA : mp;
     
-    // rocrand_generator generator;
-    // ROCRAND_CHECK_STATUS(rocrand_create_generator(&generator, ROCRAND_RNG_PSEUDO_DEFAULT)); // ROCRAND_RNG_PSEUDO_DEFAULT));
-    // ROCRAND_CHECK_STATUS(rocrand_set_seed(generator, ISEED));
-
-    // //TODO: generate numbers in this range (-0.5, 0.5]
-    // ROCRAND_CHECK_STATUS(rocrand_generate_normal_double(generator, A, mp*nq, 0, 0.1));
-    // ROCRAND_CHECK_STATUS(rocrand_destroy_generator(generator));
-    // //gPrintMat(5,5,LDA,A);
-    
     unsigned long long pos1 = myrow*nq + mycol*mp*M;
     rocrand_generator generator;
     rocrand_create_generator(&generator, ROCRAND_RNG_PSEUDO_DEFAULT);
@@ -544,6 +566,25 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
     hipDeviceSynchronize();
 
     rocrand_destroy_generator(generator);
+}
+
+void HIP::event_record(enum HIP::HPL_EVENT _event){
+    switch (_event)
+    {
+    case PANEL_COPY:
+    HIP_CHECK_ERROR(hipEventRecord(panelCopy, dataStream));
+    HIP_CHECK_ERROR(hipEventSynchronize(panelCopy));        
+    break;
+
+    case PANEL_UPDATE:
+    HIP_CHECK_ERROR(hipEventRecord(panelUpdate, dataStream));
+    HIP_CHECK_ERROR(hipEventSynchronize(panelUpdate));
+    break;
+    
+    default:
+        break;
+    }
+   
 }
 
 int HIP::idamax(const int N, const double *DX, const int INCX)
@@ -729,8 +770,8 @@ void HIP::move_data(double *DST, const double *SRC, const size_t SIZE, const int
 __global__ void _dlaswp00N(const int N, const int M,
                      double* __restrict__ A,
                      const int LDA,
-                    //  const int* __restrict__ IPIV) {
-                     const int* IPIV) {
+                     const int* __restrict__ IPIV) {
+                    //  const int* IPIV) {
 
    __shared__ double s_An_init[2048];
    __shared__ double s_An_ipiv[2048];
@@ -773,8 +814,10 @@ __global__ void _dlaswp00N(const int N, const int M,
 void HIP::dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV)
 {
     GPUInfo("%-25s %-8d%-8d \t%-5s", "[DLASWP00N]", "With A of (R:C)", M, N, "HIP");
+    hipStream_t stream;
+    rocblas_get_stream(_handle, &stream);
+
     const int block_size = 512, grid_size = N;
-    hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, 0,
+    hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, stream,
                                       N, M, A, LDA, IPIV);
-    hipDeviceSynchronize();
 }

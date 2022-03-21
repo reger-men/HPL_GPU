@@ -70,6 +70,8 @@ extern "C" {
 
 
 namespace HIP {
+enum HPL_EVENT {PANEL_COPY, PANEL_UPDATE};
+
     void init(size_t);
     void release();
 
@@ -88,7 +90,7 @@ namespace HIP {
     void matgen(const HPL_T_grid *, const int, const int,
                  const int, double *, const int,
                  const int);
-
+    void event_record(enum HPL_EVENT);
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------
@@ -135,6 +137,13 @@ namespace HIP {
     // BLAS members
     namespace {
       rocblas_handle _handle;
+      static char     host_name[MPI_MAX_PROCESSOR_NAME];
+      hipStream_t computeStream, dataStream;
+      hipEvent_t panelUpdate;
+      hipEvent_t panelCopy;
+      hipEvent_t dlaswpStart, dlaswpStop;
+      hipEvent_t dtrsmStart, dtrsmStop;
+      hipEvent_t dgemmStart, dgemmStop;
       std::map<int, const char*> _memcpyKind;
     }
 }
