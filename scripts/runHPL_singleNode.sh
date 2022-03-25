@@ -1,8 +1,8 @@
 #!/bin/bash
 
-MPI_DIR=/home/lulu/ompi/bin
+MPI_DIR=$HOME/hpl-lib/ompi/bin
 num_cpu_cores=16
-num_process=16
+num_process=4
 
 # FOR OMP
 export OMP_NUM_THREADS=${num_cpu_cores}

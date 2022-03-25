@@ -667,7 +667,7 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
     HIP::free((void**)&d_C);
 #endif
 
-    hipDeviceSynchronize();                         
+    // hipDeviceSynchronize();                         
 }
 
 void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
