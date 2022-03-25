@@ -155,7 +155,7 @@ void HPL_pdgesvK2
       HPL_BE_panel_send_to_host( panel[k], T_HIP );
       // hipEventRecord(panelCopy, dataStream);
       // hipEventSynchronize(panelCopy);
-      HIP::event_record(HIP::PANEL_COPY);
+      HIP::event_record(HIP::HPL_PANEL_COPY);
 
       HPL_pdfact(         panel[k] );
       (void) HPL_binit(   panel[k] );
@@ -223,7 +223,7 @@ void HPL_pdgesvK2
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
          // hipEventRecord(panelCopy, dataStream);
          // hipEventSynchronize(panelCopy);
-         HIP::event_record(HIP::PANEL_COPY);
+         HIP::event_record(HIP::HPL_PANEL_COPY);
 
          HPL_pdfact(       panel[depth] );    /* factor current panel */
          (void) HPL_binit(   panel[depth] );
@@ -235,7 +235,7 @@ void HPL_pdgesvK2
          HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
          // hipEventRecord(panelUpdate, dataStream); 
          // hipEventSynchronize(panelUpdate);
-         HIP::event_record(HIP::PANEL_UPDATE);
+         HIP::event_record(HIP::HPL_PANEL_UPDATE);
 
       }
       else { 
@@ -251,7 +251,7 @@ void HPL_pdgesvK2
       HPL_BE_panel_send_to_device( panel[depth], T_HIP);
       // hipEventRecord(panelUpdate, dataStream);
       // hipEventSynchronize(panelUpdate);
-      HIP::event_record(HIP::PANEL_UPDATE);
+      HIP::event_record(HIP::HPL_PANEL_UPDATE);
       }
 
      hipDeviceSynchronize();

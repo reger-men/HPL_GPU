@@ -70,7 +70,7 @@ extern "C" {
 
 
 namespace HIP {
-enum HPL_EVENT {PANEL_COPY, PANEL_UPDATE};
+enum HPL_EVENT {HPL_PANEL_COPY, HPL_PANEL_UPDATE};
 
     void init(size_t);
     void release();

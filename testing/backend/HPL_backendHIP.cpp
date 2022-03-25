@@ -571,12 +571,12 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
 void HIP::event_record(enum HIP::HPL_EVENT _event){
     switch (_event)
     {
-    case PANEL_COPY:
+    case HPL_PANEL_COPY:
     HIP_CHECK_ERROR(hipEventRecord(panelCopy, dataStream));
     HIP_CHECK_ERROR(hipEventSynchronize(panelCopy));        
     break;
 
-    case PANEL_UPDATE:
+    case HPL_PANEL_UPDATE:
     HIP_CHECK_ERROR(hipEventRecord(panelUpdate, dataStream));
     HIP_CHECK_ERROR(hipEventSynchronize(panelUpdate));
     break;
