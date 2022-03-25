@@ -468,11 +468,4 @@ void HPL_pdupdateNN
 /*
  * End of HPL_pdupdateNN
  */
-      //  hipDeviceSynchronize();
-
-      //    printf("After DGEMM ..........   \n");
-      //     for(int i = 0; i < 8; i++){
-      //       printf("A[%d] = %f    ", i, PANEL->dA[i]);
-      //    }
-      //    printf("\n\n");  
 }

@@ -153,8 +153,6 @@ void HPL_pdgesvK2
  * Factor and broadcast k-th panel
  */
       HPL_BE_panel_send_to_host( panel[k], T_HIP );
-      // hipEventRecord(panelCopy, dataStream);
-      // hipEventSynchronize(panelCopy);
       HIP::event_record(HIP::HPL_PANEL_COPY);
 
       HPL_pdfact(         panel[k] );
@@ -201,11 +199,6 @@ void HPL_pdgesvK2
       if( mycol == icurcol )
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
-         // printf("Before update panel[k] ..........\n");
-         // for(int i = 0; i < 8; i++){
-         //    printf("A[%d] = %f    ", i, panel[k]->dA[i]);
-         // }
-         // printf("\n\n");
          for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
          }

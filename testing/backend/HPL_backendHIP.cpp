@@ -367,11 +367,6 @@ void HIP::panel_send_to_host(HPL_T_panel *PANEL)
                     PANEL->dA, PANEL->lda*sizeof(double),
                     PANEL->mp*sizeof(double), jb,
                     hipMemcpyDeviceToHost, dataStream);
-    // hipMemcpy2D(PANEL->A,  PANEL->lda*sizeof(double),
-    //                 PANEL->dA, PANEL->lda*sizeof(double),
-    //                 PANEL->mp*sizeof(double), jb,
-    //                 hipMemcpyDeviceToHost);
-
 }
 
 void HIP::panel_send_to_device(HPL_T_panel *PANEL)
@@ -398,10 +393,6 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
                          A, PANEL->lda * sizeof(double),
                          PANEL->mp * sizeof(double), jb,
                          hipMemcpyHostToDevice, dataStream);
-        // hipMemcpy2D(dA, PANEL->lda * sizeof(double),
-        //                  A, PANEL->lda * sizeof(double),
-        //                  PANEL->mp * sizeof(double), jb,
-        //                  hipMemcpyHostToDevice);
     }
     else
     {
@@ -411,10 +402,6 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
                              PANEL->L2, PANEL->ldl2 * sizeof(double),
                              ml2 * sizeof(double), jb,
                              hipMemcpyHostToDevice, dataStream);
-            // hipMemcpy2D(PANEL->dL2, PANEL->ldl2 * sizeof(double),
-            //                  PANEL->L2, PANEL->ldl2 * sizeof(double),
-            //                  ml2 * sizeof(double), jb,
-            //                  hipMemcpyHostToDevice);
     }
 #endif
     // copy L1
@@ -422,10 +409,6 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
                      PANEL->L1, jb * sizeof(double),
                      jb * sizeof(double), jb,
                      hipMemcpyHostToDevice, dataStream);
-    // hipMemcpy2D(PANEL->dL1, jb * sizeof(double),
-    //                  PANEL->L1, jb * sizeof(double),
-    //                  jb * sizeof(double), jb,
-    //                  hipMemcpyHostToDevice);
     // unroll pivoting and send to device
     int *ipiv = PANEL->IWORK;
     int *dipiv = PANEL->dIWORK;
@@ -471,15 +454,6 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
                      ipiv_ex, jb * sizeof(int),
                      jb * sizeof(int), 1,
                      hipMemcpyHostToDevice, dataStream);
-
-    // hipMemcpy2D(dipiv, jb * sizeof(int),
-    //                  upiv, jb * sizeof(int),
-    //                  jb * sizeof(int), 1,
-    //                  hipMemcpyHostToDevice);
-    // hipMemcpy2D(dipiv_ex, jb * sizeof(int),
-    //                  ipiv_ex, jb * sizeof(int),
-    //                  jb * sizeof(int), 1,
-    //                  hipMemcpyHostToDevice);
 }
 
 int HIP::panel_free(HPL_T_panel *PANEL)
