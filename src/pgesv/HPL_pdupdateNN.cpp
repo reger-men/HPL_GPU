@@ -377,7 +377,6 @@ void HPL_pdupdateNN
 /*
  * The panel has been forwarded at that point, finish the update
  */
-      printf("nn = %d\n", n - nq0);
       if( ( nn = n - nq0 ) > 0 )
       {
          //Adil

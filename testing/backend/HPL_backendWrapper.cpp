@@ -152,6 +152,19 @@ extern "C" {
       }
    }
 
+   void HPL_BE_device_sync(HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::device_sync);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
    /*
    * Matrix generator
    */

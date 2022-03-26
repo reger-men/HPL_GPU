@@ -91,6 +91,7 @@ enum HPL_EVENT {HPL_PANEL_COPY, HPL_PANEL_UPDATE};
                  const int, double *, const int,
                  const int);
     void event_record(enum HPL_EVENT);
+    void device_sync();
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

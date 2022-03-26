@@ -795,3 +795,7 @@ void HIP::dlaswp00N(const int M, const int N, double * A, const int LDA, const i
     hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, stream,
                                       N, M, A, LDA, IPIV);
 }
+
+void HIP::device_sync() {
+    HIP_CHECK_ERROR(hipDeviceSynchronize());
+}

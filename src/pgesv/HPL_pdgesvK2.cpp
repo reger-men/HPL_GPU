@@ -163,7 +163,7 @@ void HPL_pdgesvK2
       (void) HPL_bwait(   panel[k] );
 
       HPL_BE_panel_send_to_device( panel[k], T_HIP );
-      hipDeviceSynchronize();
+      HPL_BE_device_sync(T_HIP);
 /*
  * Partial update of the depth-k-1 panels in front of me
  */
@@ -171,8 +171,7 @@ void HPL_pdgesvK2
       {
          nn = HPL_numrocI( jstart-j, j, nb, nb, mycol, 0, npcol );
          HPL_pdupdate( NULL, NULL, panel[k], nn );
-         hipDeviceSynchronize();
-         
+         HPL_BE_device_sync(T_HIP);
       }
    }
 /*
@@ -202,15 +201,8 @@ void HPL_pdgesvK2
          for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
          }
+         HPL_BE_device_sync(T_HIP);
 
-         hipDeviceSynchronize();
-
-         // printf("After update panel[k] ..........\n");
-         // for(int i = 0; i < 8; i++){
-         //    printf("A[%d] = %f    ", i, panel[k]->dA[i]);
-         // }
-         // printf("\n\n");
-         // printf("-----------------------------------------------------------------\n");
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
 
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
@@ -242,12 +234,10 @@ void HPL_pdgesvK2
       (void) HPL_bwait( panel[depth] );
 
       HPL_BE_panel_send_to_device( panel[depth], T_HIP);
-      // hipEventRecord(panelUpdate, dataStream);
-      // hipEventSynchronize(panelUpdate);
       HIP::event_record(HIP::HPL_PANEL_UPDATE);
       }
 
-     hipDeviceSynchronize();
+     HPL_BE_device_sync(T_HIP);
 /*
  * Circular  of the panel pointers:
  * xtmp = x[0]; for( k=0; k < depth; k++ ) x[k] = x[k+1]; x[d] = xtmp;
@@ -268,7 +258,7 @@ void HPL_pdgesvK2
    for( k = 0; k < depth; k++ )
    {
       (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-      hipDeviceSynchronize();
+      HPL_BE_device_sync(T_HIP);
       (void) HPL_BE_panel_disp(  &panel[k], T_HIP);
       // (void) HPL_pdpanel_disp(  &panel[k] );
    }
