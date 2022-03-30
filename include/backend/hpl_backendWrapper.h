@@ -43,6 +43,7 @@ void HPL_BE_dmatgen(const HPL_T_grid *, const int, const int,
                  const int, double *, const int,
                  const int, enum HPL_TARGET);
 
+void HPL_BE_device_sync(enum HPL_TARGET);
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

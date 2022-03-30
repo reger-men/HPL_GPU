@@ -120,7 +120,6 @@ void HPL_pdgesvK2
  */
    //Adil
    HPL_BE_malloc((void**)&panel, (size_t)(depth+1) * sizeof( HPL_T_panel *), T_DEFAULT);
-   /*panel = (HPL_T_panel **)malloc( (size_t)(depth+1) * sizeof( HPL_T_panel *) );*/
    if( panel == NULL )
    { HPL_pabort( __LINE__, "HPL_pdgesvK2", "Memory allocation failed" ); }
 /*
@@ -133,8 +132,6 @@ void HPL_pdgesvK2
       jb = Mmin( nn, nb );
       HPL_BE_panel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
                        tag, &panel[k], T_HIP);
-      // HPL_pdpanel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
-      //                  tag, &panel[k] );
       nn -= jb; jstart += jb;
       if( mycol == icurcol ) { jj += jb; nq -= jb; }
       icurcol = MModAdd1( icurcol, npcol );
@@ -145,8 +142,6 @@ void HPL_pdgesvK2
  */
    HPL_BE_panel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
                     jstart, tag, &panel[depth], T_HIP);
-   // HPL_pdpanel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
-   //                  jstart, tag, &panel[depth] );
    tag = MNxtMgid( tag, MSGID_BEGIN_FACT, MSGID_END_FACT );
 /*
  * Initialize the lookahead - Factor jstart columns: panel[0..depth-1]
@@ -157,18 +152,18 @@ void HPL_pdgesvK2
 /*
  * Factor and broadcast k-th panel
  */
-#ifdef ROCM
       HPL_BE_panel_send_to_host( panel[k], T_HIP );
-#endif
+      HIP::event_record(HIP::HPL_PANEL_COPY);
+
       HPL_pdfact(         panel[k] );
       (void) HPL_binit(   panel[k] );
       do
       { (void) HPL_bcast( panel[k], &test ); }
       while( test != HPL_SUCCESS );
       (void) HPL_bwait(   panel[k] );
-#ifdef ROCM
+
       HPL_BE_panel_send_to_device( panel[k], T_HIP );
-#endif
+      HPL_BE_device_sync(T_HIP);
 /*
  * Partial update of the depth-k-1 panels in front of me
  */
@@ -176,6 +171,7 @@ void HPL_pdgesvK2
       {
          nn = HPL_numrocI( jstart-j, j, nb, nb, mycol, 0, npcol );
          HPL_pdupdate( NULL, NULL, panel[k], nn );
+         HPL_BE_device_sync(T_HIP);
       }
    }
 /*
@@ -199,27 +195,49 @@ void HPL_pdgesvK2
  */
       HPL_BE_panel_free(panel[depth], T_HIP);
       HPL_BE_panel_init(GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth], T_HIP);
-      // (void) HPL_pdpanel_free( panel[depth] );
-      // HPL_pdpanel_init( GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth] );
-
       if( mycol == icurcol )
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
-         for( k = 0; k < depth; k++ )   /* partial updates 0..depth-1 */
+         for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-#ifdef ROCM
+         }
+         HPL_BE_device_sync(T_HIP);
+
+         HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
+
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
-#endif
+         // hipEventRecord(panelCopy, dataStream);
+         // hipEventSynchronize(panelCopy);
+         HIP::event_record(HIP::HPL_PANEL_COPY);
+
          HPL_pdfact(       panel[depth] );    /* factor current panel */
-#ifdef ROCM
-         HPL_BE_panel_send_to_device(panel[depth], T_HIP);   
-#endif
+         (void) HPL_binit(   panel[depth] );
+         do
+         { (void) HPL_bcast( panel[depth], &test ); }
+         while( test != HPL_SUCCESS );
+         (void) HPL_bwait(   panel[depth] );
+
+         HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
+         // hipEventRecord(panelUpdate, dataStream); 
+         // hipEventSynchronize(panelUpdate);
+         HIP::event_record(HIP::HPL_PANEL_UPDATE);
+
       }
-      else { nn = 0; }
+      else { 
+         nn = 0; 
+         HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
           /* Finish the latest update and broadcast the current panel */
       (void) HPL_binit( panel[depth] );
-      HPL_pdupdate( panel[depth], &test, panel[0], nq-nn );
+      do
+      { (void) HPL_bcast( panel[depth], &test ); }
+      while( test != HPL_SUCCESS );
       (void) HPL_bwait( panel[depth] );
+
+      HPL_BE_panel_send_to_device( panel[depth], T_HIP);
+      HIP::event_record(HIP::HPL_PANEL_UPDATE);
+      }
+
+     HPL_BE_device_sync(T_HIP);
 /*
  * Circular  of the panel pointers:
  * xtmp = x[0]; for( k=0; k < depth; k++ ) x[k] = x[k+1]; x[d] = xtmp;
@@ -240,15 +258,14 @@ void HPL_pdgesvK2
    for( k = 0; k < depth; k++ )
    {
       (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
+      HPL_BE_device_sync(T_HIP);
       (void) HPL_BE_panel_disp(  &panel[k], T_HIP);
       // (void) HPL_pdpanel_disp(  &panel[k] );
    }
    (void) HPL_BE_panel_disp( &panel[depth], T_HIP);
    // (void) HPL_pdpanel_disp( &panel[depth] );
 
-   //Adil
    if( panel ) HPL_BE_free((void**)&panel, T_DEFAULT);
-   /*if( panel ) free( panel );*/
 /*
  * End of HPL_pdgesvK2
  */

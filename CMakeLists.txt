@@ -36,11 +36,23 @@ set(CMAKE_CXX_FLAGS_Release "${CMAKE_C_FLAGS_Release} -O3")
 ADD_DEFINITIONS(-DROCM=1)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/HPL.dat
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/runHPL_singleNode.sh
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # don't need MPI C++ bindings, now deprecated
-list(APPEND CMAKE_PREFIX_PATH "/home/lulu/binbin/mylib/ompi")
+if(NOT DEFINED MPI_DIR)
+  if(DEFINED ENV{MPI_DIR})
+    set(MPI_DIR $ENV{MPI_DIR})
+    list(APPEND CMAKE_PREFIX_PATH ${MPI_DIR})
+    include_directories(${MPI_DIR}/include)
+  endif()
+else()
+  list(APPEND CMAKE_PREFIX_PATH ${MPI_DIR})
+  include_directories(${MPI_DIR}/include)
+endif()
+
+# list(APPEND CMAKE_PREFIX_PATH "/home/lulu/ompi")
 set( MPI_CXX_SKIP_MPICXX ON )
 find_package( MPI REQUIRED )
-include_directories(/home/lulu/binbin/mylib/ompi/include)
 
 # search for rocRAND/hipRAND-config.cmake in CMAKE_PREFIX_PATH
 find_package(rocrand)
@@ -59,7 +71,17 @@ else ()
     endif ()
 endif ()
 
-list(APPEND CMAKE_PREFIX_PATH "/home/lulu/binbin/mylib/openblas")
+# list(APPEND CMAKE_PREFIX_PATH "/home/lulu/OpenBLAS")
+if(NOT DEFINED BLAS_DIR)
+  if(DEFINED ENV{BLAS_DIR})
+    set(BLAS_DIR $ENV{BLAS_DIR})
+    list(APPEND CMAKE_PREFIX_PATH ${BLAS_DIR})
+    # include_directories(${BLAS_DIR}/include)
+  endif()
+else()
+  list(APPEND CMAKE_PREFIX_PATH ${BLAS_DIR})
+  # include_directories(${BLAS_DIR}/include)
+endif()
 find_package( BLAS REQUIRED )
 
 # append math library, if found

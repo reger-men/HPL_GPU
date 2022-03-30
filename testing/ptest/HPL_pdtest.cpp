@@ -166,15 +166,10 @@ void HPL_pdtest
                                  (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
                                   sizeof(double)+(size_t)4095)/(size_t)4096)*(size_t)4096;
 #else
-   //Adil: temp: generate mat on CPU and move it to the CPU. FIXME: Generate the correct Matrix.
    size_t bytes = ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double);
 #endif
-
-   void * d_vptr = NULL;
-   HPL_BE_malloc((void**)&d_vptr, bytes, T_HIP);
-   hipHostMalloc(&vptr, bytes,0); 
-   // vptr = (void*)malloc(bytes);
-
+   //Allocate mem on host.
+   hipHostMalloc(&vptr, bytes, 0); 
    info[0] = (vptr == NULL); info[1] = myrow; info[2] = mycol;
    (void) HPL_all_reduce( (void *)(info), 3, HPL_INT, HPL_max,
                           GRID->all_comm );
@@ -183,39 +178,37 @@ void HPL_pdtest
       if( ( myrow == 0 ) && ( mycol == 0 ) )
          HPL_pwarn( TEST->outfp, __LINE__, "HPL_pdtest",
                     "[%d,%d] %s", info[1], info[2],
-                    "Memory allocation failed for A, x and b. Skip." );
+                    "Pinned Host Memory allocation failed for A, x and b. Skip." );
       (TEST->kskip)++;
-      /* some processes might have succeeded with allocation */
-      //Adil
       if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
-      /*if (vptr) free(vptr);*/
       return;
+    }
+
+   void * d_vptr = NULL;
+   HPL_BE_malloc((void**)&d_vptr, bytes, T_HIP);
+   info[0] = (d_vptr==NULL);
+   info[1] = myrow; info[2] = mycol;
+   (void) HPL_all_reduce( (void *)(info), 3, HPL_INT, HPL_max,
+                          GRID->all_comm );
+   if( info[0] != 0 ) {
+     HPL_pwarn( TEST->outfp, __LINE__, "HPL_pdtest",
+                  "[%d,%d] %s", info[1], info[2],
+                  "Device memory allocation failed for A, x and b. Skip." );
+     (TEST->kskip)++;
+     return;
    }
 /*
  * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
  */
    mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
-   //Adil
-   // HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_CPU);
-   //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
 
-#if 1
    mat.d_A  = (double *)HPL_PTR( d_vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.d_X  = Mptr( mat.d_A, 0, mat.nq, mat.ld );
+
    HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);
-   HPL_BE_move_data(mat.A, mat.d_A, (N*mat.ld) * sizeof(double), M_H2D, T_HIP);
-   /*{
-    // Last row is the vector b
-    for(int y=0;y<6; y++){
-        for(int x=0;x<4; x++){
-            int index = x+y*mat.ld;
-            printf("%-4d:%-8lf\t", index, mat.d_A[index]);
-        }
-        printf("\n");
-    }
-   }*/
-#endif
+   // HPL_BE_move_data(mat.A, mat.d_A, (N*mat.ld) * sizeof(double), M_H2D, T_HIP);
+
 
 #ifdef HPL_CALL_VSIPL
    mat.block = vsip_blockbind_d( (vsip_scalar_d *)(mat.A),
