@@ -20,6 +20,7 @@ enum HPL_MOVE_DIRECTION {M_H2H = 0,
                          M_D2H = 2,
                          M_D2D = 3,
                          M_DEFAULT = 4};
+enum HPL_EVENT {HPL_PANEL_COPY, HPL_PANEL_UPDATE};
 
 
 void HPL_BE_init(size_t, enum HPL_TARGET);
@@ -44,6 +45,9 @@ void HPL_BE_dmatgen(const HPL_T_grid *, const int, const int,
                  const int, enum HPL_TARGET);
 
 void HPL_BE_device_sync(enum HPL_TARGET);
+
+void HPL_BE_event_record(enum HPL_EVENT, enum HPL_TARGET);
+
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

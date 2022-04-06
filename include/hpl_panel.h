@@ -103,6 +103,7 @@ typedef struct HPL_S_panel
    unsigned int max_work_size;  /* largest size of WORK space */
    unsigned int max_iwork_size; /* largest size of IWORK space */
    unsigned int free_work_now;  /* should we deallocate */
+   int ldu0;
 #endif
 
 #ifdef HPL_CALL_VSIPL
