@@ -57,7 +57,7 @@ extern "C" {
 
 #define GPUError(...) GPUInfo(__VA_ARGS__)
 
-//#define HPL_PRINT_INFO
+// #define HPL_PRINT_INFO
 #ifdef HPL_PRINT_INFO
 #define GPUInfo(msg, ...)                             \
 {                                                     \
@@ -70,8 +70,6 @@ extern "C" {
 
 
 namespace HIP {
-enum HPL_EVENT {HPL_PANEL_COPY, HPL_PANEL_UPDATE};
-
     void init(size_t);
     void release();
 

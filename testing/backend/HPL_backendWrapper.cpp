@@ -165,6 +165,19 @@ extern "C" {
             DO_NOTHING();
       }
    }
+   void HPL_BE_event_record(HPL_EVENT event, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::event_record, event);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
    /*
    * Matrix generator
    */

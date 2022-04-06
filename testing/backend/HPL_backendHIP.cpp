@@ -131,7 +131,7 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
     size_t                     dalign;
     int                        icurcol, icurrow, ii, itmp1, jj, lwork,
                                 ml2, mp, mycol, myrow, nb, npcol, nprow,
-                                nq, nu;
+                                nq, nu, ldu;
     /* ..
     * .. Executable Statements ..
     */
@@ -187,6 +187,7 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
     */
     PANEL->ldl2    = 0;               /* local leading dim of array L2 */
     PANEL->len     = 0;           /* length of the buffer to broadcast */
+    PANEL->ldu0    = 0;
     /*
     * Figure out the exact amount of workspace  needed by the factorization
     * and the update - Allocate that space - Finish the panel data structu-
@@ -206,8 +207,9 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
     if( npcol == 1 )                             /* P x 1 process grid */
     {                                     /* space for L1, DPIV, DINFO */
         lwork = ALGO->align + ( PANEL->len = JB * JB + JB + 1 );
-        if( nprow > 1 )                                 /* space for U */
-        { nu = nq - JB; lwork += JB * Mmax( 0, nu ); }
+        // if( nprow > 1 )                                 /* space for U */
+        { nu = nq - JB; ldu = nu + 256; lwork += JB * Mmax( 0, nu ); }
+        
 
         if(PANEL->max_work_size<(size_t)(lwork) * sizeof( double ))
         {
@@ -243,7 +245,9 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
         PANEL->DINFO = PANEL->DPIV + JB;
         *(PANEL->DINFO) = 0.0;
         PANEL->U     = ( nprow > 1 ? PANEL->DINFO + 1: NULL );
-        PANEL->dU    = (double *)HPL_PTR( PANEL->WORK, dalign ) + JB * JB;
+        PANEL->dU    = (double *)HPL_PTR( PANEL->dWORK, dalign ) + JB * JB;
+        PANEL->ldu0  = Mmin(JB, nu);
+
     }
     else
     {                                        /* space for L2, L1, DPIV */
@@ -255,7 +259,7 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
         lwork = ALGO->align + ( mycol == icurcol ? itmp1 : PANEL->len );
     #endif
 
-        if( nprow > 1 )                                 /* space for U */
+        // if( nprow > 1 )                                 /* space for U */
         {
             nu = ( mycol == icurcol ? nq - JB : nq );
             lwork += JB * Mmax( 0, nu );
@@ -476,13 +480,6 @@ int HIP::panel_free(HPL_T_panel *PANEL)
     }
     return (MPI_SUCCESS);
 }
-// int HIP::panel_free(HPL_T_panel *ptr)
-// {
-//     GPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel resources", "HIP");
-//     if( ptr->WORK  ) HIP_CHECK_ERROR(hipFree( ptr->WORK  ));
-//     if( ptr->IWORK ) HIP_CHECK_ERROR(hipFree( ptr->IWORK ));
-//     return( MPI_SUCCESS );
-// }
 
 int HIP::panel_disp(HPL_T_panel **PANEL)
 {
@@ -494,14 +491,6 @@ int HIP::panel_disp(HPL_T_panel **PANEL)
     *PANEL = NULL;
     return( err );
 }
-// int HIP::panel_disp(HPL_T_panel **ptr)
-// {
-//     GPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel structure", "HIP");
-//     int err = HIP::panel_free(*ptr);
-//     if(*ptr) HIP_CHECK_ERROR(hipFree( ptr ));
-//     *ptr = NULL;
-//     return( err );
-// }
 
 void gPrintMat(const int M, const int N, const int LDA, const double *A)
 {
@@ -536,13 +525,12 @@ void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
     rocrand_set_offset(generator, pos1);
 
     rocrand_generate_uniform_double(generator,A, ((size_t)mp)*nq);
-    // rocrand_generate_normal_double(generator, A, mp*nq, 0.0, 0.25);
     hipDeviceSynchronize();
 
     rocrand_destroy_generator(generator);
 }
 
-void HIP::event_record(enum HIP::HPL_EVENT _event){
+void HIP::event_record(enum HPL_EVENT _event){
     switch (_event)
     {
     case HPL_PANEL_COPY:
@@ -601,7 +589,7 @@ void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
                 const enum HPL_DIAG DIAG, const int M, const int N, 
                 const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
 {
-    GPUInfo("%-25s %-8d%-8d \t%-5s", "[TRSM]", "With B of (R:C)", M, N, "HIP");
+    GPUInfo("%-25s %-8d%-8d%-8d%-8d \t%-5s", "[TRSM]", "With B of (R:C)", M, N, LDA, LDB, "HIP");
 #if 1
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
@@ -622,7 +610,6 @@ void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
     HIP::free((void**)&d_A);
     HIP::free((void**)&d_B);
 #endif    
-    hipDeviceSynchronize();
 }
 
 void HIP::trsv(const enum HPL_ORDER ORDER, const enum HPL_UPLO UPLO,
@@ -667,7 +654,6 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
     HIP::free((void**)&d_C);
 #endif
 
-    // hipDeviceSynchronize();                         
 }
 
 void HIP::dgemv(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANS, const int M, const int N,
@@ -713,11 +699,40 @@ void HIP::acpy(const int M, const int N, const double *A, const int LDA,
 #define BLOCK_ROWS 16
 
 __global__ void 
-__launch_bounds__(TILE_DIM *BLOCK_ROWS)  
 _dlatcpy(const int M, const int N, const double* __restrict__ A, const int LDA,
          double* __restrict__ B, const int LDB) 
 {
+  __shared__ double s_tile[TILE_DIM][TILE_DIM + 1];
 
+  int I = blockIdx.x * TILE_DIM + threadIdx.y;
+  int J = blockIdx.y * TILE_DIM + threadIdx.x;
+
+  if(J < N) {
+    if(I + 0 < M)
+      s_tile[threadIdx.y + 0][threadIdx.x] = A[((size_t)I + 0) * LDA + J];
+    if(I + 16 < M)
+      s_tile[threadIdx.y + 16][threadIdx.x] = A[((size_t)I + 16) * LDA + J];
+    if(I + 32 < M)
+      s_tile[threadIdx.y + 32][threadIdx.x] = A[((size_t)I + 32) * LDA + J];
+    if(I + 48 < M)
+      s_tile[threadIdx.y + 48][threadIdx.x] = A[((size_t)I + 48) * LDA + J];
+  }
+
+  I = blockIdx.x * TILE_DIM + threadIdx.x;
+  J = blockIdx.y * TILE_DIM + threadIdx.y;
+
+  __syncthreads();
+
+  if(I < M) {
+    if(J + 0 < N)
+      B[I + ((size_t)J + 0) * LDB] = s_tile[threadIdx.x][threadIdx.y + 0];
+    if(J + 16 < N)
+      B[I + ((size_t)J + 16) * LDB] = s_tile[threadIdx.x][threadIdx.y + 16];
+    if(J + 32 < N)
+      B[I + ((size_t)J + 32) * LDB] = s_tile[threadIdx.x][threadIdx.y + 32];
+    if(J + 48 < N)
+      B[I + ((size_t)J + 48) * LDB] = s_tile[threadIdx.x][threadIdx.y + 48];
+  }
 }
 
 /*
@@ -727,9 +742,12 @@ void HIP::atcpy(const int M, const int N, const double *A, const int LDA,
                 double *B, const int LDB)
 {
     GPUInfo("%-25s %-8d%-8d \t%-5s", "[LATCOPY]", "With A of (R:C)", M, N, "HIP");
-    dim3 grid_size((M+TILE_DIM-1)/TILE_DIM, (N+TILE_DIM-1)/TILE_DIM);
+    hipStream_t stream;
+    rocblas_get_stream(_handle, &stream);
+    dim3 grid_size((M + TILE_DIM - 1) / TILE_DIM, (N + TILE_DIM - 1) / TILE_DIM);
     dim3 block_size(TILE_DIM, BLOCK_ROWS);
-    _dlatcpy<<<grid_size, block_size, 0, 0>>>(M, N, A, LDA, B, LDB);
+    hipLaunchKernelGGL((_dlatcpy), grid_size, block_size, 0, stream, M, N, A, LDA, B, LDB);
+
 }
 
 void HIP::move_data(double *DST, const double *SRC, const size_t SIZE, const int KIND)

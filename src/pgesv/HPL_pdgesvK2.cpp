@@ -153,7 +153,7 @@ void HPL_pdgesvK2
  * Factor and broadcast k-th panel
  */
       HPL_BE_panel_send_to_host( panel[k], T_HIP );
-      HIP::event_record(HIP::HPL_PANEL_COPY);
+      HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
 
       HPL_pdfact(         panel[k] );
       (void) HPL_binit(   panel[k] );
@@ -206,9 +206,8 @@ void HPL_pdgesvK2
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
 
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
-         // hipEventRecord(panelCopy, dataStream);
-         // hipEventSynchronize(panelCopy);
-         HIP::event_record(HIP::HPL_PANEL_COPY);
+
+         HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
 
          HPL_pdfact(       panel[depth] );    /* factor current panel */
          (void) HPL_binit(   panel[depth] );
@@ -218,9 +217,8 @@ void HPL_pdgesvK2
          (void) HPL_bwait(   panel[depth] );
 
          HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
-         // hipEventRecord(panelUpdate, dataStream); 
-         // hipEventSynchronize(panelUpdate);
-         HIP::event_record(HIP::HPL_PANEL_UPDATE);
+
+         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
 
       }
       else { 
@@ -234,7 +232,7 @@ void HPL_pdgesvK2
       (void) HPL_bwait( panel[depth] );
 
       HPL_BE_panel_send_to_device( panel[depth], T_HIP);
-      HIP::event_record(HIP::HPL_PANEL_UPDATE);
+      HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
       }
 
      HPL_BE_device_sync(T_HIP);

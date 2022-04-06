@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MPI_DIR=$HOME/hpl-lib/ompi/bin
+MPI_DIR=$HOME/ompi/bin
 num_cpu_cores=16
 num_process=4
 
