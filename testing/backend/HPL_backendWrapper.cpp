@@ -178,6 +178,32 @@ extern "C" {
             DO_NOTHING();
       }
    }
+   void HPL_BE_stream_sync(enum HPL_STREAM stream, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::one_stream_sync, stream);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+   void HPL_BE_set_stream_handle(enum HPL_UPDATE_FLAG flag, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::set_stream_handle, flag);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
    /*
    * Matrix generator
    */

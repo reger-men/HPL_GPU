@@ -65,10 +65,16 @@ void HIP::init(size_t num_gpus)
     //Init ROCBlas
     rocblas_initialize();
     ROCBLAS_CHECK_STATUS(rocblas_create_handle(&_handle));
+    ROCBLAS_CHECK_STATUS(rocblas_create_handle(&small_handle));
+    ROCBLAS_CHECK_STATUS(rocblas_create_handle(&large_handle));
     rocblas_set_pointer_mode(_handle, rocblas_pointer_mode_host);
+    rocblas_set_pointer_mode(small_handle, rocblas_pointer_mode_host);
+    rocblas_set_pointer_mode(large_handle, rocblas_pointer_mode_host); 
     HIP_CHECK_ERROR(hipStreamCreate(&computeStream));
     HIP_CHECK_ERROR(hipStreamCreate(&dataStream));
-    
+    HIP_CHECK_ERROR(hipStreamCreate(&small_stream));
+    HIP_CHECK_ERROR(hipStreamCreate(&large_stream));  
+
     ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
     
     HIP_CHECK_ERROR(hipEventCreate(&panelUpdate));
@@ -90,6 +96,8 @@ void HIP::init(size_t num_gpus)
 void HIP::release()
 {
     ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(_handle));
+    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(small_handle));
+    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(large_handle));
 }
 
 void HIP::malloc(void** ptr, size_t size)
@@ -492,7 +500,7 @@ int HIP::panel_disp(HPL_T_panel **PANEL)
     return( err );
 }
 
-void gPrintMat(const int M, const int N, const int LDA, const double *A)
+void HIP::gPrintMat(const int M, const int N, const int LDA, const double *A)
 {
     // Last row is the vector b
     for(int y=0;y<M+1; y++){
@@ -502,6 +510,38 @@ void gPrintMat(const int M, const int N, const int LDA, const double *A)
         }
         printf("\n");
     }
+}
+
+void HIP::writeMat(const int M, const int N, const int LDA, const double *A, int type)
+{
+    // Last row is the vector b
+    FILE* fp = fopen("mat.txt", "a");
+    
+    double *tmp;
+    CPU::malloc((void**)&tmp, N * LDA * sizeof(double));
+    HIP_CHECK_ERROR(hipMemcpy(tmp, A, N * LDA * sizeof(double), hipMemcpyDefault));
+    if (type == 0)
+        fprintf(fp, "fact\n");
+    else if (type == 1)
+        fprintf(fp, "small\n");
+    else if (type == 2)
+        fprintf(fp, "large\n");
+    else if (type == 3)
+        fprintf(fp, "last\n");
+    for(int y = 0; y < M; y++){
+        for(int x = 0 ; x < N; x++){
+            int index = y + LDA * x;
+            // printf("%-4d:%-8lf\t", index, tmp[index]);
+            fprintf(fp, "%.2lf ", tmp[index]);
+        }
+        // printf("\n");
+        fprintf(fp, "\n");
+    }
+
+    fprintf(fp, "\n");
+
+    CPU::free((void**)&tmp);
+    fclose(fp);
 }
 
 void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
@@ -816,4 +856,33 @@ void HIP::dlaswp00N(const int M, const int N, double * A, const int LDA, const i
 
 void HIP::device_sync() {
     HIP_CHECK_ERROR(hipDeviceSynchronize());
+}
+
+void HIP::set_stream_handle(HPL_UPDATE_FLAG flag) {
+    if (flag == HPL_SMALL_UPDATE) {
+        _handle = small_handle;
+        computeStream = small_stream;
+        ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
+    } 
+    else if (flag == HPL_LARGE_UPDATE) {
+        _handle = large_handle;
+        computeStream = large_stream;
+        ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
+    }
+}
+
+void HIP::stream_sync(hipStream_t stream) {
+    HIP_CHECK_ERROR(hipStreamSynchronize(stream));
+}
+
+void HIP::one_stream_sync(enum HPL_STREAM stream) {
+    if (stream == HPL_COMPUTE_STREAM) {
+        HIP_CHECK_ERROR(hipStreamSynchronize(computeStream));
+    }
+    else if (stream == HPL_SMALL_STREAM) {
+        HIP_CHECK_ERROR(hipStreamSynchronize(small_stream));
+    }
+    else if (stream == HPL_LARGE_STREAM) {
+        HIP_CHECK_ERROR(hipStreamSynchronize(large_stream));
+    }
 }

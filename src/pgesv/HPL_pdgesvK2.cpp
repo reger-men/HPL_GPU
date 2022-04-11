@@ -199,10 +199,12 @@ void HPL_pdgesvK2
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
          for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
+            HPL_BE_set_stream_handle(HPL_SMALL_UPDATE, T_HIP);
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
          }
          HPL_BE_device_sync(T_HIP);
 
+         HPL_BE_set_stream_handle(HPL_LARGE_UPDATE, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
 
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
@@ -223,16 +225,17 @@ void HPL_pdgesvK2
       }
       else { 
          nn = 0; 
+         HPL_BE_set_stream_handle(HPL_LARGE_UPDATE, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
           /* Finish the latest update and broadcast the current panel */
-      (void) HPL_binit( panel[depth] );
-      do
-      { (void) HPL_bcast( panel[depth], &test ); }
-      while( test != HPL_SUCCESS );
-      (void) HPL_bwait( panel[depth] );
+         (void) HPL_binit( panel[depth] );
+         do
+         { (void) HPL_bcast( panel[depth], &test ); }
+         while( test != HPL_SUCCESS );
+         (void) HPL_bwait( panel[depth] );
 
-      HPL_BE_panel_send_to_device( panel[depth], T_HIP);
-      HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
+         HPL_BE_panel_send_to_device( panel[depth], T_HIP);
+         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
       }
 
      HPL_BE_device_sync(T_HIP);
