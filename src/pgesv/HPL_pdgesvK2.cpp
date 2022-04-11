@@ -225,14 +225,14 @@ void HPL_pdgesvK2
          nn = 0; 
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
           /* Finish the latest update and broadcast the current panel */
-      (void) HPL_binit( panel[depth] );
-      do
-      { (void) HPL_bcast( panel[depth], &test ); }
-      while( test != HPL_SUCCESS );
-      (void) HPL_bwait( panel[depth] );
+         (void) HPL_binit( panel[depth] );
+         do
+         { (void) HPL_bcast( panel[depth], &test ); }
+         while( test != HPL_SUCCESS );
+         (void) HPL_bwait( panel[depth] );
 
-      HPL_BE_panel_send_to_device( panel[depth], T_HIP);
-      HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
+         HPL_BE_panel_send_to_device( panel[depth], T_HIP);
+         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
       }
 
      HPL_BE_device_sync(T_HIP);

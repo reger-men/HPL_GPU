@@ -2,7 +2,7 @@
 
 MPI_DIR=$HOME/ompi/bin
 num_cpu_cores=16
-num_process=4
+num_process=1
 
 # FOR OMP
 export OMP_NUM_THREADS=${num_cpu_cores}
