@@ -89,6 +89,9 @@ namespace HIP {
                  const int, double *, const int,
                  const int);
     void event_record(enum HPL_EVENT);
+    void stream_sync(hipStream_t stream);
+    void one_stream_sync(enum HPL_STREAM);
+    void set_stream_handle(HPL_UPDATE_FLAG);  
     void device_sync();
 /*
 *  ----------------------------------------------------------------------
@@ -133,11 +136,12 @@ namespace HIP {
 
     void dlaswp00N(const int, const int, double *, const int, const int *);
     void gPrintMat(const int, const int, const int, const double*);
+    void writeMat(const int, const int, const int, const double*, int type);
     // BLAS members
     namespace {
-      rocblas_handle _handle;
+      rocblas_handle _handle, small_handle, large_handle;
       static char     host_name[MPI_MAX_PROCESSOR_NAME];
-      hipStream_t computeStream, dataStream;
+      hipStream_t computeStream, dataStream, small_stream, large_stream;
       hipEvent_t panelUpdate;
       hipEvent_t panelCopy;
       hipEvent_t dlaswpStart, dlaswpStop;

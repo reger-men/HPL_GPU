@@ -21,7 +21,8 @@ enum HPL_MOVE_DIRECTION {M_H2H = 0,
                          M_D2D = 3,
                          M_DEFAULT = 4};
 enum HPL_EVENT {HPL_PANEL_COPY, HPL_PANEL_UPDATE};
-
+enum HPL_STREAM {HPL_COMPUTE_STREAM, HPL_SMALL_STREAM, HPL_LARGE_STREAM};
+enum HPL_UPDATE_FLAG{ HPL_SMALL_UPDATE, HPL_LARGE_UPDATE };
 
 void HPL_BE_init(size_t, enum HPL_TARGET);
 
@@ -48,6 +49,8 @@ void HPL_BE_device_sync(enum HPL_TARGET);
 
 void HPL_BE_event_record(enum HPL_EVENT, enum HPL_TARGET);
 
+void HPL_BE_stream_sync(enum HPL_STREAM, enum HPL_TARGET);
+void HPL_BE_set_stream_handle(enum HPL_UPDATE_FLAG, enum HPL_TARGET);  
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

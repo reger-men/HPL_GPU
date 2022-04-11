@@ -199,10 +199,12 @@ void HPL_pdgesvK2
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
          for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
+            HPL_BE_set_stream_handle(HPL_SMALL_UPDATE, T_HIP);
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
          }
          HPL_BE_device_sync(T_HIP);
 
+         HPL_BE_set_stream_handle(HPL_LARGE_UPDATE, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
 
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
@@ -223,6 +225,7 @@ void HPL_pdgesvK2
       }
       else { 
          nn = 0; 
+         HPL_BE_set_stream_handle(HPL_LARGE_UPDATE, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
           /* Finish the latest update and broadcast the current panel */
          (void) HPL_binit( panel[depth] );
