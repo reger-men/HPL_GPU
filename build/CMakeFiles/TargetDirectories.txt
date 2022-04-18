@@ -1,7 +1,0 @@
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/install/strip.dir
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/install/local.dir
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/edit_cache.dir
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/xhplhip.dir
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/rebuild_cache.dir
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/list_install_components.dir
-/home/lulu/hyc/HPL_GPU/build/CMakeFiles/install.dir

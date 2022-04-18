@@ -72,15 +72,22 @@ void HIP::init(size_t num_gpus)
     rocblas_set_pointer_mode(large_handle, rocblas_pointer_mode_host); 
     HIP_CHECK_ERROR(hipStreamCreate(&computeStream));
     HIP_CHECK_ERROR(hipStreamCreate(&dataStream));
-    HIP_CHECK_ERROR(hipStreamCreate(&small_stream));
-    HIP_CHECK_ERROR(hipStreamCreate(&large_stream));  
-
+    HIP_CHECK_ERROR(hipStreamCreate(&pdlaswpStream));
+    
     ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
     
     HIP_CHECK_ERROR(hipEventCreate(&panelUpdate));
     HIP_CHECK_ERROR(hipEventCreate(&panelCopy));
-    HIP_CHECK_ERROR(hipEventCreate(&dlaswpStart));
-    HIP_CHECK_ERROR(hipEventCreate(&dlaswpStop));
+
+    HIP_CHECK_ERROR(hipEventCreate(&panelSendToHost));
+    HIP_CHECK_ERROR(hipEventCreate(&panelSendToDevice));
+
+    HIP_CHECK_ERROR(hipEventCreate(&pdlaswpStart_1));
+    HIP_CHECK_ERROR(hipEventCreate(&pdlaswpStop_1));
+    HIP_CHECK_ERROR(hipEventCreate(&pdlaswpStart_2));
+    HIP_CHECK_ERROR(hipEventCreate(&pdlaswpStop_2));
+    HIP_CHECK_ERROR(hipEventCreate(&pdlaswpStart_3));
+    HIP_CHECK_ERROR(hipEventCreate(&pdlaswpStop_3));
     HIP_CHECK_ERROR(hipEventCreate(&dtrsmStart));
     HIP_CHECK_ERROR(hipEventCreate(&dtrsmStop));
     HIP_CHECK_ERROR(hipEventCreate(&dgemmStart));
@@ -512,37 +519,6 @@ void HIP::gPrintMat(const int M, const int N, const int LDA, const double *A)
     }
 }
 
-void HIP::writeMat(const int M, const int N, const int LDA, const double *A, int type)
-{
-    // Last row is the vector b
-    FILE* fp = fopen("mat.txt", "a");
-    
-    double *tmp;
-    CPU::malloc((void**)&tmp, N * LDA * sizeof(double));
-    HIP_CHECK_ERROR(hipMemcpy(tmp, A, N * LDA * sizeof(double), hipMemcpyDefault));
-    if (type == 0)
-        fprintf(fp, "fact\n");
-    else if (type == 1)
-        fprintf(fp, "small\n");
-    else if (type == 2)
-        fprintf(fp, "large\n");
-    else if (type == 3)
-        fprintf(fp, "last\n");
-    for(int y = 0; y < M; y++){
-        for(int x = 0 ; x < N; x++){
-            int index = y + LDA * x;
-            // printf("%-4d:%-8lf\t", index, tmp[index]);
-            fprintf(fp, "%.2lf ", tmp[index]);
-        }
-        // printf("\n");
-        fprintf(fp, "\n");
-    }
-
-    fprintf(fp, "\n");
-
-    CPU::free((void**)&tmp);
-    fclose(fp);
-}
 
 void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
@@ -575,19 +551,99 @@ void HIP::event_record(enum HPL_EVENT _event){
     {
     case HPL_PANEL_COPY:
     HIP_CHECK_ERROR(hipEventRecord(panelCopy, dataStream));
+    break;
+
+    case HPL_PANEL_UPDATE:
+    HIP_CHECK_ERROR(hipEventRecord(panelUpdate, computeStream));
+    break;
+
+    case HPL_RS_1:
+    HIP_CHECK_ERROR(hipEventRecord(pdlaswpStop_1, pdlaswpStream));
+    break;
+
+    case HPL_RS_2:
+    HIP_CHECK_ERROR(hipEventRecord(pdlaswpStop_2, pdlaswpStream));
+    break;
+
+    case HPL_RS_3:
+    HIP_CHECK_ERROR(hipEventRecord(pdlaswpStop_3, pdlaswpStream));
+    break;
+
+    default:
+    break;
+    }
+}
+
+void HIP::event_synchronize(enum HPL_EVENT _event){
+    switch (_event)
+    {
+    case HPL_PANEL_COPY:
     HIP_CHECK_ERROR(hipEventSynchronize(panelCopy));        
     break;
 
     case HPL_PANEL_UPDATE:
-    HIP_CHECK_ERROR(hipEventRecord(panelUpdate, dataStream));
     HIP_CHECK_ERROR(hipEventSynchronize(panelUpdate));
+    break;
+
+    case HPL_RS_1:
+    HIP_CHECK_ERROR(hipEventSynchronize(pdlaswpStop_1));
+    break;
+
+    case HPL_RS_2:
+    HIP_CHECK_ERROR(hipEventSynchronize(pdlaswpStop_2));
+    break;
+
+    case HPL_RS_3:
+    HIP_CHECK_ERROR(hipEventSynchronize(pdlaswpStop_3));
     break;
     
     default:
-        break;
+    break;
     }
    
 }
+
+void HIP::stream_synchronize(enum HPL_STREAM _stream){
+    switch (_stream)
+    {
+    case HPL_COMPUTESTREAM:
+    HIP_CHECK_ERROR(hipStreamSynchronize(computeStream));        
+    break;
+    case HPL_DATASTREAM:
+    HIP_CHECK_ERROR(hipStreamSynchronize(dataStream));    
+    break;    
+    case HPL_PDLASWPSTREAM:
+    HIP_CHECK_ERROR(hipStreamSynchronize(pdlaswpStream));        
+    break;
+    default:
+    break;
+    }
+}
+
+void HIP::stream_wait_event(enum HPL_STREAM _stream, enum HPL_EVENT _event){
+    switch (_event)
+    {
+    case HPL_PANEL_UPDATE:
+    HIP_CHECK_ERROR(hipStreamWaitEvent(pdlaswpStream, panelUpdate, 0));        
+    break;
+
+    case HPL_RS_1:
+    HIP_CHECK_ERROR(hipStreamWaitEvent(computeStream, pdlaswpStop_1, 0));        
+    break;
+
+    case HPL_RS_2:
+    HIP_CHECK_ERROR(hipStreamWaitEvent(computeStream, pdlaswpStop_2, 0));        
+    break;
+
+    case HPL_RS_3:
+    HIP_CHECK_ERROR(hipStreamWaitEvent(computeStream, pdlaswpStop_3, 0));        
+    break;
+
+    default:
+    break;
+    }
+}
+
 
 int HIP::idamax(const int N, const double *DX, const int INCX)
 {
@@ -629,7 +685,7 @@ void HIP::trsm( const enum HPL_ORDER ORDER, const enum HPL_SIDE SIDE,
                 const enum HPL_DIAG DIAG, const int M, const int N, 
                 const double ALPHA, const double *A, const int LDA, double *B, const int LDB)
 {
-    GPUInfo("%-25s %-8d%-8d%-8d%-8d \t%-5s", "[TRSM]", "With B of (R:C)", M, N, LDA, LDB, "HIP");
+    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DTRSM]", "With C of (R:C)", M, N, "HIP");
 #if 1
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dtrsm(_handle, (rocblas_side)SIDE, (rocblas_fill)UPLO, (rocblas_operation)TRANSA, 
@@ -669,7 +725,7 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
                 const double *B, const int LDB, const double BETA, double *C, 
                 const int LDC)
 {
-    GPUInfo("%-25s %-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", LDC, N, "HIP");
+    GPUInfo("%-25s %-8d%-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", M, N, K, "HIP");
 #if 1
     //rocBLAS uses column-major storage for 2D arrays
     ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
@@ -849,40 +905,35 @@ void HIP::dlaswp00N(const int M, const int N, double * A, const int LDA, const i
     hipStream_t stream;
     rocblas_get_stream(_handle, &stream);
 
+    hipEvent_t start, stop;
+    float elapsedTime = 0.f; 
+
     const int block_size = 512, grid_size = N;
+    
     hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, stream,
                                       N, M, A, LDA, IPIV);
+
 }
 
 void HIP::device_sync() {
     HIP_CHECK_ERROR(hipDeviceSynchronize());
 }
 
-void HIP::set_stream_handle(HPL_UPDATE_FLAG flag) {
-    if (flag == HPL_SMALL_UPDATE) {
-        _handle = small_handle;
-        computeStream = small_stream;
-        ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
-    } 
-    else if (flag == HPL_LARGE_UPDATE) {
-        _handle = large_handle;
-        computeStream = large_stream;
-        ROCBLAS_CHECK_STATUS(rocblas_set_stream(_handle, computeStream));
-    }
-}
 
-void HIP::stream_sync(hipStream_t stream) {
-    HIP_CHECK_ERROR(hipStreamSynchronize(stream));
-}
+void HIP::pdlaswp(HPL_T_panel *PANEL, const int NN){
+    double * Aptr, * L1ptr, * L2ptr, * Uptr, * dpiv;
+    int * ipiv;
+    int i, jb, lda, mp, n, nb, nq0, nn;
+    nb = PANEL->nb;
+    jb = PANEL->jb;
+    n = PANEL->nq; 
+    lda = PANEL->lda;
+    if( NN >= 0 ) n = Mmin( NN, n );
+    Aptr = PANEL->dA;       L2ptr = PANEL->dL2;   L1ptr = PANEL->dL1;
+    dpiv  = PANEL->DPIV;    ipiv  = PANEL->dIWORK;
+    mp   = PANEL->mp - jb;  nq0   = 0;       nn = n - nq0;
 
-void HIP::one_stream_sync(enum HPL_STREAM stream) {
-    if (stream == HPL_COMPUTE_STREAM) {
-        HIP_CHECK_ERROR(hipStreamSynchronize(computeStream));
-    }
-    else if (stream == HPL_SMALL_STREAM) {
-        HIP_CHECK_ERROR(hipStreamSynchronize(small_stream));
-    }
-    else if (stream == HPL_LARGE_STREAM) {
-        HIP_CHECK_ERROR(hipStreamSynchronize(large_stream));
-    }
+    const int block_size = 512, grid_size = nn;
+    hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, pdlaswpStream,
+                                      nn, jb, Aptr, lda, ipiv);
 }

@@ -230,10 +230,10 @@ void HPL_pdupdateNT
       {
 #ifdef HPL_DETAILED_TIMING
          HPL_ptimer( HPL_TIMING_LASWP );
-         HPL_BE_dlaswp00N( jb, nn, Aptr, lda, ipiv, T_HIP );
+         // HPL_BE_dlaswp00N( jb, nn, Aptr, lda, ipiv, T_HIP );
          HPL_ptimer( HPL_TIMING_LASWP );
 #else
-         HPL_BE_dlaswp00N( jb, nn, Aptr, lda, ipiv, T_HIP );
+         // HPL_BE_dlaswp00N( jb, nn, Aptr, lda, ipiv, T_HIP );
 #endif
          //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,

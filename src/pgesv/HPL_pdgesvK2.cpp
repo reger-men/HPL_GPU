@@ -154,6 +154,7 @@ void HPL_pdgesvK2
  */
       HPL_BE_panel_send_to_host( panel[k], T_HIP );
       HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
+      HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
 
       HPL_pdfact(         panel[k] );
       (void) HPL_binit(   panel[k] );
@@ -163,15 +164,19 @@ void HPL_pdgesvK2
       (void) HPL_bwait(   panel[k] );
 
       HPL_BE_panel_send_to_device( panel[k], T_HIP );
-      HPL_BE_device_sync(T_HIP);
+      HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
+      HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
+
 /*
  * Partial update of the depth-k-1 panels in front of me
  */
       if( k < depth - 1 )
       {
          nn = HPL_numrocI( jstart-j, j, nb, nb, mycol, 0, npcol );
+         HPL_BE_pdlaswp(panel[k], nn, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[k], nn );
-         HPL_BE_device_sync(T_HIP);
+         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
+         HPL_BE_event_synchronize(HPL_PANEL_UPDATE, T_HIP);
       }
    }
 /*
@@ -199,33 +204,49 @@ void HPL_pdgesvK2
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
          for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
-            HPL_BE_set_stream_handle(HPL_SMALL_UPDATE, T_HIP);
+            HPL_BE_pdlaswp(panel[k], nn, T_HIP);
+            HPL_BE_event_record(HPL_RS_1, T_HIP);
+            // overlap row swap2 with update1
+            HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_1, T_HIP);
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
+            HPL_BE_pdlaswp(panel[0], nn * 3, T_HIP);
+            HPL_BE_event_record(HPL_RS_2, T_HIP);
+
          }
          HPL_BE_device_sync(T_HIP);
 
-         HPL_BE_set_stream_handle(HPL_LARGE_UPDATE, T_HIP);
-         HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
+         // split update and row swap step    
+         // overlap row swap3 with update2
+         HPL_pdupdate( NULL, NULL, panel[0], nn * 3 );
+         
+         HPL_BE_pdlaswp(panel[0], nq - (nn * 3), T_HIP);        
+         HPL_BE_event_record(HPL_RS_3, T_HIP);
 
+         //overlap row swap1 of next iteration with update3
+         HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
+
+         HPL_pdupdate( NULL, NULL, panel[0], nq - (nn * 3) );
+
+         // overlap update with data copy
+         
          HPL_BE_panel_send_to_host( panel[depth], T_HIP);
-
          HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
+         HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
 
          HPL_pdfact(       panel[depth] );    /* factor current panel */
          (void) HPL_binit(   panel[depth] );
+
          do
          { (void) HPL_bcast( panel[depth], &test ); }
          while( test != HPL_SUCCESS );
          (void) HPL_bwait(   panel[depth] );
 
          HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
-
-         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
-
+         HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
+         HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
       }
       else { 
          nn = 0; 
-         HPL_BE_set_stream_handle(HPL_LARGE_UPDATE, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
           /* Finish the latest update and broadcast the current panel */
          (void) HPL_binit( panel[depth] );
@@ -236,9 +257,10 @@ void HPL_pdgesvK2
 
          HPL_BE_panel_send_to_device( panel[depth], T_HIP);
          HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
+         HPL_BE_event_synchronize(HPL_PANEL_UPDATE, T_HIP);
       }
 
-     HPL_BE_device_sync(T_HIP);
+   //   HPL_BE_device_sync(T_HIP);
 /*
  * Circular  of the panel pointers:
  * xtmp = x[0]; for( k=0; k < depth; k++ ) x[k] = x[k+1]; x[d] = xtmp;
@@ -251,6 +273,7 @@ void HPL_pdgesvK2
       if( mycol == icurcol ) { jj += jb; nq -= jb; }
       icurcol = MModAdd1( icurcol, npcol );
       tag     = MNxtMgid( tag, MSGID_BEGIN_FACT, MSGID_END_FACT );
+
    }
 /*
  * Clean-up: Finish updates - release panels and panel list
@@ -258,6 +281,7 @@ void HPL_pdgesvK2
    nn = HPL_numrocI( 1, N, nb, nb, mycol, 0, npcol );
    for( k = 0; k < depth; k++ )
    {
+      HPL_BE_pdlaswp(panel[k], nn, T_HIP);
       (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
       HPL_BE_device_sync(T_HIP);
       (void) HPL_BE_panel_disp(  &panel[k], T_HIP);

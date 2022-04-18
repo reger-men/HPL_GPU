@@ -89,9 +89,9 @@ namespace HIP {
                  const int, double *, const int,
                  const int);
     void event_record(enum HPL_EVENT);
-    void stream_sync(hipStream_t stream);
-    void one_stream_sync(enum HPL_STREAM);
-    void set_stream_handle(HPL_UPDATE_FLAG);  
+    void event_synchronize(enum HPL_EVENT);
+    void stream_synchronize(enum HPL_STREAM);
+    void stream_wait_event(enum HPL_STREAM, enum HPL_EVENT);
     void device_sync();
 /*
 *  ----------------------------------------------------------------------
@@ -136,15 +136,18 @@ namespace HIP {
 
     void dlaswp00N(const int, const int, double *, const int, const int *);
     void gPrintMat(const int, const int, const int, const double*);
-    void writeMat(const int, const int, const int, const double*, int type);
+    void pdlaswp(HPL_T_panel *PANEL, const int NN);
+    void pdlaswpTest(HPL_T_panel *PANEL, const int NN);
     // BLAS members
     namespace {
       rocblas_handle _handle, small_handle, large_handle;
       static char     host_name[MPI_MAX_PROCESSOR_NAME];
-      hipStream_t computeStream, dataStream, small_stream, large_stream;
+      hipStream_t computeStream, dataStream, pdlaswpStream;
       hipEvent_t panelUpdate;
       hipEvent_t panelCopy;
-      hipEvent_t dlaswpStart, dlaswpStop;
+      hipEvent_t panelSendToHost, panelSendToDevice;
+      hipEvent_t pdlaswpStart_1, pdlaswpStart_2, pdlaswpStart_3;
+      hipEvent_t pdlaswpStop_1, pdlaswpStop_2, pdlaswpStop_3;
       hipEvent_t dtrsmStart, dtrsmStop;
       hipEvent_t dgemmStart, dgemmStop;
       std::map<int, const char*> _memcpyKind;
