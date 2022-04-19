@@ -228,13 +228,7 @@ void HPL_pdupdateNT
  */
       if( ( nn = n - nq0 ) > 0 )
       {
-#ifdef HPL_DETAILED_TIMING
-         HPL_ptimer( HPL_TIMING_LASWP );
-         // HPL_BE_dlaswp00N( jb, nn, Aptr, lda, ipiv, T_HIP );
-         HPL_ptimer( HPL_TIMING_LASWP );
-#else
-         // HPL_BE_dlaswp00N( jb, nn, Aptr, lda, ipiv, T_HIP );
-#endif
+
          //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
