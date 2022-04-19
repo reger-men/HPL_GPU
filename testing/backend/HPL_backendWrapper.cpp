@@ -178,31 +178,44 @@ extern "C" {
             DO_NOTHING();
       }
    }
-   void HPL_BE_stream_sync(enum HPL_STREAM stream, enum HPL_TARGET TR)
+   void HPL_BE_event_synchronize(HPL_EVENT event, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
             DO_NOTHING();
             break;
          case T_HIP:
-            HPL::dispatch(HIP::one_stream_sync, stream);
+            HPL::dispatch(HIP::event_synchronize, event);
             break;
          default:
             DO_NOTHING();
-      }
+      }  
    }
-   void HPL_BE_set_stream_handle(enum HPL_UPDATE_FLAG flag, enum HPL_TARGET TR)
+   void HPL_BE_stream_synchronize(HPL_STREAM stream, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
             DO_NOTHING();
             break;
          case T_HIP:
-            HPL::dispatch(HIP::set_stream_handle, flag);
+            HPL::dispatch(HIP::stream_synchronize, stream);
             break;
          default:
             DO_NOTHING();
-      }
+      }  
+   }
+   void HPL_BE_stream_wait_event(HPL_STREAM stream, HPL_EVENT event, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::stream_wait_event, stream, event);
+            break;
+         default:
+            DO_NOTHING();
+      }  
    }
    /*
    * Matrix generator
@@ -475,6 +488,19 @@ extern "C" {
             break;
          default:
             HPL::dispatch(CPU::dlaswp00N, M, N, A, LDA, IPIV);
+      }
+   }
+
+   void HPL_BE_pdlaswp(HPL_T_panel* PANEL, const int NN, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::pdlaswp, PANEL, NN);
+            break;
+         default:
+            break;
       }
    }
 } //extern "C"
