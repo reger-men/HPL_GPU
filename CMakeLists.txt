@@ -145,6 +145,8 @@ src/blas/HPL_dgemm.cpp src/blas/HPL_dgemv.cpp src/blas/HPL_dcopy.cpp
 src/auxil/HPL_dlacpy.cpp src/auxil/HPL_dlatcpy.cpp
 testing/ptimer/HPL_ptimer_walltime.cpp testing/ptimer/HPL_ptimer.cpp
 testing/ptimer/HPL_ptimer_cputime.cpp
+testing/timer/HPL_timer_walltime.cpp testing/timer/HPL_timer.cpp
+testing/timer/HPL_timer_cputime.cpp
 src/panel/HPL_pdpanel_new.cpp src/panel/HPL_pdpanel_init.cpp
 src/panel/HPL_pdpanel_free.cpp src/panel/HPL_pdpanel_disp.cpp
 testing/backend/HPL_backendWrapper.cpp testing/backend/HPL_backendHIP.cpp
