@@ -728,6 +728,7 @@ void HIP::dgemm(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA,
     GPUInfo("%-25s %-8d%-8d%-8d \t%-5s", "[DGEMM]", "With C of (R:C)", M, N, K, "HIP");
 #if 1
     //rocBLAS uses column-major storage for 2D arrays
+    hipEventRecord(dgemmStart, computeStream);
     ROCBLAS_CHECK_STATUS(rocblas_dgemm(_handle, (rocblas_operation)TRANSA, (rocblas_operation)TRANSB, 
                          M, N, K, &ALPHA, A, LDA, B, LDB, &BETA, C, LDC));
 #else
@@ -861,8 +862,8 @@ __global__ void _dlaswp00N(const int N, const int M,
                      const int* __restrict__ IPIV) {
                     //  const int* IPIV) {
 
-   __shared__ double s_An_init[2048];
-   __shared__ double s_An_ipiv[2048];
+   __shared__ double s_An_init[512];
+   __shared__ double s_An_ipiv[512];
 
    const int m = threadIdx.x;
    const int n = blockIdx.x;
@@ -934,6 +935,7 @@ void HIP::pdlaswp(HPL_T_panel *PANEL, const int NN){
     mp   = PANEL->mp - jb;  nq0   = 0;       nn = n - nq0;
 
     const int block_size = 512, grid_size = nn;
+    hipStreamWaitEvent(pdlaswpStream, dgemmStart, 0);
     hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, pdlaswpStream,
                                       nn, jb, Aptr, lda, ipiv);
 }

@@ -209,7 +209,7 @@ void HPL_pdgesvK2
             // overlap row swap2 with update1
             HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_1, T_HIP);
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-            HPL_BE_pdlaswp(panel[0], nn * 3, T_HIP);
+            HPL_BE_pdlaswp(panel[0], nn * 4, T_HIP);
             HPL_BE_event_record(HPL_RS_2, T_HIP);
 
          }
@@ -217,15 +217,15 @@ void HPL_pdgesvK2
 
          // split update and row swap step    
          // overlap row swap3 with update2
-         HPL_pdupdate( NULL, NULL, panel[0], nn * 3 );
+         HPL_pdupdate( NULL, NULL, panel[0], nn * 4 );
          
-         HPL_BE_pdlaswp(panel[0], nq - (nn * 3), T_HIP);        
+         HPL_BE_pdlaswp(panel[0], nq - (nn * 4), T_HIP);        
          HPL_BE_event_record(HPL_RS_3, T_HIP);
 
          //overlap row swap1 of next iteration with update3
          HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
 
-         HPL_pdupdate( NULL, NULL, panel[0], nq - (nn * 3) );
+         HPL_pdupdate( NULL, NULL, panel[0], nq - (nn * 4) );
 
          // overlap update with data copy
          
