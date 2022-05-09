@@ -134,7 +134,7 @@ void HPL_pdfact
    if( vptr ) HPL_BE_free((void**)&vptr, T_TEMPO);
    //if( vptr ) free( vptr );
 
-   PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
+   // PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
 #ifdef ROCM
    PANEL->dA   = Mptr( PANEL->dA, 0, jb, PANEL->lda );
 #endif

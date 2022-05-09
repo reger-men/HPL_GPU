@@ -400,79 +400,95 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
     if (jb <= 0)
         return;
 
-        // copy A and/or L2
-#ifdef HPL_COPY_L
-#else
+    // copy A and/or L2
     if (PANEL->grid->mycol == PANEL->pcol)
     { // L2 reuses A
-        A = Mptr(PANEL->A, 0, -jb, PANEL->lda);
-        dA = Mptr(PANEL->dA, 0, -jb, PANEL->lda);
+        if (PANEL->grid->npcol > 1) {
 
-        hipMemcpy2DAsync(dA, PANEL->lda * sizeof(double),
-                         A, PANEL->lda * sizeof(double),
-                         PANEL->mp * sizeof(double), jb,
-                         hipMemcpyHostToDevice, dataStream);
-    }
-    else
-    {
-        ml2 = (PANEL->grid->myrow == PANEL->prow ? PANEL->mp - jb : PANEL->mp);
-        if (ml2 > 0)
-            hipMemcpy2DAsync(PANEL->dL2, PANEL->ldl2 * sizeof(double),
-                             PANEL->L2, PANEL->ldl2 * sizeof(double),
-                             ml2 * sizeof(double), jb,
-                             hipMemcpyHostToDevice, dataStream);
-    }
-#endif
-    // copy L1
-    hipMemcpy2DAsync(PANEL->dL1, jb * sizeof(double),
+            hipMemcpy2DAsync(Mptr(PANEL->dA, 0, -jb, PANEL->lda),
+                         PANEL->lda * sizeof(double),
+                         Mptr(PANEL->A, 0, 0, PANEL->lda),
+                         PANEL->lda * sizeof(double),
+                         jb * sizeof(double),
+                         jb,
+                         hipMemcpyHostToDevice,
+                         dataStream);
+
+            if((PANEL->mp - jb) > 0)
+                    hipMemcpy2DAsync(PANEL->dL2,
+                            PANEL->ldl2 * sizeof(double),
+                            Mptr(PANEL->A, jb, 0, PANEL->lda),
+                            PANEL->lda * sizeof(double),
+                            (PANEL->mp - jb) * sizeof(double),
+                            jb,
+                            hipMemcpyHostToDevice,
+                            dataStream);
+        }
+        else {
+            if(PANEL->mp > 0)
+                hipMemcpy2DAsync(Mptr(PANEL->dA, 0, -jb, PANEL->lda),
+                        PANEL->lda * sizeof(double),
+                        Mptr(PANEL->A, 0, 0, PANEL->lda),
+                        PANEL->lda * sizeof(double),
+                        PANEL->mp * sizeof(double),
+                        jb,
+                        hipMemcpyHostToDevice,
+                        dataStream);
+        }
+        // copy L1
+        hipMemcpy2DAsync(PANEL->dL1, jb * sizeof(double),
                      PANEL->L1, jb * sizeof(double),
                      jb * sizeof(double), jb,
                      hipMemcpyHostToDevice, dataStream);
-    // unroll pivoting and send to device
-    int *ipiv = PANEL->IWORK;
-    int *dipiv = PANEL->dIWORK;
-    int *ipiv_ex = PANEL->IWORK + jb;
-    int *dipiv_ex = PANEL->dIWORK + jb;
-
-    int *upiv = PANEL->IWORK2;
-
-    for (i = 0; i < jb; i++)
-    {
-        ipiv[i] = (int)(PANEL->DPIV[i]) - PANEL->ii;
-    } // shift
-    for (i = 0; i < PANEL->mp; i++)
-    {
-        upiv[i] = i;
-    } // initialize ids
-    for (i = 0; i < jb; i++)
-    { // swap ids
-        int id = upiv[i];
-        upiv[i] = upiv[ipiv[i]];
-        upiv[ipiv[i]] = id;
     }
+    
+    if (PANEL->grid->mycol == PANEL->pcol) {
+        // unroll pivoting and send to device
+        int *ipiv = PANEL->IWORK;
+        int *dipiv = PANEL->dIWORK;
+        int *ipiv_ex = PANEL->IWORK + jb;
+        int *dipiv_ex = PANEL->dIWORK + jb;
 
-    for (i = 0; i < jb; i++)
-    {
-        ipiv_ex[i] = -1;
-    }
+        int *upiv = PANEL->IWORK2;
 
-    int cnt = 0;
-    for (i = jb; i < PANEL->mp; i++)
-    { // find swapped ids outside of panel
-        if (upiv[i] < jb)
+        for (i = 0; i < jb; i++)
         {
-            ipiv_ex[upiv[i]] = i;
+            ipiv[i] = (int)(PANEL->DPIV[i]) - PANEL->ii;
+        } // shift
+        for (i = 0; i < PANEL->mp; i++)
+        {
+            upiv[i] = i;
+        } // initialize ids
+        for (i = 0; i < jb; i++)
+        { // swap ids
+            int id = upiv[i];
+            upiv[i] = upiv[ipiv[i]];
+            upiv[ipiv[i]] = id;
         }
-    }
 
-    hipMemcpy2DAsync(dipiv, jb * sizeof(int),
-                     upiv, jb * sizeof(int),
-                     jb * sizeof(int), 1,
-                     hipMemcpyHostToDevice, dataStream);
-    hipMemcpy2DAsync(dipiv_ex, jb * sizeof(int),
-                     ipiv_ex, jb * sizeof(int),
-                     jb * sizeof(int), 1,
-                     hipMemcpyHostToDevice, dataStream);
+        for (i = 0; i < jb; i++)
+        {
+            ipiv_ex[i] = -1;
+        }
+
+        int cnt = 0;
+        for (i = jb; i < PANEL->mp; i++)
+        { // find swapped ids outside of panel
+            if (upiv[i] < jb)
+            {
+                ipiv_ex[upiv[i]] = i;
+            }
+        }
+
+        hipMemcpy2DAsync(dipiv, jb * sizeof(int),
+                        upiv, jb * sizeof(int),
+                        jb * sizeof(int), 1,
+                        hipMemcpyHostToDevice, dataStream);
+        hipMemcpy2DAsync(dipiv_ex, jb * sizeof(int),
+                        ipiv_ex, jb * sizeof(int),
+                        jb * sizeof(int), 1,
+                        hipMemcpyHostToDevice, dataStream);
+    }
 }
 
 int HIP::panel_free(HPL_T_panel *PANEL)

@@ -157,15 +157,16 @@ void HPL_pdgesvK2
       HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
 
       HPL_pdfact(         panel[k] );
+
+      HPL_BE_panel_send_to_device( panel[k], T_HIP );
+      HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
+      HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
+
       (void) HPL_binit(   panel[k] );
       do
       { (void) HPL_bcast( panel[k], &test ); }
       while( test != HPL_SUCCESS );
       (void) HPL_bwait(   panel[k] );
-
-      HPL_BE_panel_send_to_device( panel[k], T_HIP );
-      HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
-      HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
 
 /*
  * Partial update of the depth-k-1 panels in front of me
@@ -234,16 +235,17 @@ void HPL_pdgesvK2
          HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
 
          HPL_pdfact(       panel[depth] );    /* factor current panel */
-         (void) HPL_binit(   panel[depth] );
 
+         HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
+         HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
+         HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
+
+         (void) HPL_binit(   panel[depth] );
          do
          { (void) HPL_bcast( panel[depth], &test ); }
          while( test != HPL_SUCCESS );
          (void) HPL_bwait(   panel[depth] );
 
-         HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
-         HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
-         HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
       }
       else { 
          nn = 0; 
@@ -258,9 +260,6 @@ void HPL_pdgesvK2
          while( test != HPL_SUCCESS );
          (void) HPL_bwait( panel[depth] );
 
-         HPL_BE_panel_send_to_device( panel[depth], T_HIP);
-         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
-         HPL_BE_event_synchronize(HPL_PANEL_UPDATE, T_HIP);
       }
 
      HPL_BE_device_sync(T_HIP);
