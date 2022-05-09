@@ -93,6 +93,10 @@ namespace HIP {
     void stream_synchronize(enum HPL_STREAM);
     void stream_wait_event(enum HPL_STREAM, enum HPL_EVENT);
     void device_sync();
+
+    int binit_ibcst(HPL_T_panel*);
+    int bcast_ibcst(HPL_T_panel*, int*);
+    int bwait_ibcst(HPL_T_panel*);
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

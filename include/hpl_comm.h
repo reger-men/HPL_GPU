@@ -64,7 +64,8 @@ typedef enum
    HPL_2RING         = 403,                      /* Increasing 2-ring */
    HPL_2RING_M       = 404,           /* Increasing 2-ring (modified) */
    HPL_BLONG         = 405,                         /* long broadcast */
-   HPL_BLONG_M       = 406               /* long broadcast (modified) */
+   HPL_BLONG_M       = 406,               /* long broadcast (modified) */
+   HPL_IBCAST       = 407               /* default bcast in MPI */
 } HPL_T_TOP;
 /*
  * ---------------------------------------------------------------------

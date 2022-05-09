@@ -939,3 +939,59 @@ void HIP::pdlaswp(HPL_T_panel *PANEL, const int NN){
     hipLaunchKernelGGL(_dlaswp00N, dim3(grid_size), dim3(block_size), 0, pdlaswpStream,
                                       nn, jb, Aptr, lda, ipiv);
 }
+
+int HIP::binit_ibcst(HPL_T_panel* PANEL) {
+
+    return (HPL_SUCCESS);
+}
+
+#define _M_BUFF (void*)(PANEL->dL2)
+#define _M_COUNT PANEL->len
+#define _M_TYPE MPI_DOUBLE
+
+static MPI_Request request  = MPI_REQUEST_NULL;
+static MPI_Request request2 = MPI_REQUEST_NULL;
+
+int HIP::bcast_ibcst(HPL_T_panel* PANEL, int* IFLAG) {
+  MPI_Comm comm;
+  int      ierr, ierr2, go, next, msgid, prev, rank, root, size;
+
+  if(PANEL == NULL) {
+    *IFLAG = HPL_SUCCESS;
+    return (HPL_SUCCESS);
+  }
+  if((size = PANEL->grid->npcol) <= 1) {
+    *IFLAG = HPL_SUCCESS;
+    return (HPL_SUCCESS);
+  }
+
+  rank  = PANEL->grid->mycol;
+  comm  = PANEL->grid->row_comm;
+  root  = PANEL->pcol;
+  msgid = PANEL->msgid;
+
+  ierr  = MPI_Ibcast(_M_BUFF, _M_COUNT, _M_TYPE, root, comm, &request);
+  ierr2 = MPI_Ibcast(PANEL->dIWORK, PANEL->jb * 2, MPI_INT, root, comm, &request2);
+  /*
+   * If the message was received and being forwarded,  return HPL_SUCCESS.
+   * If an error occured in an MPI call, return HPL_FAILURE.
+   */
+  *IFLAG = (ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE);
+  *IFLAG = (ierr2 == MPI_SUCCESS ? *IFLAG : HPL_FAILURE);
+
+  return (*IFLAG);
+}
+
+int HIP::bwait_ibcst(HPL_T_panel* PANEL) {
+  int ierr1, ierr2;
+
+  if(PANEL == NULL) { return (HPL_SUCCESS); }
+  if(PANEL->grid->npcol <= 1) { return (HPL_SUCCESS); }
+
+  ierr1 = MPI_Wait(&request, MPI_STATUS_IGNORE);
+  ierr2 = MPI_Wait(&request2, MPI_STATUS_IGNORE);
+
+  return ((ierr1 == MPI_SUCCESS
+               ? (ierr2 == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE)
+               : HPL_FAILURE));
+}

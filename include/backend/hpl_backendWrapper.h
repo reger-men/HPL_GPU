@@ -52,6 +52,13 @@ void HPL_BE_stream_synchronize(enum HPL_STREAM, enum HPL_TARGET);
 void HPL_BE_stream_wait_event(enum HPL_STREAM, enum HPL_EVENT, enum HPL_TARGET);
 
 void HPL_BE_stream_sync(enum HPL_STREAM, enum HPL_TARGET);
+
+/*
+    Broadcast routine
+*/
+void HPL_BE_binit_ibcast(HPL_T_panel*);
+void HPL_BE_bcast_ibcast(HPL_T_panel*, int*);
+int HPL_BE_bwait_ibcast(HPL_T_panel*);
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

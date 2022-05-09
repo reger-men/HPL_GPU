@@ -117,7 +117,7 @@ int HPL_packL
  * Panel + L1 + DPIV  have been copied into a contiguous buffer - Create
  * and commit a contiguous data type
  */
-   PANEL->buffers[IBUF] = (void *)(PANEL->L2 + INDEX);
+   PANEL->buffers[IBUF] = (void ***)(PANEL->L2 + INDEX);
    PANEL->counts [IBUF] = 1;
 
    ierr =      MPI_Type_contiguous( LEN, MPI_DOUBLE, &PANEL->dtypes[IBUF] );

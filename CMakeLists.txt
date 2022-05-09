@@ -34,6 +34,7 @@ set( CMAKE_CXX_STANDARD 14 )
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_Release "${CMAKE_C_FLAGS_Release} -O3")
 ADD_DEFINITIONS(-DROCM=1)
+ADD_DEFINITIONS(-DHPL_COPY_L=1)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/HPL.dat
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/runHPL_singleNode.sh
@@ -116,7 +117,7 @@ src/comm/HPL_blonM.cpp src/comm/HPL_1ring.cpp src/comm/HPL_2ring.cpp
 src/comm/HPL_1rinM.cpp src/comm/HPL_2rinM.cpp src/comm/HPL_packL.cpp
 src/comm/HPL_sdrv.cpp src/comm/HPL_send.cpp src/pgesv/HPL_pdlaswp00N.cpp
 src/comm/HPL_recv.cpp src/grid/HPL_reduce.cpp src/comm/HPL_binit.cpp
-src/comm/HPL_bwait.cpp
+src/comm/HPL_bwait.cpp src/comm/HPL_copyL.cpp
 src/pgesv/HPL_pdlaswp00T.cpp src/pgesv/HPL_pdlaswp01N.cpp
 src/pgesv/HPL_pdlaswp01T.cpp src/pgesv/HPL_pdupdateNT.cpp
 src/pgesv/HPL_pdupdateTN.cpp src/pgesv/HPL_pdupdateTT.cpp
