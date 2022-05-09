@@ -98,7 +98,7 @@ int HPL_binit
       case HPL_2RING   : ierr = HPL_binit_2ring( PANEL ); break;
       case HPL_BLONG_M : ierr = HPL_binit_blonM( PANEL ); break;
       case HPL_BLONG   : ierr = HPL_binit_blong( PANEL ); break;
-      case HPL_IBCAST  : ierr = HPL_BE_binit_ibcast( PANEL ); break;
+      case HPL_IBCAST  : HPL_BE_binit_ibcast( PANEL, ierr, T_HIP ); break;
       default          : ierr = HPL_SUCCESS;
    }
  

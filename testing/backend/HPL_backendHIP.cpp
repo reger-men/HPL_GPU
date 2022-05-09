@@ -956,9 +956,9 @@ void HIP::pdlaswp(HPL_T_panel *PANEL, const int NN){
                                       nn, jb, Aptr, lda, ipiv);
 }
 
-int HIP::binit_ibcst(HPL_T_panel* PANEL) {
+void HIP::binit_ibcst(HPL_T_panel* PANEL, int &result) {
 
-    return (HPL_SUCCESS);
+    result = HPL_SUCCESS;
 }
 
 #define _M_BUFF (void*)(PANEL->dL2)
@@ -968,17 +968,19 @@ int HIP::binit_ibcst(HPL_T_panel* PANEL) {
 static MPI_Request request  = MPI_REQUEST_NULL;
 static MPI_Request request2 = MPI_REQUEST_NULL;
 
-int HIP::bcast_ibcst(HPL_T_panel* PANEL, int* IFLAG) {
+void HIP::bcast_ibcst(HPL_T_panel* PANEL, int* IFLAG, int &result) {
   MPI_Comm comm;
   int      ierr, ierr2, go, next, msgid, prev, rank, root, size;
 
   if(PANEL == NULL) {
     *IFLAG = HPL_SUCCESS;
-    return (HPL_SUCCESS);
+    result = HPL_SUCCESS;
+    return;
   }
   if((size = PANEL->grid->npcol) <= 1) {
     *IFLAG = HPL_SUCCESS;
-    return (HPL_SUCCESS);
+    result = HPL_SUCCESS;
+    return;
   }
 
   rank  = PANEL->grid->mycol;
@@ -995,19 +997,19 @@ int HIP::bcast_ibcst(HPL_T_panel* PANEL, int* IFLAG) {
   *IFLAG = (ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE);
   *IFLAG = (ierr2 == MPI_SUCCESS ? *IFLAG : HPL_FAILURE);
 
-  return (*IFLAG);
+    result = *IFLAG;
 }
 
-int HIP::bwait_ibcst(HPL_T_panel* PANEL) {
+void HIP::bwait_ibcst(HPL_T_panel* PANEL, int &result) {
   int ierr1, ierr2;
 
-  if(PANEL == NULL) { return (HPL_SUCCESS); }
-  if(PANEL->grid->npcol <= 1) { return (HPL_SUCCESS); }
+  if(PANEL == NULL) { result = HPL_SUCCESS; return; }
+  if(PANEL->grid->npcol <= 1) { result = HPL_SUCCESS; return; }
 
   ierr1 = MPI_Wait(&request, MPI_STATUS_IGNORE);
   ierr2 = MPI_Wait(&request2, MPI_STATUS_IGNORE);
 
-  return ((ierr1 == MPI_SUCCESS
+  result = (ierr1 == MPI_SUCCESS
                ? (ierr2 == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE)
-               : HPL_FAILURE));
+               : HPL_FAILURE);
 }

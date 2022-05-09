@@ -108,7 +108,7 @@ int HPL_bcast
       case HPL_2RING   : ierr = HPL_bcast_2ring( PANEL, IFLAG ); break;
       case HPL_BLONG_M : ierr = HPL_bcast_blonM( PANEL, IFLAG ); break;
       case HPL_BLONG   : ierr = HPL_bcast_blong( PANEL, IFLAG ); break;
-      case HPL_IBCAST  : ierr = HPL_BE_bcast_ibcast( PANEL, IFLAG ); break;
+      case HPL_IBCAST  : HPL_BE_bcast_ibcast( PANEL, IFLAG, ierr, T_HIP); break;
       default          : ierr = HPL_SUCCESS;
    }
  
