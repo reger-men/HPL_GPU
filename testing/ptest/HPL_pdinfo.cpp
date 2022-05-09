@@ -362,12 +362,22 @@ void HPL_pdinfo
       for( i = 0; i < *NBS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
+#ifdef ROCM
+         NB[ i ] = atoi( num );
+         if( NB[ i ] < 1 || NB[ i ] > 512)
+         {
+            HPL_pwarn( stderr, __LINE__, "HPL_pdinfo", 
+                       "Value of NB less than 1 or greater than 512" );
+            error = 1; goto label_error;
+         }
+#else
          if( ( NB[ i ] = atoi( num ) ) < 1 )
          {
             HPL_pwarn( stderr, __LINE__, "HPL_pdinfo", 
                        "Value of NB less than 1" );
             error = 1; goto label_error;
          }
+#endif
       }
 /*
  * Process grids, mapping, (>=1) (P, Q)
@@ -390,12 +400,21 @@ void HPL_pdinfo
       for( i = 0; i < *NPQS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
+#ifdef ROCM
+         if( ( P[ i ] = atoi( num ) ) != 1 )
+         {
+            HPL_pwarn( stderr, __LINE__, "HPL_pdinfo",
+                       "Value of P is not 1" );
+            error = 1; goto label_error;
+         }
+#elif
          if( ( P[ i ] = atoi( num ) ) < 1 )
          {
             HPL_pwarn( stderr, __LINE__, "HPL_pdinfo",
                        "Value of P less than 1" );
             error = 1; goto label_error;
          }
+#endif
       }
       (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NPQS; i++ )
