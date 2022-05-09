@@ -236,6 +236,51 @@ extern "C" {
       }
    }
 
+   /*
+   * Broadcast routine
+   */
+   void HPL_BE_binit_ibcast(HPL_T_panel* PANEL, int &result, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::binit_ibcst, PANEL, result);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+
+   void HPL_BE_bcast_ibcast(HPL_T_panel* PANEL, int* FLAG, int &result, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::bcast_ibcst, PANEL, FLAG, result);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+
+   void HPL_BE_bwait_ibcast(HPL_T_panel* PANEL, int &result, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::bwait_ibcst, PANEL, result);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------

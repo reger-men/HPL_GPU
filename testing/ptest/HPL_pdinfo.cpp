@@ -362,12 +362,22 @@ void HPL_pdinfo
       for( i = 0; i < *NBS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
+#ifdef ROCM
+         NB[ i ] = atoi( num );
+         if( NB[ i ] < 1 || NB[ i ] > 512)
+         {
+            HPL_pwarn( stderr, __LINE__, "HPL_pdinfo", 
+                       "Value of NB less than 1 or greater than 512" );
+            error = 1; goto label_error;
+         }
+#else
          if( ( NB[ i ] = atoi( num ) ) < 1 )
          {
             HPL_pwarn( stderr, __LINE__, "HPL_pdinfo", 
                        "Value of NB less than 1" );
             error = 1; goto label_error;
          }
+#endif
       }
 /*
  * Process grids, mapping, (>=1) (P, Q)
@@ -390,12 +400,21 @@ void HPL_pdinfo
       for( i = 0; i < *NPQS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
+#ifdef ROCM
+         if( ( P[ i ] = atoi( num ) ) != 1 )
+         {
+            HPL_pwarn( stderr, __LINE__, "HPL_pdinfo",
+                       "Value of P is not 1" );
+            error = 1; goto label_error;
+         }
+#elif
          if( ( P[ i ] = atoi( num ) ) < 1 )
          {
             HPL_pwarn( stderr, __LINE__, "HPL_pdinfo",
                        "Value of P less than 1" );
             error = 1; goto label_error;
          }
+#endif
       }
       (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NPQS; i++ )
@@ -538,6 +557,7 @@ void HPL_pdinfo
          else if( j == 3 ) TP[ i ] = HPL_2RING_M;
          else if( j == 4 ) TP[ i ] = HPL_BLONG;
          else if( j == 5 ) TP[ i ] = HPL_BLONG_M;
+         else if( j == 6 ) TP[ i ] = HPL_IBCAST;
          else              TP[ i ] = HPL_1RING_M;
       }
 /*
@@ -702,6 +722,7 @@ label_error:
          else if( TP[i] == HPL_2RING_M ) iwork[j] = 3;
          else if( TP[i] == HPL_BLONG   ) iwork[j] = 4;
          else if( TP[i] == HPL_BLONG_M ) iwork[j] = 5;
+         else if( TP[i] == HPL_IBCAST )  iwork[j] = 6;
          j++;
       }
       for( i = 0; i < *NDHS; i++ ) { iwork[j] = DH[i]; j++; }
@@ -745,6 +766,7 @@ label_error:
          else if( iwork[j] == 3 ) TP[i] = HPL_2RING_M;
          else if( iwork[j] == 4 ) TP[i] = HPL_BLONG;
          else if( iwork[j] == 5 ) TP[i] = HPL_BLONG_M;
+         else if( iwork[j] == 6 ) TP[i] = HPL_IBCAST;
          j++;
       }
       for( i = 0; i < *NDHS; i++ ) { DH[i] = iwork[j]; j++; }
@@ -1008,6 +1030,8 @@ label_error:
             HPL_fprintf( TEST->outfp,       "   Blong " );
          else if( TP[i] == HPL_BLONG_M )
             HPL_fprintf( TEST->outfp,       "  BlongM " );
+         else if( TP[i] == HPL_IBCAST )
+            HPL_fprintf( TEST->outfp,       "  IBCAST " );
       }
       if( *NTPS > 8 )
       {
@@ -1026,6 +1050,8 @@ label_error:
                HPL_fprintf( TEST->outfp,       "   Blong " );
             else if( TP[i] == HPL_BLONG_M )
                HPL_fprintf( TEST->outfp,       "  BlongM " );
+            else if( TP[i] == HPL_IBCAST )
+               HPL_fprintf( TEST->outfp,       "  IBCAST " );
          }
          if( *NTPS > 16 )
          {
@@ -1044,6 +1070,8 @@ label_error:
                   HPL_fprintf( TEST->outfp,       "   Blong " );
                else if( TP[i] == HPL_BLONG_M )
                   HPL_fprintf( TEST->outfp,       "  BlongM " );
+               else if( TP[i] == HPL_IBCAST )
+                  HPL_fprintf( TEST->outfp,       "  IBCAST " );
             }
          }
       }
