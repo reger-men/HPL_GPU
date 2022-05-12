@@ -1,0 +1,25 @@
+System requirements:
+ROCM 4.3 or above
+OpenMPI v4.0.3
+UCX v1.8.0
+
+
+Environment:
+export MPI_DIR=<MPI install directory>
+export BLAS_DIR=<OpenBLAS base directory>
+
+export PATH=$MPI_DIR/bin:$PATH
+export LD_LIBRARY_PATH=$MPI_DIR/lib:$BLAS_DIR/lib:$LD_LIBRARY_PATH
+
+export C_INCLUDE_PATH=$MPI_DIR/include
+export CPLUS_INCLUDE_PATH=$MPI_DIR/include
+
+Build HPL-GPU for ROCm
+
+$ git clone https://github.com/reger-men/HPL_GPU.git
+$ cd HPL-GPU
+$ mkdir build && cd build
+$ cmake ..
+$ make -j
+
+
