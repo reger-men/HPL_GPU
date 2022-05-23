@@ -109,6 +109,9 @@ typedef struct HPL_S_panel
    int *dlindxAU, *lindxAU;
    int *dpermU, *permU;
    int *ipiv, *ipiv_ex, *dipiv, *dipiv_ex;
+
+   double*            fWORK;  /* temp buffer in pdfact */
+   unsigned int       max_fwork_size;       /*max size of temp buffer in pdfact*/
 #endif
 
 #ifdef HPL_CALL_VSIPL

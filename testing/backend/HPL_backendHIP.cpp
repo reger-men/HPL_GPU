@@ -133,9 +133,11 @@ void HIP::panel_new(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N
     p->max_work_size = 0;
     p->max_iwork_size = 0;
     p->free_work_now = 0;
+    p->max_fwork_size = 0;
     p->WORK = NULL;
     p->IWORK = NULL;
     p->IWORK2 = NULL;
+    p->fWORK  = NULL;
     HIP::panel_init( GRID, ALGO, M, N, JB, A, IA, JA, TAG, p );
     *PANEL = p;
 }
@@ -392,6 +394,21 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
 
     if (lwork)
         *(PANEL->IWORK) = -1;
+
+    /* ensure the temp buffer in HPL_pdfact is allocated once*/
+    lwork = (size_t)(PANEL->algo->align) + (size_t)(((4+((unsigned int)(PANEL->jb) << 1)) << 1) );
+    if(PANEL->max_fwork_size < (size_t)(lwork) * sizeof(double)) {
+        if(PANEL->fWORK) { hipHostFree(PANEL->fWORK); }
+        size_t numbytes = (size_t)(lwork) * sizeof(double);
+
+        hipHostMalloc((void**)&PANEL->fWORK, numbytes);
+        if(PANEL->fWORK == NULL) {
+        HPL_pabort(__LINE__,
+                    "HPL_pdpanel_init",
+                    "Panel Host pdfact Scratch Memory allocation failed");
+        }
+        PANEL->max_fwork_size = (size_t)(lwork) * sizeof(double);
+    }
     /*
     * End of HPL_pdpanel_init
     */    
@@ -576,6 +593,11 @@ int HIP::panel_free(HPL_T_panel *PANEL)
             HIP_CHECK_ERROR(hipFree(PANEL->dIWORK));
             HIP_CHECK_ERROR(hipHostFree(PANEL->IWORK));
             PANEL->max_iwork_size = 0;
+        }
+        if(PANEL->fWORK)
+        {
+            HIP_CHECK_ERROR(hipHostFree(PANEL->fWORK));
+            PANEL->max_fwork_size = 0;
         }
     }
     return (MPI_SUCCESS);
