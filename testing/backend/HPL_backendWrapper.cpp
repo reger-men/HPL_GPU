@@ -522,6 +522,21 @@ extern "C" {
             DO_NOTHING();
       }
    }
+
+   void HPL_BE_move_data_2d(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, const int KIND, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::move_data_2d, dst, dpitch, src, spitch, width, height, (int)KIND);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+
    void HPL_BE_dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV, enum HPL_TARGET TR) 
    {
       switch(TR) {

@@ -137,6 +137,7 @@ namespace HIP {
                 double *, const int);  
 
     void move_data(double *, const double *, const size_t, const int);
+    void move_data_2d(void*, size_t, const void*, size_t, size_t, size_t, const int);
 
     void dlaswp00N(const int, const int, double *, const int, const int *);
     void dlaswp01T(const int, const int, double*, const int, double*, const int, const int*, const int*);

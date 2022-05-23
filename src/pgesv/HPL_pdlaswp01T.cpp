@@ -173,10 +173,10 @@ void HPL_pdlaswp01T
 
    if( *iflag == -1 )    /* no index arrays have been computed so far */
    {
-      hipMemcpy2D(PANEL->ipiv, PANEL->jb * sizeof(int),
+      HPL_BE_move_data_2d(PANEL->ipiv, PANEL->jb * sizeof(int),
                   PANEL->dipiv, PANEL->jb * sizeof(int),
                   PANEL->jb * sizeof(int), 1,
-                  hipMemcpyDeviceToHost);
+                  hipMemcpyDeviceToHost, T_HIP);
       HPL_pipid(   PANEL,  ipl, ipID );
       HPL_plindx1( PANEL, *ipl, ipID, ipA, lindxA, lindxAU, iplen,
                    ipmap, ipmapm1, permU, iwork );

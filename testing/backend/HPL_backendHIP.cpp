@@ -959,6 +959,14 @@ void HIP::move_data(double *DST, const double *SRC, const size_t SIZE, const int
     char title[25] = "[MOVE_"; strcat(title,_memcpyKind[KIND]); strcat(title,"]");
     GPUInfo("%-25s %-12ld (B) \t%-5s", title, "Memory of size",  SIZE, "HIP");
     HIP_CHECK_ERROR(hipMemcpy(DST, SRC, SIZE, (hipMemcpyKind)KIND));
+
+}
+
+void HIP::move_data_2d(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, const int KIND)
+{
+    char title[25] = "[MOVE2D_"; strcat(title,_memcpyKind[KIND]); strcat(title,"]");
+    GPUInfo("%-25s %-12ld (B) \t%-5s", title, "Memory of size",  SIZE, "HIP");
+    HIP_CHECK_ERROR(hipMemcpy2D(dst, dpitch, src, spitch, width, height, (hipMemcpyKind)KIND));
 }
 
 #define BLOCK_SIZE 512
