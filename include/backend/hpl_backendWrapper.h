@@ -112,6 +112,10 @@ void HPL_BE_move_data(double *, const double *, const size_t, enum HPL_MOVE_DIRE
 void HPL_BE_dlaswp00N(const int, const int, double *, const int, const int *, enum HPL_TARGET);
 void HPL_BE_pdlaswp(HPL_T_panel*, const int, enum HPL_TARGET);
 
+void HPL_BE_dlaswp01T(const int, const int, double *, const int, double *, const int, const int *, const int *, enum HPL_TARGET);
+void HPL_BE_dlaswp06T(const int, const int, double *, const int, double *, const int, const int *, enum HPL_TARGET);
+void HPL_BE_dlaswp10N(const int, const int, double *, const int, const int *, enum HPL_TARGET);
+
 #ifdef __cplusplus
 }
 #endif

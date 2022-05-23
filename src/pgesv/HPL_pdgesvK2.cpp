@@ -99,6 +99,7 @@ void HPL_pdgesvK2
    int                        N, depth, icurcol=0, j, jb, jj=0, jstart,
                               k, mycol, n, nb, nn, npcol, nq,
                               tag=MSGID_BEGIN_FACT, test=HPL_KEEP_TESTING;
+   int                        coef = (GRID->nprow == 1? 4: 0);  // to split pdupdate
 #ifdef HPL_PROGRESS_REPORT
    double start_time, time, gflops;
 #endif
@@ -205,28 +206,33 @@ void HPL_pdgesvK2
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
          for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
-            HPL_BE_pdlaswp(panel[k], nn, T_HIP);
-            HPL_BE_event_record(HPL_RS_1, T_HIP);
-            // overlap row swap2 with update1
-            HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_1, T_HIP);
+            if (GRID->nprow == 1) {
+               HPL_BE_pdlaswp(panel[k], nn, T_HIP);
+               HPL_BE_event_record(HPL_RS_1, T_HIP);
+               HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_1, T_HIP);
+            }
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-            HPL_BE_pdlaswp(panel[0], nn * 4, T_HIP);
-            HPL_BE_event_record(HPL_RS_2, T_HIP);
-
+            // overlap row swap2 with update1
+            if (GRID->nprow == 1) {
+               HPL_BE_pdlaswp(panel[0], nn * coef, T_HIP);
+               HPL_BE_event_record(HPL_RS_2, T_HIP);
+            }
          }
          HPL_BE_device_sync(T_HIP);
 
-         // split update and row swap step    
-         // overlap row swap3 with update2
-         HPL_pdupdate( NULL, NULL, panel[0], nn * 4 );
+         if (GRID->nprow == 1) {
+            // split update and row swap step    
+            // overlap row swap3 with update2
+            HPL_pdupdate( NULL, NULL, panel[0], nn * coef );
          
-         HPL_BE_pdlaswp(panel[0], nq - (nn * 4), T_HIP);        
-         HPL_BE_event_record(HPL_RS_3, T_HIP);
+            HPL_BE_pdlaswp(panel[0], nq - (nn * coef), T_HIP);        
+            HPL_BE_event_record(HPL_RS_3, T_HIP);
 
-         //overlap row swap1 of next iteration with update3
-         HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
+            //overlap row swap1 of next iteration with update3
+            HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
+         }
 
-         HPL_pdupdate( NULL, NULL, panel[0], nq - (nn * 4) );
+         HPL_pdupdate( NULL, NULL, panel[0], nq - (nn * coef) );
 
          // overlap update with data copy
          
@@ -249,17 +255,20 @@ void HPL_pdgesvK2
       }
       else { 
          nn = 0; 
-         HPL_BE_pdlaswp(panel[0], nq-nn, T_HIP);        
-         HPL_BE_event_record(HPL_RS_3, T_HIP);
-         HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
-         HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
           /* Finish the latest update and broadcast the current panel */
          (void) HPL_binit( panel[depth] );
          do
          { (void) HPL_bcast( panel[depth], &test ); }
          while( test != HPL_SUCCESS );
-         (void) HPL_bwait( panel[depth] );
+         
+         if (GRID->nprow == 1) {
+            HPL_BE_pdlaswp(panel[0], nq-nn, T_HIP);        
+            HPL_BE_event_record(HPL_RS_3, T_HIP);
+            HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
+         }
+         HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
 
+         (void) HPL_bwait( panel[depth] );
       }
 
      HPL_BE_device_sync(T_HIP);
@@ -283,7 +292,8 @@ void HPL_pdgesvK2
    nn = HPL_numrocI( 1, N, nb, nb, mycol, 0, npcol );
    for( k = 0; k < depth; k++ )
    {
-      HPL_BE_pdlaswp(panel[k], nn, T_HIP);
+      if (GRID->nprow == 1)
+         HPL_BE_pdlaswp(panel[k], nn, T_HIP);
       (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
       HPL_BE_device_sync(T_HIP);
       (void) HPL_BE_panel_disp(  &panel[k], T_HIP);

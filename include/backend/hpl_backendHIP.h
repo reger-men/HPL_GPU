@@ -139,6 +139,9 @@ namespace HIP {
     void move_data(double *, const double *, const size_t, const int);
 
     void dlaswp00N(const int, const int, double *, const int, const int *);
+    void dlaswp01T(const int, const int, double*, const int, double*, const int, const int*, const int*);
+    void dlaswp06T(const int, const int, double*, const int, double*, const int, const int*);
+    void dlaswp10N(const int, const int, double*, const int, const int*);
     void gPrintMat(const int, const int, const int, const double*);
     void pdlaswp(HPL_T_panel *PANEL, const int NN);
     void pdlaswpTest(HPL_T_panel *PANEL, const int NN);

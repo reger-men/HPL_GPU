@@ -295,8 +295,13 @@ void HPL_pdupdateNT
  * Compute redundantly row block of U and update trailing submatrix
  */
       nq0 = 0; curr = ( PANEL->grid->myrow == PANEL->prow ? 1 : 0 );
+#ifdef ROCM
+      Aptr = PANEL->dA; L2ptr = PANEL->dL2;  L1ptr = PANEL->dL1;
+      Uptr = PANEL->dU; ldl2 = PANEL->ldl2;
+#elif
       Aptr = PANEL->A; L2ptr = PANEL->L2;  L1ptr = PANEL->L1;
       Uptr = PANEL->U; ldl2 = PANEL->ldl2;
+#endif
       mp   = PANEL->mp - ( curr != 0 ? jb : 0 );
 #ifdef HPL_CALL_VSIPL
 /*
@@ -325,7 +330,7 @@ void HPL_pdupdateNT
 
          //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplRight, HplLower, HplTrans,
-                    HplUnit, nn, jb, HPL_rone, L1ptr, jb, Uptr, LDU, T_DEFAULT);
+                    HplUnit, nn, jb, HPL_rone, L1ptr, jb, Uptr, LDU, T_HIP);
          /*HPL_dtrsm( HplColumnMajor, HplRight, HplLower, HplTrans,
                     HplUnit, nn, jb, HPL_rone, L1ptr, jb, Uptr, LDU );*/
 
@@ -349,13 +354,13 @@ void HPL_pdupdateNT
             //Adil
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
+                       Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
             /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda );*/
 #endif
             //Adil
-            HPL_BE_dlatcpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
+            HPL_BE_dlatcpy( jb, nn, Uptr, LDU, Aptr, lda, T_HIP);
             /*HPL_dlatcpy( jb, nn, Uptr, LDU, Aptr, lda );*/
          }
          else
@@ -378,7 +383,7 @@ void HPL_pdupdateNT
             //Adil
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Aptr, lda, T_DEFAULT);
+                       Aptr, lda, T_HIP);
             /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Aptr, lda );*/
@@ -393,10 +398,10 @@ void HPL_pdupdateNT
  * The panel has been forwarded at that point, finish the update
  */
       if( ( nn = n - nq0 ) > 0 )
-      {
+      {         
          //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplRight, HplLower, HplTrans,
-                    HplUnit, nn, jb, HPL_rone, L1ptr, jb, Uptr, LDU, T_DEFAULT);
+                    HplUnit, nn, jb, HPL_rone, L1ptr, jb, Uptr, LDU, T_HIP);
          /*HPL_dtrsm( HplColumnMajor, HplRight, HplLower, HplTrans,
                     HplUnit, nn, jb, HPL_rone, L1ptr, jb, Uptr, LDU );*/
 
@@ -416,17 +421,17 @@ void HPL_pdupdateNT
  */
             (void) vsip_mdestroy_d( Av1 );
             (void) vsip_mdestroy_d( Uv1 );
-#else
+#else            
             //Adil
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT );
+                       Mptr( Aptr, jb, 0, lda ), lda, T_HIP );
             /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda );*/
 #endif
             //Adil
-            HPL_BE_dlatcpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
+            HPL_BE_dlatcpy( jb, nn, Uptr, LDU, Aptr, lda, T_HIP);
             /*HPL_dlatcpy( jb, nn, Uptr, LDU, Aptr, lda );*/
          }
          else
@@ -449,7 +454,7 @@ void HPL_pdupdateNT
             //Adil
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
-                       Aptr, lda, T_DEFAULT);
+                       Aptr, lda, T_HIP);
             /*HPL_dgemm( HplColumnMajor, HplNoTrans, HplTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Aptr, lda );*/
@@ -478,7 +483,8 @@ void HPL_pdupdateNT
 #ifdef ROCM
    PANEL->dA = Mptr( PANEL->dA, 0, n, lda ); 
 #endif
-   PANEL->A = Mptr( PANEL->A, 0, n, lda ); PANEL->nq -= n; PANEL->jj += n;
+   // PANEL->A = Mptr( PANEL->A, 0, n, lda ); 
+   PANEL->nq -= n; PANEL->jj += n;
 /*
  * return the outcome of the probe  (should always be  HPL_SUCCESS,  the
  * panel broadcast is enforced in that routine).

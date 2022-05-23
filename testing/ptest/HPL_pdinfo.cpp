@@ -400,21 +400,12 @@ void HPL_pdinfo
       for( i = 0; i < *NPQS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
-#ifdef ROCM
-         if( ( P[ i ] = atoi( num ) ) != 1 )
-         {
-            HPL_pwarn( stderr, __LINE__, "HPL_pdinfo",
-                       "Value of P is not 1" );
-            error = 1; goto label_error;
-         }
-#elif
          if( ( P[ i ] = atoi( num ) ) < 1 )
          {
             HPL_pwarn( stderr, __LINE__, "HPL_pdinfo",
                        "Value of P less than 1" );
             error = 1; goto label_error;
          }
-#endif
       }
       (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NPQS; i++ )

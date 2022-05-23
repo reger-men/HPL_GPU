@@ -202,7 +202,6 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
     */
     PANEL->ldl2    = 0;               /* local leading dim of array L2 */
     PANEL->len     = 0;           /* length of the buffer to broadcast */
-    PANEL->ldu0    = 0;
     /*
     * Figure out the exact amount of workspace  needed by the factorization
     * and the update - Allocate that space - Finish the panel data structu-
@@ -218,6 +217,8 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
     * buffer.
     */
     dalign = ALGO->align * sizeof( double );
+    size_t lpiv = (6 * JB * sizeof(int) + sizeof(double) - 1) / (sizeof(double));
+    size_t ipivlen = (JB * sizeof(int) + sizeof(double) - 1) / (sizeof(double));
 
     if( npcol == 1 )                             /* P x 1 process grid */
     {                                     /* space for L1, DPIV, DINFO */
@@ -256,22 +257,32 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
         PANEL->dL1   = (double *)HPL_PTR( PANEL->dWORK, dalign );
         PANEL->dDPIV = (double *)HPL_PTR( PANEL->dWORK, dalign ) + JB * JB;
         PANEL->L1    = (double *)HPL_PTR( PANEL->WORK, dalign );
-        PANEL->DPIV  = (double *)HPL_PTR( PANEL->WORK, dalign ) + JB * JB;
-        PANEL->DINFO = PANEL->DPIV + JB;
-        *(PANEL->DINFO) = 0.0;
-        PANEL->U     = ( nprow > 1 ? PANEL->DINFO + 1: NULL );
-        PANEL->dU    = (double *)HPL_PTR( PANEL->dWORK, dalign ) + JB * JB;
-        PANEL->ldu0  = Mmin(JB, nu);
 
+        PANEL->dlindxA  = (int*)(PANEL->dL1 + JB * JB);
+        PANEL->lindxA   = (int*)(PANEL->L1 + JB * JB);
+        PANEL->dlindxAU = PANEL->dlindxA + 2 * JB;
+        PANEL->lindxAU  = PANEL->lindxA + 2 * JB;
+        PANEL->dpermU   = PANEL->dlindxAU + 2 * JB;
+        PANEL->permU    = PANEL->lindxAU + 2 * JB;
+
+        // Put ipiv array at the end
+        PANEL->dipiv = PANEL->dpermU + JB;
+        PANEL->ipiv  = PANEL->permU + JB;
+
+        PANEL->DINFO  = ((double*)PANEL->lindxA) + lpiv + ipivlen;
+        PANEL->dDINFO = ((double*)PANEL->dlindxA) + lpiv + ipivlen;
+        *(PANEL->DINFO) = 0.0;
+        PANEL->U     = (  PANEL->DINFO + 1);
+        PANEL->dU    = ( PANEL->dDINFO + 1);
     }
     else
     {                                        /* space for L2, L1, DPIV */
         ml2 = ( myrow == icurrow ? mp - JB : mp ); ml2 = Mmax( 0, ml2 );
-        PANEL->len = ml2*JB + ( itmp1 = JB*JB + JB + 1 );
+        PANEL->len = ml2*JB + ( itmp1 = JB*JB + lpiv + ipivlen ); 
     #ifdef HPL_COPY_L
-        lwork = ALGO->align + PANEL->len;
+        lwork = ALGO->align + PANEL->len + 1;
     #else
-        lwork = ALGO->align + ( mycol == icurcol ? itmp1 : PANEL->len );
+        lwork = ALGO->align + ( mycol == icurcol ? itmp1 : PANEL->len ) + 1;
     #endif
 
         // if( nprow > 1 )                                 /* space for U */
@@ -328,20 +339,29 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
             PANEL->ldl2 = Mmax( 1, ml2 );
         }
     #endif
-        PANEL->DPIV  = PANEL->L1   + JB * JB;
-        PANEL->dDPIV  = PANEL->dL1   + JB * JB;
-        PANEL->DINFO = PANEL->DPIV + JB;
+        PANEL->dlindxA  = (int*)(PANEL->dL1 + JB * JB);
+        PANEL->lindxA   = (int*)(PANEL->L1 + JB * JB);
+        PANEL->dlindxAU = PANEL->dlindxA + 2 * JB;
+        PANEL->lindxAU  = PANEL->lindxA + 2 * JB;
+        PANEL->dpermU   = PANEL->dlindxAU + 2 * JB;
+        PANEL->permU    = PANEL->lindxAU + 2 * JB;
+
+        PANEL->dipiv = PANEL->dpermU + JB;
+        PANEL->ipiv  = PANEL->permU + JB;
+
+        PANEL->DINFO  = ((double*)PANEL->lindxA) + lpiv + ipivlen;
+        PANEL->dDINFO = ((double*)PANEL->dlindxA) + lpiv + ipivlen;
         *(PANEL->DINFO) = 0.0;
-        PANEL->U     = ( nprow > 1 ? PANEL->DINFO + 1 : NULL );
-        PANEL->dU    = PANEL->dL1   + JB * JB;;
+        PANEL->U     = (  PANEL->DINFO + 1  );
+        PANEL->dU    = ( PANEL->dDINFO + 1 );
     }
 
 
-    if( nprow == 1 ) { lwork = 3*JB; }
+    if( nprow == 1 ) { lwork = mp + JB; }
     else
     {
-        itmp1 = (JB << 2); lwork = nprow + 1; itmp1 = Mmax( itmp1, lwork );
-        lwork = 4 + (9 * JB) + (3 * nprow) + itmp1;
+        itmp1 = (JB << 1); lwork = nprow + 1; itmp1 = Mmax( itmp1, lwork );
+        lwork = mp + 4 + (5 * JB) + (3 * nprow) + itmp1;
     }
 
 
@@ -392,6 +412,7 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
 {
     double *A, *dA;
     int jb, i, ml2;
+    static int equil = -1;
     /* ..
      * .. Executable Statements ..
      */
@@ -404,36 +425,32 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
     if (PANEL->grid->mycol == PANEL->pcol)
     { // L2 reuses A
         if (PANEL->grid->npcol > 1) {
-
-            hipMemcpy2DAsync(Mptr(PANEL->dA, 0, -jb, PANEL->lda),
-                         PANEL->lda * sizeof(double),
-                         Mptr(PANEL->A, 0, 0, PANEL->lda),
-                         PANEL->lda * sizeof(double),
-                         jb * sizeof(double),
-                         jb,
-                         hipMemcpyHostToDevice,
-                         dataStream);
+            if (PANEL->grid->myrow == PANEL->prow) {
+                hipMemcpy2DAsync(Mptr(PANEL->dA, 0, -jb, PANEL->lda), PANEL->lda * sizeof(double),
+                        Mptr(PANEL->A, 0, 0, PANEL->lda), PANEL->lda * sizeof(double),
+                        jb * sizeof(double), jb,
+                        hipMemcpyHostToDevice, dataStream);
 
             if((PANEL->mp - jb) > 0)
-                    hipMemcpy2DAsync(PANEL->dL2,
-                            PANEL->ldl2 * sizeof(double),
-                            Mptr(PANEL->A, jb, 0, PANEL->lda),
-                            PANEL->lda * sizeof(double),
-                            (PANEL->mp - jb) * sizeof(double),
-                            jb,
-                            hipMemcpyHostToDevice,
-                            dataStream);
+                    hipMemcpy2DAsync(PANEL->dL2, PANEL->ldl2 * sizeof(double),
+                            Mptr(PANEL->A, jb, 0, PANEL->lda), PANEL->lda * sizeof(double),
+                            (PANEL->mp - jb) * sizeof(double), jb,
+                            hipMemcpyHostToDevice, dataStream);
         }
         else {
             if(PANEL->mp > 0)
-                hipMemcpy2DAsync(Mptr(PANEL->dA, 0, -jb, PANEL->lda),
-                        PANEL->lda * sizeof(double),
-                        Mptr(PANEL->A, 0, 0, PANEL->lda),
-                        PANEL->lda * sizeof(double),
-                        PANEL->mp * sizeof(double),
-                        jb,
-                        hipMemcpyHostToDevice,
-                        dataStream);
+                    hipMemcpy2DAsync(PANEL->dL2, PANEL->ldl2 * sizeof(double),
+                           Mptr(PANEL->A, 0, 0, PANEL->lda), PANEL->lda * sizeof(double),
+                           PANEL->mp * sizeof(double), jb,
+                           hipMemcpyHostToDevice, dataStream);
+        }
+    }
+        else {
+            if(PANEL->mp > 0)
+                hipMemcpy2DAsync(Mptr(PANEL->dA, 0, -jb, PANEL->lda), PANEL->lda * sizeof(double),
+                        Mptr(PANEL->A, 0, 0, PANEL->lda), PANEL->lda * sizeof(double),
+                        PANEL->mp * sizeof(double), jb,
+                        hipMemcpyHostToDevice, dataStream);
         }
         // copy L1
         hipMemcpy2DAsync(PANEL->dL1, jb * sizeof(double),
@@ -443,17 +460,18 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
     }
     
     if (PANEL->grid->mycol == PANEL->pcol) {
+        if (PANEL->grid->nprow == 1) {
         // unroll pivoting and send to device
-        int *ipiv = PANEL->IWORK;
-        int *dipiv = PANEL->dIWORK;
-        int *ipiv_ex = PANEL->IWORK + jb;
-        int *dipiv_ex = PANEL->dIWORK + jb;
+        int* ipiv    = PANEL->ipiv;
+        int* ipiv_ex = PANEL->ipiv + jb;
+        int* dipiv    = PANEL->dipiv;
+        int* dipiv_ex = PANEL->dipiv + jb;
 
         int *upiv = PANEL->IWORK2;
 
         for (i = 0; i < jb; i++)
         {
-            ipiv[i] = (int)(PANEL->DPIV[i]) - PANEL->ii;
+            ipiv[i] = (int)(PANEL->ipiv[i]) - PANEL->ii;
         } // shift
         for (i = 0; i < PANEL->mp; i++)
         {
@@ -488,6 +506,57 @@ void HIP::panel_send_to_device(HPL_T_panel *PANEL)
                         ipiv_ex, jb * sizeof(int),
                         jb * sizeof(int), 1,
                         hipMemcpyHostToDevice, dataStream);
+        }
+        else {
+            if(equil == -1) equil = PANEL->algo->equil;
+
+            // to broadcast row-swapping information between column processes
+            int  k       = (int)((unsigned int)(jb) << 1);
+            int* iflag   = PANEL->IWORK;
+            int* ipl     = iflag + 1;
+            int* ipID    = ipl + 1;
+            int* ipA     = ipID + ((unsigned int)(k) << 1);
+            int* iplen   = ipA + 1;
+            int* ipmap   = iplen + PANEL->grid->nprow + 1;
+            int* ipmapm1 = ipmap + PANEL->grid->nprow;
+            int* upiv    = ipmapm1 + PANEL->grid->nprow;
+            int* iwork   = upiv + PANEL->mp;
+
+            int* lindxA   = PANEL->lindxA;
+            int* lindxAU  = PANEL->lindxAU;
+            int* permU    = PANEL->permU;
+            int* permU_ex = permU + jb;
+            int* ipiv     = PANEL->ipiv;
+
+            int* dlindxA   = PANEL->dlindxA;
+            int* dlindxAU  = PANEL->dlindxAU;
+            int* dpermU    = PANEL->dpermU;
+            int* dpermU_ex = dpermU + jb;
+            int* dipiv     = PANEL->dipiv;
+
+            if(*iflag == -1) /* no index arrays have been computed so far */
+            {
+                HPL_pipid(PANEL, ipl, ipID);
+                HPL_plindx1(PANEL, *ipl, ipID, ipA, lindxA, lindxAU, iplen, ipmap, ipmapm1, permU, iwork);
+                *iflag = 1;
+            } else if(*iflag == 0) /* HPL_pdlaswp00N called before: reuse ipID */
+            {
+                HPL_plindx1(PANEL, *ipl, ipID, ipA, lindxA, lindxAU, iplen, ipmap, ipmapm1, permU, iwork);
+                *iflag = 1;
+            } else if((*iflag == 1) && (equil != 0)) { /* HPL_pdlaswp01N was call before only re-compute IPLEN, IPMAP */
+                HPL_plindx10(PANEL, *ipl, ipID, iplen, ipmap, ipmapm1);
+                *iflag = 1;
+            }
+
+            int N = Mmax(*ipA, jb);
+            if(N > 0) {
+                hipMemcpy2DAsync(dlindxA, k * sizeof(int), lindxA, k * sizeof(int), N * sizeof(int), 1, hipMemcpyHostToDevice, dataStream);
+                hipMemcpy2DAsync(dlindxAU, k * sizeof(int), lindxAU, k * sizeof(int), N * sizeof(int), 1, hipMemcpyHostToDevice, dataStream);
+            }
+
+            hipMemcpy2DAsync(dpermU, jb * sizeof(int), permU, jb * sizeof(int), jb * sizeof(int), 1, hipMemcpyHostToDevice, dataStream);
+            hipMemcpy2DAsync(dipiv, jb * sizeof(int), ipiv, jb * sizeof(int), jb * sizeof(int), 1, hipMemcpyHostToDevice, dataStream);
+        }
     }
 }
 
@@ -947,7 +1016,7 @@ void HIP::pdlaswp(HPL_T_panel *PANEL, const int NN){
     lda = PANEL->lda;
     if( NN >= 0 ) n = Mmin( NN, n );
     Aptr = PANEL->dA;       L2ptr = PANEL->dL2;   L1ptr = PANEL->dL1;
-    dpiv  = PANEL->DPIV;    ipiv  = PANEL->dIWORK;
+    dpiv  = PANEL->DPIV;    ipiv  = PANEL->dipiv;
     mp   = PANEL->mp - jb;  nq0   = 0;       nn = n - nq0;
 
     const int block_size = 512, grid_size = nn;
@@ -989,13 +1058,11 @@ void HIP::bcast_ibcst(HPL_T_panel* PANEL, int* IFLAG, int &result) {
   msgid = PANEL->msgid;
 
   ierr  = MPI_Ibcast(_M_BUFF, _M_COUNT, _M_TYPE, root, comm, &request);
-  ierr2 = MPI_Ibcast(PANEL->dIWORK, PANEL->jb * 2, MPI_INT, root, comm, &request2);
   /*
    * If the message was received and being forwarded,  return HPL_SUCCESS.
    * If an error occured in an MPI call, return HPL_FAILURE.
    */
   *IFLAG = (ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE);
-  *IFLAG = (ierr2 == MPI_SUCCESS ? *IFLAG : HPL_FAILURE);
 
     result = *IFLAG;
 }
@@ -1007,9 +1074,213 @@ void HIP::bwait_ibcst(HPL_T_panel* PANEL, int &result) {
   if(PANEL->grid->npcol <= 1) { result = HPL_SUCCESS; return; }
 
   ierr1 = MPI_Wait(&request, MPI_STATUS_IGNORE);
-  ierr2 = MPI_Wait(&request2, MPI_STATUS_IGNORE);
 
-  result = (ierr1 == MPI_SUCCESS
-               ? (ierr2 == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE)
-               : HPL_FAILURE);
+  result = (ierr1 == MPI_SUCCESS? HPL_SUCCESS : HPL_FAILURE);
+}
+
+#define TILE_DIM_01T 32
+#define BLOCK_ROWS_01T 8
+
+/* Build U matrix from rows of A */
+__global__ void dlaswp01T_1(const int M, const int N,
+                            double* __restrict__ A, const int LDA,
+                            double* __restrict__ U, const int LDU,
+                            const int* __restrict__ LINDXA, const int* __restrict__ LINDXAU) {
+
+  __shared__ double s_U[TILE_DIM_01T][TILE_DIM_01T + 1];
+
+  const int m = threadIdx.x + TILE_DIM_01T * blockIdx.x;
+  const int n = threadIdx.y + TILE_DIM_01T * blockIdx.y;
+
+  if(m < M) {
+    const int ipa  = LINDXA[m];
+    const int ipau = LINDXAU[m];
+
+    if(ipau >= 0) { // row will swap into U
+      // save in LDS for the moment
+      // possible cache-hits if ipas are close
+      s_U[threadIdx.x][threadIdx.y + 0] =
+          (n + 0 < N) ? A[ipa + (n + 0) * ((size_t)LDA)] : 0.0;
+      s_U[threadIdx.x][threadIdx.y + 8] =
+          (n + 8 < N) ? A[ipa + (n + 8) * ((size_t)LDA)] : 0.0;
+      s_U[threadIdx.x][threadIdx.y + 16] =
+          (n + 16 < N) ? A[ipa + (n + 16) * ((size_t)LDA)] : 0.0;
+      s_U[threadIdx.x][threadIdx.y + 24] =
+          (n + 24 < N) ? A[ipa + (n + 24) * ((size_t)LDA)] : 0.0;
+    }
+  }
+
+  __syncthreads();
+
+  const int um = threadIdx.y + TILE_DIM_01T * blockIdx.x;
+  const int un = threadIdx.x + TILE_DIM_01T * blockIdx.y;
+
+  if(un < N) {
+    const int uipau0 = (um + 0 < M) ? LINDXAU[um + 0] : -1;
+    const int uipau1 = (um + 8 < M) ? LINDXAU[um + 8] : -1;
+    const int uipau2 = (um + 16 < M) ? LINDXAU[um + 16] : -1;
+    const int uipau3 = (um + 24 < M) ? LINDXAU[um + 24] : -1;
+
+    // write out chunks of U
+    if(uipau0 >= 0)
+      U[un + uipau0 * ((size_t)LDU)] = s_U[threadIdx.y + 0][threadIdx.x];
+    if(uipau1 >= 0)
+      U[un + uipau1 * ((size_t)LDU)] = s_U[threadIdx.y + 8][threadIdx.x];
+    if(uipau2 >= 0)
+      U[un + uipau2 * ((size_t)LDU)] = s_U[threadIdx.y + 16][threadIdx.x];
+    if(uipau3 >= 0)
+      U[un + uipau3 * ((size_t)LDU)] = s_U[threadIdx.y + 24][threadIdx.x];
+  }
+}
+
+#define BLOCK_SIZE_01T 1024
+
+/* Perform any local row swaps of A */
+__global__ void dlaswp01T_2(const int M, const int N,
+                            double* __restrict__ A, const int LDA,
+                            const int* __restrict__ LINDXA, const int* __restrict__ LINDXAU) {
+
+  __shared__ double s_A[BLOCK_SIZE_01T];
+
+  const int n = blockIdx.x;
+  const int m = threadIdx.x;
+
+  int ipau, ipa;
+
+  if(m < M) {
+    ipau = LINDXAU[m];
+    ipa  = LINDXA[m];
+
+    // read in
+    s_A[m] = (ipau < 0) ? A[ipa + n * ((size_t)LDA)] : 0.0;
+  }
+  __syncthreads();
+
+  if(m < M) {
+    if(ipau < 0) { // swap into A
+      A[-ipau + n * ((size_t)LDA)] = s_A[m];
+    }
+  }
+}
+
+void HIP::dlaswp01T(const int M, const int N, double* A, const int LDA, double* U, const int LDU, const int* LINDXA, const int* LINDXAU) {
+
+    if((M <= 0) || (N <= 0)) return;
+        
+    dim3 grid_size((M + TILE_DIM_01T - 1) / TILE_DIM_01T, (N + TILE_DIM_01T - 1) / TILE_DIM_01T);
+    dim3 block_size(TILE_DIM_01T, BLOCK_ROWS_01T);
+    hipLaunchKernelGGL((dlaswp01T_1), grid_size, block_size, 0, pdlaswpStream,
+                        M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
+    assert(((void)"NB too large in HPL_dlaswp01T", M <= BLOCK_SIZE_01T));
+    hipLaunchKernelGGL(
+        (dlaswp01T_2), N, M, 0, pdlaswpStream, M, N, A, LDA, LINDXA, LINDXAU);
+}
+
+#define TILE_DIM_06T 32
+#define BLOCK_ROWS_06T 8
+
+__global__ void dlaswp06T_kernel(const int M, const int N,
+                          double* __restrict__ A, const int LDA, 
+                          double* __restrict__ U, const int LDU,
+                          const int* __restrict__ LINDXA) {
+
+  __shared__ double s_U[TILE_DIM_06T][TILE_DIM_06T + 1];
+  __shared__ double s_A[TILE_DIM_06T][TILE_DIM_06T + 1];
+
+  const int am = threadIdx.x + TILE_DIM_06T * blockIdx.x;
+  const int an = threadIdx.y + TILE_DIM_06T * blockIdx.y;
+
+  const int um = threadIdx.y + TILE_DIM_06T * blockIdx.x;
+  const int un = threadIdx.x + TILE_DIM_06T * blockIdx.y;
+
+  int aip;
+
+  if(am < M) {
+    aip = LINDXA[am];
+    s_A[threadIdx.x][threadIdx.y + 0] =
+        (an + 0 < N) ? A[aip + (an + 0) * ((size_t)LDA)] : 0.0;
+    s_A[threadIdx.x][threadIdx.y + 8] =
+        (an + 8 < N) ? A[aip + (an + 8) * ((size_t)LDA)] : 0.0;
+    s_A[threadIdx.x][threadIdx.y + 16] =
+        (an + 16 < N) ? A[aip + (an + 16) * ((size_t)LDA)] : 0.0;
+    s_A[threadIdx.x][threadIdx.y + 24] =
+        (an + 24 < N) ? A[aip + (an + 24) * ((size_t)LDA)] : 0.0;
+  }
+
+  if(un < N) {
+    s_U[threadIdx.y + 0][threadIdx.x] =
+        (um + 0 < M) ? U[un + (um + 0) * ((size_t)LDU)] : 0.0;
+    s_U[threadIdx.y + 8][threadIdx.x] =
+        (um + 8 < M) ? U[un + (um + 8) * ((size_t)LDU)] : 0.0;
+    s_U[threadIdx.y + 16][threadIdx.x] =
+        (um + 16 < M) ? U[un + (um + 16) * ((size_t)LDU)] : 0.0;
+    s_U[threadIdx.y + 24][threadIdx.x] =
+        (um + 24 < M) ? U[un + (um + 24) * ((size_t)LDU)] : 0.0;
+  }
+
+  __syncthreads();
+
+  // swap
+  if(am < M) {
+    if((an + 0) < N)
+      A[aip + (an + 0) * ((size_t)LDA)] = s_U[threadIdx.x][threadIdx.y + 0];
+    if((an + 8) < N)
+      A[aip + (an + 8) * ((size_t)LDA)] = s_U[threadIdx.x][threadIdx.y + 8];
+    if((an + 16) < N)
+      A[aip + (an + 16) * ((size_t)LDA)] = s_U[threadIdx.x][threadIdx.y + 16];
+    if((an + 24) < N)
+      A[aip + (an + 24) * ((size_t)LDA)] = s_U[threadIdx.x][threadIdx.y + 24];
+  }
+
+  if(un < N) {
+    if((um + 0) < M)
+      U[un + (um + 0) * ((size_t)LDU)] = s_A[threadIdx.y + 0][threadIdx.x];
+    if((um + 8) < M)
+      U[un + (um + 8) * ((size_t)LDU)] = s_A[threadIdx.y + 8][threadIdx.x];
+    if((um + 16) < M)
+      U[un + (um + 16) * ((size_t)LDU)] = s_A[threadIdx.y + 16][threadIdx.x];
+    if((um + 24) < M)
+      U[un + (um + 24) * ((size_t)LDU)] = s_A[threadIdx.y + 24][threadIdx.x];
+  }
+}
+
+void HIP::dlaswp06T(const int M, const int N, double *A, const int LDA, double*    U, const int LDU, const int* LINDXA) {
+
+  if((M <= 0) || (N <= 0)) return;
+
+  dim3 grid_size((M + TILE_DIM_06T - 1) / TILE_DIM_06T, (N + TILE_DIM_06T - 1) / TILE_DIM_06T);
+  dim3 block_size(TILE_DIM_06T, BLOCK_ROWS_06T);
+  hipLaunchKernelGGL((dlaswp06T_kernel), grid_size, block_size, 0, pdlaswpStream,
+                     M, N, A, LDA, U, LDU, LINDXA);
+}
+
+#define BLOCK_SIZE_10N 512
+
+__global__ void dlaswp10N_kernel(const int M, const int N, double* __restrict__ A, const int LDA, const int* __restrict__ IPIV) {
+
+  const int m = threadIdx.x + BLOCK_SIZE_10N * blockIdx.x;
+
+  if(m < M) {
+    for(int i = 0; i < N; i++) {
+      const int ip = IPIV[i];
+
+      if(ip != i) {
+        // swap
+        const double Ai           = A[m + i * ((size_t)LDA)];
+        const double Aip          = A[m + ip * ((size_t)LDA)];
+        A[m + i * ((size_t)LDA)]  = Aip;
+        A[m + ip * ((size_t)LDA)] = Ai;
+      }
+    }
+  }
+}
+
+void HIP::dlaswp10N(const int  M, const int  N, double* A, const int  LDA, const int* IPIV) {
+ 
+  if((M <= 0) || (N <= 0)) return;
+
+  dim3 grid_size((M + BLOCK_SIZE_10N - 1) / BLOCK_SIZE_10N);
+  hipLaunchKernelGGL(
+      (dlaswp10N_kernel), grid_size, dim3(BLOCK_SIZE_10N), 0, pdlaswpStream, M, N, A, LDA, IPIV);
+
 }
