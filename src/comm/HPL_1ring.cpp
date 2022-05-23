@@ -93,7 +93,7 @@ int HPL_binit_1ring( PANEL )
 /*
  * Force the copy of the panel into a contiguous buffer
  */
-   HPL_copyL( PANEL );
+   // HPL_copyL( PANEL );
 
    return( HPL_SUCCESS );
 #endif
@@ -107,7 +107,7 @@ int HPL_binit_1ring( PANEL )
 
 #else
 
-#define   _M_BUFF     (void *)(PANEL->L2)
+#define   _M_BUFF     (void *)(PANEL->dL2)
 #define   _M_COUNT    PANEL->len
 #define   _M_TYPE     MPI_DOUBLE
 
