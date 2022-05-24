@@ -37,6 +37,20 @@ extern "C" {
       }
    }
 
+   void HPL_BE_host_malloc(void** ptr, size_t size, unsigned int flag, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::malloc, ptr, size);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::host_malloc, ptr, size, flag);
+            break;
+         default:
+            HPL::dispatch(CPU::malloc, ptr, size);
+      }
+   }
+
    /*
    * Deallocate the memory of ptr
    */
@@ -54,6 +68,19 @@ extern "C" {
       }
    }
 
+   void HPL_BE_host_free(void **ptr, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::free, ptr);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::host_free, ptr);
+            break;
+         default:
+            HPL::dispatch(CPU::free, ptr);
+      }
+   }
     /*
    * Allocate the panel resources
    */
@@ -522,6 +549,21 @@ extern "C" {
             DO_NOTHING();
       }
    }
+
+   void HPL_BE_move_data_2d(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, const int KIND, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            DO_NOTHING();
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::move_data_2d, dst, dpitch, src, spitch, width, height, (int)KIND);
+            break;
+         default:
+            DO_NOTHING();
+      }
+   }
+
    void HPL_BE_dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV, enum HPL_TARGET TR) 
    {
       switch(TR) {
@@ -545,6 +587,51 @@ extern "C" {
             HPL::dispatch(HIP::pdlaswp, PANEL, NN);
             break;
          default:
+            break;
+      }
+   }
+  
+   void HPL_BE_dlaswp01T(const int M, const int N, double* A, const int LDA, double* U, const int LDU, const int* LINDXA, const int* LINDXAU, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL_dlaswp01T(M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dlaswp01T, M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
+            break;
+         default:
+            HPL_dlaswp01T(M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
+            break;
+      }
+   }
+
+   void HPL_BE_dlaswp06T(const int M, const int N, double* A, const int LDA, double* U, const int LDU, const int* LINDXA, enum HPL_TARGET TR) 
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL_dlaswp06T(M, N, A, LDA, U, LDU, LINDXA);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dlaswp06T, M, N, A, LDA, U, LDU, LINDXA);
+            break;
+         default:
+            HPL_dlaswp06T(M, N, A, LDA, U, LDU, LINDXA);
+            break;
+      }
+   }
+
+   void HPL_BE_dlaswp10N(const int M, const int N, double* A, const int LDA, const int* IPIV, enum HPL_TARGET TR) 
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL_dlaswp10N(M, N, A, LDA, IPIV);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::dlaswp10N, M, N, A, LDA, IPIV);
+            break;
+         default:
+            HPL_dlaswp10N(M, N, A, LDA, IPIV);
             break;
       }
    }

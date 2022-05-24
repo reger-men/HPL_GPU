@@ -130,12 +130,7 @@ void HPL_pdtrsv
    nb = AMAT->nb; lda = AMAT->ld; A = AMAT->A; XR = AMAT->X;
 
 #ifdef ROCM
-   // rocblas_set_stream(handle, 0);
-   rocblas_handle handle;
-   rocblas_create_handle(&handle);
-   rocblas_set_pointer_mode(handle, rocblas_pointer_mode_host);
    dA = AMAT->d_A; dXR = AMAT->d_X;
-   // hipMemcpy(AMAT->A, AMAT->dA, (AMAT->n+1)*AMAT->ld*sizeof(double), hipMemcpyDeviceToHost);
 #endif
    (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
    Rcomm = GRID->row_comm; Rmsgid = MSGID_BEGIN_PTRSV;
@@ -162,17 +157,12 @@ void HPL_pdtrsv
    {
       if( mycol == Bcol  )
       { 
-#ifdef ROCM
-         hipMemcpy(XC, dXC, Anp*sizeof(double), hipMemcpyDeviceToHost);
-#endif
-         (void) HPL_send( XC, Anp, Alcol, Rmsgid, Rcomm ); 
+         HPL_BE_device_sync(T_HIP);
+         (void) HPL_send( dXC, Anp, Alcol, Rmsgid, Rcomm ); 
       }
       else if( mycol == Alcol )
       { 
-         (void) HPL_recv( XC, Anp, Bcol,  Rmsgid, Rcomm ); 
-#ifdef ROCM
-         hipMemcpy(dXC, XC, Anp*sizeof(double), hipMemcpyHostToDevice);
-#endif
+         (void) HPL_recv( dXC, Anp, Bcol,  Rmsgid, Rcomm ); 
       }
    }
    Rmsgid = ( Rmsgid + 2 >
@@ -191,8 +181,8 @@ void HPL_pdtrsv
    if( Anp > 0 )
    {
 #ifdef ROCM
-      hipHostMalloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), 0);
-      hipMalloc((void**)&dW, (size_t)(Mmin( n1, Anp )) * sizeof( double ));
+      HPL_BE_host_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), 0, T_HIP);
+      HPL_BE_malloc((void**)&dW, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_HIP);
       if( W == NULL || dW == NULL)
 #else
       //Adil
@@ -220,23 +210,9 @@ void HPL_pdtrsv
 #endif
       if( myrow == Alrow )
       {
-#ifdef ROCM
-         const double one = 1.0;
-         rocblas_dtrsm(handle, rocblas_side_left, rocblas_fill_upper,
-                      rocblas_operation_none, rocblas_diagonal_non_unit,
-                       kb, 1, &one, dAptr+Anp, lda, dXC+Anp, kb);
-         rocblas_dcopy(handle, kb, dXC+Anp, 1, dXd, 1 );
-#else
-         //Adil
          HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1, T_TEMPO);
-         /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1 );*/
-
-         //Adil
-         HPL_BE_dcopy(kb, XC+Anp, 1, Xd, 1, T_TEMPO);                    
-         /*HPL_dcopy( kb, XC+Anp, 1, Xd, 1 );*/
-#endif
+                    kb, dAptr+Anp, lda, dXC+Anp, 1, T_HIP);
+         HPL_BE_dcopy(kb, dXC+Anp, 1, dXd, 1, T_HIP);                    
       }
    }
 
@@ -270,20 +246,15 @@ void HPL_pdtrsv
          if( myrow == rowprev )
          {
             if( GridIsNot1xQ ) {
-#ifdef ROCM
-               hipMemcpy(Xdprev, dXdprev, kbprev*sizeof(double), hipMemcpyDeviceToHost);
-#endif
-               (void) HPL_send( Xdprev, kbprev, MModSub1( myrow, nprow ),
+               HPL_BE_device_sync(T_HIP);
+               (void) HPL_send( dXdprev, kbprev, MModSub1( myrow, nprow ),
                                 Cmsgid, Ccomm );
             }
          }
          else
          {
-            (void) HPL_recv( Xdprev, kbprev, MModAdd1( myrow, nprow ),
+            (void) HPL_recv( dXdprev, kbprev, MModAdd1( myrow, nprow ),
                              Cmsgid, Ccomm );
-#ifdef ROCM
-            hipMemcpy(dXdprev, Xdprev, kbprev*sizeof(double), hipMemcpyHostToDevice);
-#endif
          } 
 /*
  * Compute partial update of previous solution block and send it to cur-
@@ -292,26 +263,12 @@ void HPL_pdtrsv
          if( n1pprev > 0 )
          {
             tmp1 = Anpprev - n1pprev;
-#ifdef ROCM
-            const double one =  1.0;
-            const double mone = -1.0;
-            rocblas_dgemv(handle, rocblas_operation_none, n1pprev, kbprev,
-                         &mone, dAprev+tmp1, lda, dXdprev, 1, &one,
-                         dXC+tmp1, 1 );
-#else
-            //Adil
             HPL_BE_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
-                       -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
-                       XC+tmp1, 1, T_DEFAULT);
-            /*HPL_dgemv( HplColumnMajor, HplNoTrans, n1pprev, kbprev,
-                       -HPL_rone, Aprev+tmp1, lda, Xdprev, 1, HPL_rone,
-                       XC+tmp1, 1 );*/
-#endif
+                       -HPL_rone, dAprev+tmp1, lda, dXdprev, 1, HPL_rone,
+                       dXC+tmp1, 1, T_HIP);
             if( GridIsNotPx1 ) {
-#ifdef ROCM
-               hipMemcpy(XC+tmp1, dXC+tmp1, n1pprev*sizeof(double), hipMemcpyDeviceToHost);
-#endif
-               (void) HPL_send( XC+tmp1, n1pprev, Alcol, Rmsgid, Rcomm );
+               HPL_BE_device_sync(T_HIP);
+               (void) HPL_send( dXC+tmp1, n1pprev, Alcol, Rmsgid, Rcomm );
             }
          }
 /*
@@ -320,10 +277,8 @@ void HPL_pdtrsv
  */
          if( ( myrow != rowprev ) &&
              ( myrow != MModAdd1( rowprev, nprow ) ) ) {
-#ifdef ROCM
-            hipMemcpy(Xdprev, dXdprev, kbprev*sizeof(double), hipMemcpyDeviceToHost);
-#endif
-            (void) HPL_send( Xdprev, kbprev, MModSub1( myrow, nprow ),
+            HPL_BE_device_sync(T_HIP);
+            (void) HPL_send( dXdprev, kbprev, MModSub1( myrow, nprow ),
                              Cmsgid, Ccomm );
              }
       }
@@ -335,16 +290,8 @@ void HPL_pdtrsv
  */
          if( n1pprev > 0 )
          {
-            (void) HPL_recv( W, n1pprev, colprev, Rmsgid, Rcomm );
-#ifdef ROCM
-            hipMemcpy(dW, W, n1pprev*sizeof(double), hipMemcpyHostToDevice);
-            const double one = 1.0;
-            rocblas_daxpy(handle, n1pprev, &one, dW, 1, dXC+Anpprev-n1pprev, 1);
-#else
-            //Adil
-            HPL_BE_daxpy(n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1, T_DEFAULT);
-            /*HPL_daxpy( n1pprev, HPL_rone, W, 1, XC+Anpprev-n1pprev, 1 );*/
-#endif
+            (void) HPL_recv( dW, n1pprev, colprev, Rmsgid, Rcomm );
+            HPL_BE_daxpy(n1pprev, HPL_rone, dW, 1, dXC+Anpprev-n1pprev, 1, T_HIP);
          }
       }
 /*
@@ -352,41 +299,16 @@ void HPL_pdtrsv
  */
       if( ( mycol == Alcol ) && ( myrow == Alrow ) )
       {
-#ifdef ROCM
-         const double one = 1.0;
-         rocblas_dtrsm(handle, rocblas_side_left, rocblas_fill_upper,
-                      rocblas_operation_none, rocblas_diagonal_non_unit,
-                       kb, 1, &one, dAptr+Anp, lda, dXC+Anp, kb);
-         rocblas_dcopy(handle, kb, dXC+Anp, 1, dXR+Anq, 1 );
-#else
-         //Adil
          HPL_BE_dtrsv(HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1, T_DEFAULT);
-         /*HPL_dtrsv( HplColumnMajor, HplUpper, HplNoTrans, HplNonUnit,
-                    kb, Aptr+Anp, lda, XC+Anp, 1 );*/
-
-         //Adil
-         HPL_BE_dcopy(kb, XC+Anp, 1, XR+Anq, 1, T_DEFAULT);                    
-         /*HPL_dcopy( kb, XC+Anp, 1, XR+Anq, 1 );*/
-#endif
+                    kb, dAptr+Anp, lda, dXC+Anp, 1, T_HIP);
+         HPL_BE_dcopy(kb, dXC+Anp, 1, dXR+Anq, 1, T_HIP);                    
       }
 /*
 *  Finish previous update
 */
       if( ( mycol == colprev ) && ( ( tmp1 = Anpprev - n1pprev ) > 0 ) ) {
-#ifdef ROCM
-         const double one =  1.0;
-         const double mone = -1.0;
-         rocblas_dgemv(handle, rocblas_operation_none, tmp1, kbprev,
-                      &mone, dAprev, lda, dXdprev, 1, &one,
-                      dXC, 1 );
-#else
-         //Adil
          HPL_BE_dgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
-                    Aprev, lda, Xdprev, 1, HPL_rone, XC, 1, T_DEFAULT);
-         /*HPL_dgemv( HplColumnMajor, HplNoTrans, tmp1, kbprev, -HPL_rone,
-                    Aprev, lda, Xdprev, 1, HPL_rone, XC, 1 );*/
-#endif
+                    dAprev, lda, dXdprev, 1, HPL_rone, dXC, 1, T_HIP);
       }
 /*
 *  Save info of current step and update info for the next step
@@ -413,23 +335,17 @@ void HPL_pdtrsv
  * Replicate last solution block
  */
    if( mycol == colprev ) {
-#ifdef ROCM
-      hipMemcpy(XR, dXR, kbprev*sizeof(double), hipMemcpyDeviceToHost);
-#endif
-      (void) HPL_broadcast( (void *)(XR), kbprev, HPL_DOUBLE, rowprev,
+      HPL_BE_device_sync(T_HIP);
+      (void) HPL_broadcast( (void *)(dXR), kbprev, HPL_DOUBLE, rowprev,
                             Ccomm );
-#ifdef ROCM
-      hipMemcpy(dXR, XR, kbprev*sizeof(double), hipMemcpyHostToDevice);
-#endif
    }
 
 #ifdef ROCM
-   hipDeviceSynchronize();
+   HPL_BE_device_sync(T_HIP);
    if( Wfr  ) {
-      hipHostFree( W  );
-      hipFree( dW  );
+      HPL_BE_host_free((void**)&W, T_HIP);
+      HPL_BE_free((void**)&dW, T_HIP);
    }
-   // hipMemcpy(AMAT->dX, AMAT->X, (AMAT->n)*sizeof(double), hipMemcpyHostToDevice);
 #else
    //Adil
    if( Wfr ) HPL_BE_free((void**)&W, T_TEMPO);

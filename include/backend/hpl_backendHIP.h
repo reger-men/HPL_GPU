@@ -74,7 +74,9 @@ namespace HIP {
     void release();
 
     void malloc(void**, size_t);
+    void host_malloc(void**, size_t, unsigned int);
     void free(void **);
+    void host_free(void **);
     void panel_new(HPL_T_grid *, HPL_T_palg *, const int, const int, const int, HPL_T_pmat *,
                    const int, const int, const int, HPL_T_panel **);
     void panel_init(HPL_T_grid *, HPL_T_palg *, const int,
@@ -137,8 +139,12 @@ namespace HIP {
                 double *, const int);  
 
     void move_data(double *, const double *, const size_t, const int);
+    void move_data_2d(void*, size_t, const void*, size_t, size_t, size_t, const int);
 
     void dlaswp00N(const int, const int, double *, const int, const int *);
+    void dlaswp01T(const int, const int, double*, const int, double*, const int, const int*, const int*);
+    void dlaswp06T(const int, const int, double*, const int, double*, const int, const int*);
+    void dlaswp10N(const int, const int, double*, const int, const int*);
     void gPrintMat(const int, const int, const int, const double*);
     void pdlaswp(HPL_T_panel *PANEL, const int NN);
     void pdlaswpTest(HPL_T_panel *PANEL, const int NN);

@@ -117,26 +117,26 @@ int HPL_binit_blonM( PANEL )
 
 #else
 
-#define   _M_BUFF_S1        (void *)(PANEL->L2)
+#define   _M_BUFF_S1        (void *)(PANEL->dL2)
 #define   _M_COUNT_S1       PANEL->len
 #define   _M_TYPE_S1        MPI_DOUBLE
 
-#define   _M_BUFF_S2        (void *)(PANEL->L2 + ibuf)
+#define   _M_BUFF_S2        (void *)(PANEL->dL2 + ibuf)
 #define   _M_COUNT_S2       lbuf
 #define   _M_TYPE_S2        MPI_DOUBLE
  
-#define   _M_BUFF_R1        (void *)(PANEL->L2)
+#define   _M_BUFF_R1        (void *)(PANEL->dL2)
 #define   _M_COUNT_R1       PANEL->len
 #define   _M_TYPE_R1        MPI_DOUBLE
  
-#define   _M_BUFF_R2        (void *)(PANEL->L2 + ibuf)
+#define   _M_BUFF_R2        (void *)(PANEL->dL2 + ibuf)
 #define   _M_COUNT_R2       lbuf
 #define   _M_TYPE_R2        MPI_DOUBLE
  
-#define   _M_ROLL_BUFF_S    (void *)(PANEL->L2 + ibufS)
+#define   _M_ROLL_BUFF_S    (void *)(PANEL->dL2 + ibufS)
 #define   _M_ROLL_COUNT_S   lbufS
 #define   _M_ROLL_TYPE_S    MPI_DOUBLE
-#define   _M_ROLL_BUFF_R    (void *)(PANEL->L2 + ibufR)
+#define   _M_ROLL_BUFF_R    (void *)(PANEL->dL2 + ibufR)
 #define   _M_ROLL_COUNT_R   lbufR
 #define   _M_ROLL_TYPE_R    MPI_DOUBLE
 

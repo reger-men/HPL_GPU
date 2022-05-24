@@ -107,7 +107,7 @@ int HPL_binit_2rinM( PANEL )
  
 #else
  
-#define   _M_BUFF     (void *)(PANEL->L2)
+#define   _M_BUFF     (void *)(PANEL->dL2)
 #define   _M_COUNT    PANEL->len
 #define   _M_TYPE     MPI_DOUBLE
  

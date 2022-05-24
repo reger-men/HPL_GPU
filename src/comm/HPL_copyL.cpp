@@ -94,16 +94,16 @@ void HPL_copyL
       if( PANEL->grid->myrow == PANEL->prow )
       {
          //Adil
-         HPL_BE_dlacpy(PANEL->mp-jb, jb, Mptr( PANEL->A, jb, -jb, lda ),
-                     lda, PANEL->L2, PANEL->ldl2, T_DEFAULT);
+         HPL_BE_dlacpy(PANEL->mp-jb, jb, Mptr( PANEL->dA, jb, -jb, lda ),
+                     lda, PANEL->dL2, PANEL->ldl2, T_HIP);
          /*HPL_dlacpy( PANEL->mp-jb, jb, Mptr( PANEL->A, jb, -jb, lda ),
                      lda, PANEL->L2, PANEL->ldl2 );*/
       }
       else
       {
          //Adil
-         HPL_BE_dlacpy( PANEL->mp,    jb, Mptr( PANEL->A,  0, -jb, lda ),
-                     lda, PANEL->L2, PANEL->ldl2, T_DEFAULT);
+         HPL_BE_dlacpy( PANEL->mp,    jb, Mptr( PANEL->dA,  0, -jb, lda ),
+                     lda, PANEL->dL2, PANEL->ldl2, T_HIP);
          /*HPL_dlacpy( PANEL->mp,    jb, Mptr( PANEL->A,  0, -jb, lda ),
                      lda, PANEL->L2, PANEL->ldl2 );*/
       }

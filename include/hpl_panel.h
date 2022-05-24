@@ -97,13 +97,21 @@ typedef struct HPL_S_panel
    double *dL2;                 /* device ptr to L */
    double *dL1;                 /* device ptr to jb x jb upper block of A */
    double *dDPIV;               /* device ptr to replicated jb pivot array */
+   double *dDINFO;              /* ptr to replicated scalar info */
    double *dU;                  /* device ptr to U */
    int *IWORK2;                 /* integer workspace for swapping */
    int *dIWORK;                 /* device integer workspace for swapping */
    unsigned int max_work_size;  /* largest size of WORK space */
    unsigned int max_iwork_size; /* largest size of IWORK space */
    unsigned int free_work_now;  /* should we deallocate */
-   int ldu0;
+   /* the members below is to achieve distributed row-swapping between row processes */
+   int *dlindxA, *lindxA;
+   int *dlindxAU, *lindxAU;
+   int *dpermU, *permU;
+   int *ipiv, *ipiv_ex, *dipiv, *dipiv_ex;
+
+   double*            fWORK;  /* temp buffer in pdfact */
+   unsigned int       max_fwork_size;       /*max size of temp buffer in pdfact*/
 #endif
 
 #ifdef HPL_CALL_VSIPL

@@ -119,20 +119,10 @@ void HPL_pdfact
 #endif
    align = PANEL->algo->align;
 
-   //Adil
-   HPL_BE_malloc((void**)&vptr, ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double), T_TEMPO);
-   /*vptr  = (void *)malloc( ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double) );*/
-   if( vptr == NULL )
-   { HPL_pabort( __LINE__, "HPL_pdfact", "Memory allocation failed" ); }
 /*
- * Factor the panel - Update the panel pointers
+ * Factor the panel - Update the panel pointers, the buffer is allocated when initializing panel
  */
-   PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, (double *)HPL_PTR( vptr,
-                       ((size_t)(align) * sizeof(double) ) ) );
-
-   //Adil
-   if( vptr ) HPL_BE_free((void**)&vptr, T_TEMPO);
-   //if( vptr ) free( vptr );
+   PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, PANEL->fWORK );
 
    // PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
 #ifdef ROCM

@@ -319,7 +319,7 @@ void HPL_pdmxswp
 /*
  * Save the global pivot index in pivot array
  */
-   (PANEL->DPIV)[JJ] = WORK[2];
+   (PANEL->ipiv)[JJ] = WORK[2];
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_MXSWP );
 #endif
