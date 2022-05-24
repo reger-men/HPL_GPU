@@ -28,7 +28,11 @@ void HPL_BE_init(size_t, enum HPL_TARGET);
 
 void HPL_BE_malloc(void**, size_t, enum HPL_TARGET);
 
+void HPL_BE_host_malloc(void**, size_t, unsigned int flag, enum HPL_TARGET);
+
 void HPL_BE_free(void **, enum HPL_TARGET);
+
+void HPL_BE_host_free(void **, enum HPL_TARGET);
 
 void HPL_BE_panel_new(HPL_T_grid *, HPL_T_palg *, const int, const int, const int,
                         HPL_T_pmat *, const int, const int, const int, HPL_T_panel * *, enum HPL_TARGET);

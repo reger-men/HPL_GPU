@@ -37,6 +37,20 @@ extern "C" {
       }
    }
 
+   void HPL_BE_host_malloc(void** ptr, size_t size, unsigned int flag, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::malloc, ptr, size);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::host_malloc, ptr, size, flag);
+            break;
+         default:
+            HPL::dispatch(CPU::malloc, ptr, size);
+      }
+   }
+
    /*
    * Deallocate the memory of ptr
    */
@@ -54,6 +68,19 @@ extern "C" {
       }
    }
 
+   void HPL_BE_host_free(void **ptr, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::free, ptr);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::host_free, ptr);
+            break;
+         default:
+            HPL::dispatch(CPU::free, ptr);
+      }
+   }
     /*
    * Allocate the panel resources
    */

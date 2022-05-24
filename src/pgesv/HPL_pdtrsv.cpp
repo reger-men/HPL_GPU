@@ -181,8 +181,8 @@ void HPL_pdtrsv
    if( Anp > 0 )
    {
 #ifdef ROCM
-      hipHostMalloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), 0);
-      hipMalloc((void**)&dW, (size_t)(Mmin( n1, Anp )) * sizeof( double ));
+      HPL_BE_host_malloc((void**)&W, (size_t)(Mmin( n1, Anp )) * sizeof( double ), 0, T_HIP);
+      HPL_BE_malloc((void**)&dW, (size_t)(Mmin( n1, Anp )) * sizeof( double ), T_HIP);
       if( W == NULL || dW == NULL)
 #else
       //Adil
@@ -343,7 +343,7 @@ void HPL_pdtrsv
 #ifdef ROCM
    HPL_BE_device_sync(T_HIP);
    if( Wfr  ) {
-      hipHostFree( W  );
+      HPL_BE_host_free((void**)&W, T_HIP);
       HPL_BE_free((void**)&dW, T_HIP);
    }
 #else

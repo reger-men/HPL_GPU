@@ -105,6 +105,9 @@ void HIP::release()
     ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(_handle));
     ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(small_handle));
     ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(large_handle));
+    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(_handle));
+    HIP_CHECK_ERROR(hipStreamDestroy(computeStream));
+    HIP_CHECK_ERROR(hipStreamDestroy(dataStream));
 }
 
 void HIP::malloc(void** ptr, size_t size)
@@ -113,12 +116,20 @@ void HIP::malloc(void** ptr, size_t size)
     HIP_CHECK_ERROR(hipMalloc(ptr, size));
 }
 
+void HIP::host_malloc(void** ptr, size_t size, unsigned int flag)
+{
+    GPUInfo("%-25s %-12ld (B) \t%-5s", "[Allocate]", "Host memory of size",  size, "HIP");
+    HIP_CHECK_ERROR(hipHostMalloc(ptr, size, flag));
+}
+
 void HIP::free(void** ptr)
 {
     HIP_CHECK_ERROR(hipFree(*ptr));
-    ROCBLAS_CHECK_STATUS(rocblas_destroy_handle(_handle));
-    HIP_CHECK_ERROR(hipStreamDestroy(computeStream));
-    HIP_CHECK_ERROR(hipStreamDestroy(dataStream));
+}
+
+void HIP::host_free(void **ptr)
+{
+    HIP_CHECK_ERROR(hipHostFree(*ptr));
 }
 
 void HIP::panel_new(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB, HPL_T_pmat *A,

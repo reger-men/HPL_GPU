@@ -84,7 +84,7 @@ int HPL_binit_blong( PANEL )
 /*
  * Force the copy of the panel into a contiguous buffer
  */
-   // HPL_copyL( PANEL );
+   HPL_copyL( PANEL );
 #endif
    return( HPL_SUCCESS );
 }

@@ -93,7 +93,7 @@ int HPL_binit_1rinM( PANEL )
 /*
  * Force the copy of the panel into a contiguous buffer
  */
-   // HPL_copyL( PANEL );
+   HPL_copyL( PANEL );
  
    return( HPL_SUCCESS );
 #endif

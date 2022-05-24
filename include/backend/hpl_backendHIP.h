@@ -74,7 +74,9 @@ namespace HIP {
     void release();
 
     void malloc(void**, size_t);
+    void host_malloc(void**, size_t, unsigned int);
     void free(void **);
+    void host_free(void **);
     void panel_new(HPL_T_grid *, HPL_T_palg *, const int, const int, const int, HPL_T_pmat *,
                    const int, const int, const int, HPL_T_panel **);
     void panel_init(HPL_T_grid *, HPL_T_palg *, const int,
