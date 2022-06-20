@@ -133,15 +133,12 @@ void HPL_pdtest
    int                        ii, ip2, mycol, myrow, npcol, nprow, nq;
    char                       ctop, cpfact, crfact;
    time_t                     current_time_start, current_time_end;
+   double                     *Aptr, *Xptr;
 /* ..
  * .. Executable Statements ..
  */
    (void) HPL_grid_info( GRID, &nprow, &npcol, &myrow, &mycol );
 
-   mat.n  = N; mat.nb = NB; mat.info = 0;
-   mat.mp = HPL_numroc( N, NB, NB, myrow, 0, nprow );
-   nq     = HPL_numroc( N, NB, NB, mycol, 0, npcol );
-   mat.nq = nq + 1;
 /*
  * Allocate matrix, right-hand-side, and vector solution x. [ A | b ] is
  * N by N+1.  One column is added in every process column for the solve.
@@ -151,6 +148,29 @@ void HPL_pdtest
  *
  * Ensure that lda is a multiple of ALIGN and not a power of 2
  */
+#ifdef ROCM
+  int ierr;
+  ierr = HPL_BE_pdmatgen(TEST, GRID, ALGO, &mat, N, NB, HPL_TR);
+  if(ierr != HPL_SUCCESS) {
+    (TEST->kskip)++;
+    HPL_BE_pdmatfree(&mat, HPL_TR);
+    return;
+  }
+/*
+ * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
+ */
+  MPI_Type_contiguous(2*NB+4, MPI_DOUBLE, &PDFACT_ROW);
+  MPI_Type_commit(&PDFACT_ROW);
+
+  HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);
+  Aptr = mat.d_A; Xptr = mat.d_X;
+
+#else
+   mat.n  = N; mat.nb = NB; mat.info = 0;
+   mat.mp = HPL_numroc( N, NB, NB, myrow, 0, nprow );
+   nq     = HPL_numroc( N, NB, NB, mycol, 0, npcol );
+   mat.nq = nq + 1; 
+
    mat.ld = ( ( Mmax( 1, mat.mp ) - 1 ) / ALGO->align ) * ALGO->align;
    do
    {
@@ -158,57 +178,40 @@ void HPL_pdtest
       while( ii > 1 ) { ii >>= 1; ip2 <<= 1; }
    }
    while( mat.ld == ip2 );
-/*
- * Allocate dynamic memory
- */
-#ifdef ROCM
-   size_t bytes = (((size_t)( (size_t)(ALGO->align) +
-                                 (size_t)(mat.ld+1) * (size_t)(mat.nq) ) *
-                                  sizeof(double)+(size_t)4095)/(size_t)4096)*(size_t)4096;
-#else
+   /*
+   * Allocate dynamic memory
+   */
+   //Adil: temp: generate mat on CPU and move it to the CPU. FIXME: Generate the correct Matrix.
    size_t bytes = ((size_t)(ALGO->align) + (size_t)(mat.ld+1) * (size_t)(mat.nq) ) * sizeof(double);
-#endif
-   //Allocate mem on host.
-   hipHostMalloc(&vptr, bytes, 0); 
+
+   vptr = (void*)malloc(bytes);
+
    info[0] = (vptr == NULL); info[1] = myrow; info[2] = mycol;
    (void) HPL_all_reduce( (void *)(info), 3, HPL_INT, HPL_max,
-                          GRID->all_comm );
+                           GRID->all_comm );
    if( info[0] != 0 )
    {
       if( ( myrow == 0 ) && ( mycol == 0 ) )
          HPL_pwarn( TEST->outfp, __LINE__, "HPL_pdtest",
-                    "[%d,%d] %s", info[1], info[2],
-                    "Pinned Host Memory allocation failed for A, x and b. Skip." );
+                     "[%d,%d] %s", info[1], info[2],
+                     "Memory allocation failed for A, x and b. Skip." );
       (TEST->kskip)++;
+      /* some processes might have succeeded with allocation */
+      //Adil
       if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
+      /*if (vptr) free(vptr);*/
       return;
-    }
-
-   void * d_vptr = NULL;
-   HPL_BE_malloc((void**)&d_vptr, bytes, T_HIP);
-   info[0] = (d_vptr==NULL);
-   info[1] = myrow; info[2] = mycol;
-   (void) HPL_all_reduce( (void *)(info), 3, HPL_INT, HPL_max,
-                          GRID->all_comm );
-   if( info[0] != 0 ) {
-     HPL_pwarn( TEST->outfp, __LINE__, "HPL_pdtest",
-                  "[%d,%d] %s", info[1], info[2],
-                  "Device memory allocation failed for A, x and b. Skip." );
-     (TEST->kskip)++;
-     return;
    }
-/*
- * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
- */
+   /*
+   * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
+   */
    mat.A  = (double *)HPL_PTR( vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
    mat.X  = Mptr( mat.A, 0, mat.nq, mat.ld );
-
-   mat.d_A  = (double *)HPL_PTR( d_vptr, ((size_t)(ALGO->align) * sizeof(double) ) );
-   mat.d_X  = Mptr( mat.d_A, 0, mat.nq, mat.ld );
-
-   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);
-   // HPL_BE_move_data(mat.A, mat.d_A, (N*mat.ld) * sizeof(double), M_H2D, T_HIP);
-
+   //Adil
+   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_CPU);
+   //HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );
+   Aptr = mat.A;  Xptr = mat.X;
+#endif
 
 #ifdef HPL_CALL_VSIPL
    mat.block = vsip_blockbind_d( (vsip_scalar_d *)(mat.A),
@@ -346,13 +349,19 @@ void HPL_pdtest
 /*
  * Quick return, if I am not interested in checking the computations
  */
+#ifdef ROCM
+   MPI_Type_free(&PDFACT_ROW);
+#endif
    if( TEST->thrsh <= HPL_rzero )
    { 
       (TEST->kpass)++; 
-
+#ifdef ROCM
+      HPL_BE_pdmatfree(&mat, HPL_TR);
+#else
       //Adil
       if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
       /*if( vptr ) free( vptr ); */
+#endif
       return; 
    }
 /*
@@ -364,38 +373,53 @@ void HPL_pdtest
          HPL_pwarn( TEST->outfp, __LINE__, "HPL_pdtest", "%s %d, %s", 
                     "Error code returned by solve is", mat.info, "skip" );
       (TEST->kskip)++;
+#ifdef ROCM
+      HPL_BE_pdmatfree(&mat, HPL_TR); return;
+#else
       //Adil
       if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT); return;
       /*if( vptr ) free( vptr ); return;*/
+#endif
    }
 /*
  * Check computation, re-generate [ A | b ], compute norm 1 and inf of A and x,
  * and norm inf of b - A x. Display residual checks.
  */
    //Adil
-   // HPL_BE_dmatgen(GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED, T_DEFAULT);
+   HPL_BE_dmatgen(GRID, N, N+1, NB, Aptr, mat.ld, HPL_ISEED, HPL_TR);   
    /*HPL_pdmatgen( GRID, N, N+1, NB, mat.A, mat.ld, HPL_ISEED );*/
-   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);   
-   hipMemcpy(vptr, d_vptr, bytes, hipMemcpyDeviceToHost);
-
-   Anorm1 = HPL_pdlange( GRID, HPL_NORM_1, N, N, NB, mat.A, mat.ld );
-   AnormI = HPL_pdlange( GRID, HPL_NORM_I, N, N, NB, mat.A, mat.ld );
+   Anorm1 = HPL_BE_pdlange( GRID, HPL_NORM_1, N, N, NB, Aptr, mat.ld, HPL_TR );
+   AnormI = HPL_BE_pdlange( GRID, HPL_NORM_I, N, N, NB, Aptr, mat.ld, HPL_TR );
 /*
  * Because x is distributed in process rows, switch the norms
  */
-   XnormI = HPL_pdlange( GRID, HPL_NORM_1, 1, N, NB, mat.X, 1 );
-   Xnorm1 = HPL_pdlange( GRID, HPL_NORM_I, 1, N, NB, mat.X, 1 );
+   XnormI = HPL_BE_pdlange( GRID, HPL_NORM_1, 1, N, NB, Xptr, 1, HPL_TR);
+   Xnorm1 = HPL_BE_pdlange( GRID, HPL_NORM_I, 1, N, NB, Xptr, 1, HPL_TR);
 /*
  * If I am in the col that owns b, (1) compute local BnormI, (2) all_reduce to
  * find the max (in the col). Then (3) broadcast along the rows so that every
  * process has BnormI. Note that since we use a uniform distribution in [-0.5,0.5]
  * for the entries of B, it is very likely that BnormI (<=,~) 0.5.
  */
+#ifdef ROCM
+   size_t BptrBytes = Mmax(mat.nq, mat.ld) * sizeof(double);
+   Bptr             = (double*)malloc(BptrBytes);
+   nq    = HPL_numroc(N, NB, NB, mycol, 0, npcol);
+   double *dBptr = Mptr( mat.d_A, 0, nq, mat.ld );
+#else
    Bptr = Mptr( mat.A, 0, nq, mat.ld );
+#endif
    if( mycol == HPL_indxg2p( N, NB, NB, 0, npcol ) ){
       if( mat.mp > 0 )
       {
-         BnormI = Bptr[HPL_idamax( mat.mp, Bptr, 1 )]; BnormI = Mabs( BnormI );
+#ifdef ROCM
+         int id;
+         id = HPL_BE_idamax(mat.mp, dBptr, 1, HPL_TR);
+         HPL_BE_move_data(&BnormI, dBptr + id - 1, 1 * sizeof(double), M_D2H, HPL_TR);
+#else
+         BnormI = Bptr[HPL_idamax( mat.mp, Bptr, 1 )]; 
+#endif
+         BnormI = Mabs( BnormI );
       }
       else
       {
@@ -410,21 +434,43 @@ void HPL_pdtest
 /*
  * If I own b, compute ( b - A x ) and ( - A x ) otherwise
  */
+#ifdef ROCM
+   const int nq_chunk = std::numeric_limits<int>::max() / (mat.ld);
+#endif
    if( mycol == HPL_indxg2p( N, NB, NB, 0, npcol ) )
    {
+#ifdef ROCM
+      for(int nn = 0; nn < nq; nn += nq_chunk) {
+         int nb = Mmin(nq - nn, nq_chunk);
+         HPL_BE_dgemv(HplColumnMajor, HplNoTrans, mat.mp, nb, -HPL_rone, Mptr(mat.d_A, 0, nn, mat.ld), mat.ld, Mptr(mat.d_X, 0, nn, 1), 1, HPL_rone, dBptr, 1, HPL_TR);
+      }
+      HPL_BE_move_data(Bptr, dBptr, mat.mp * sizeof(double), M_D2H, HPL_TR);
+#else
       //Adil
       HPL_BE_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1, T_DEFAULT);
       /*HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rone, Bptr, 1 );*/
+#endif
    }
    else if( nq > 0 )
    {
+#ifdef ROCM
+      int nb = Mmin(nq, nq_chunk);
+      HPL_BE_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nb, -HPL_rone, Mptr(mat.d_A, 0, 0, mat.ld), mat.ld, Mptr(mat.d_X, 0, 0, 1), 1, HPL_rzero, dBptr, 1, HPL_TR);
+
+      for(int nn = nb; nn < nq; nn += nq_chunk) {
+        int nb = Mmin(nq - nn, nq_chunk);
+        HPL_BE_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nb, -HPL_rone, Mptr(mat.d_A, 0, nn, mat.ld), mat.ld, Mptr(mat.d_X, 0, nn, 1), 1, HPL_rone, dBptr, 1, HPL_TR);
+      }
+      HPL_BE_move_data(Bptr, dBptr, mat.mp * sizeof(double), M_D2H, HPL_TR);
+#else
       //Adil
       HPL_BE_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1, T_DEFAULT);
       /*HPL_dgemv( HplColumnMajor, HplNoTrans, mat.mp, nq, -HPL_rone,
                  mat.A, mat.ld, mat.X, 1, HPL_rzero, Bptr, 1 );*/
+#endif
    }
    else { for( ii = 0; ii < mat.mp; ii++ ) Bptr[ii] = HPL_rzero; }
 /*
@@ -436,7 +482,12 @@ void HPL_pdtest
 /*
  * Compute || b - A x ||_oo
  */
+#ifdef ROCM
+   HPL_BE_move_data(dBptr, Bptr, mat.mp * sizeof(double), M_H2D, HPL_TR);
+   resid0 = HPL_BE_pdlange( GRID, HPL_NORM_I, N, 1, NB, dBptr, mat.ld, HPL_TR );
+#else
    resid0 = HPL_pdlange( GRID, HPL_NORM_I, N, 1, NB, Bptr, mat.ld );
+#endif
 /*
  * Computes and displays norms, residuals ...
  */
@@ -479,8 +530,13 @@ void HPL_pdtest
    }
    //Adil
    // if( vptr ) HPL_BE_free((void**)&vptr, T_DEFAULT);
-   if( vptr ) HIP_CHECK_ERROR(hipHostFree((vptr)));
-   //if( vptr ) free( vptr );
+   if( vptr ) HPL_BE_host_free((void**)&vptr, HPL_TR); 
+#ifdef ROCM
+   if(Bptr) HPL_BE_host_free((void**)&Bptr, T_CPU); 
+   if(dBptr) HPL_BE_free((void**)&dBptr, T_HIP);
+#else
+
+#endif
 /*
  * End of HPL_pdtest
  */

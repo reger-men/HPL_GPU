@@ -75,6 +75,10 @@ typedef enum
 #define    HPL_FAILURE            0
 #define    HPL_SUCCESS            1
 #define    HPL_KEEP_TESTING       2
+
+extern MPI_Op HPL_DMXSWP;
+extern MPI_Datatype PDFACT_ROW;
+
 /*
  * ---------------------------------------------------------------------
  * comm function prototypes
