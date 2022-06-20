@@ -48,7 +48,11 @@
  * Include files
  */
 #include "hpl.h"
-
+#ifdef PDFACT_OMP
+#include <omp.h>
+double max_value[128];
+int    max_index[128];
+#endif 
 #ifdef STDC_HEADERS
 void HPL_pdfact
 (
@@ -122,13 +126,42 @@ void HPL_pdfact
 /*
  * Factor the panel - Update the panel pointers, the buffer is allocated when initializing panel
  */
-   PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, PANEL->fWORK );
 
-   // PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
 #ifdef ROCM
-   PANEL->dA   = Mptr( PANEL->dA, 0, jb, PANEL->lda );
+#ifdef PDFACT_OMP
+#pragma omp parallel shared(max_value, max_index)
+  {
+    const int thread_rank = omp_get_thread_num();
+    const int thread_size = omp_get_num_threads();
+    assert(thread_size <= 128);
+
+   PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, PANEL->fWORK );
+  } 
+#else 
+   PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, PANEL->fWORK );
+#endif
+#else
+   //Adil
+   HPL_BE_malloc((void**)&vptr, ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double), T_TEMPO);
+   /*vptr  = (void *)malloc( ( (size_t)(align) + (size_t)(((4+((unsigned int)(jb) << 1)) << 1) )) * sizeof(double) );*/
+   if( vptr == NULL )
+   { HPL_pabort( __LINE__, "HPL_pdfact", "Memory allocation failed" ); }
+/*
+ * Factor the panel - Update the panel pointers
+ */
+   PANEL->algo->rffun( PANEL, PANEL->mp, jb, 0, (double *)HPL_PTR( vptr,
+                       ((size_t)(align) * sizeof(double) ) ) );
+
+   //Adil
+   if( vptr ) HPL_BE_free((void**)&vptr, T_TEMPO);
+   //if( vptr ) free( vptr );
 #endif
 
+#ifdef ROCM
+   PANEL->dA   = Mptr( PANEL->dA, 0, jb, PANEL->dlda );
+#else
+   PANEL->A   = Mptr( PANEL->A, 0, jb, PANEL->lda );
+#endif
    PANEL->nq -= jb; PANEL->jj += jb;
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_RPFACT );

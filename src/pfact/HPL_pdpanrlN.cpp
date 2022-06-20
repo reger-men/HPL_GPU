@@ -131,6 +131,10 @@ void HPL_pdpanrlN
 /*
  * .. Local Variables ..
  */
+#ifdef PDFACT_OMP
+    const int thread_rank = omp_get_thread_num();
+    const int thread_size = omp_get_num_threads();
+#endif
    double                     * A, * Acur, * Anxt;
 #ifdef HPL_CALL_VSIPL
    vsip_mview_d               * Av0, * Av1, * Xv1, * Yv0, * Yv1;
@@ -171,8 +175,18 @@ void HPL_pdpanrlN
 /*
  * Swap and broadcast the current row
  */
+#ifdef PDFACT_OMP
+   if (thread_rank == 0) {
+      CPU::HPL_pdmxswp(PANEL, m, ii, jj, WORK);
+      CPU::HPL_dlocswpN(PANEL, ii, jj, WORK);
+      // HPL_pdmxswp(  PANEL, m, ii, jj, WORK );
+      // HPL_dlocswpN( PANEL,    ii, jj, WORK );
+   }
+#pragma omp barrier
+#else
       HPL_pdmxswp(  PANEL, m, ii, jj, WORK );
       HPL_dlocswpN( PANEL,    ii, jj, WORK );
+#endif
 /*
  * Scale current column by its absolute value max entry  -  Update trai-
  * ling sub-matrix and find local absolute value max in next column (On-
@@ -180,6 +194,10 @@ void HPL_pdpanrlN
  * operations could benefit from a specialized blocked implementation.
  */
       if( WORK[0] != HPL_rzero )
+#ifdef PDFACT_OMP
+         CPU::HPL_dscal_omp(Mm1, HPL_rone / WORK[0], Acur, 1, PANEL->nb, iip1, thread_rank, thread_size);
+      CPU::HPL_daxpy_omp(Mm1, -WORK[4 + jj + 1], Acur, 1, Anxt, 1, PANEL->nb, iip1, thread_rank, thread_size);
+#else
          //Adil
          HPL_BE_dscal( Mm1, HPL_rone / WORK[0], Acur, 1, T_DEFAULT);
          /*HPL_dscal( Mm1, HPL_rone / WORK[0], Acur, 1 );*/
@@ -187,6 +205,7 @@ void HPL_pdpanrlN
       //Adil
       HPL_BE_daxpy( Mm1, -WORK[4+jj+1], Acur, 1, Anxt, 1, T_DEFAULT);
       /*HPL_daxpy( Mm1, -WORK[4+jj+1], Acur, 1, Anxt, 1 );*/
+#endif
       HPL_dlocmax( PANEL, Mm1, iip1, jj+1, WORK );
 #ifdef HPL_CALL_VSIPL
       if( Nm1 > 1 )
@@ -211,11 +230,16 @@ void HPL_pdpanrlN
       }
 #else
       if( Nm1 > 1 )
+#ifdef PDFACT_OMP
+         CPU::HPL_dger_omp(HplColumnMajor, Mm1, Nm1 - 1, -HPL_rone, Acur, 1, WORK + 4 + jj + 2, 1, Mptr(Anxt, 0, 1, lda), lda, PANEL->nb, iip1, thread_rank, thread_size);
+#pragma omp barrier
+#else
          //Adil
          HPL_BE_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
                    WORK+4+jj+2, 1, Mptr( Anxt, 0, 1, lda ), lda, T_DEFAULT);
          /*HPL_dger( HplColumnMajor, Mm1, Nm1-1, -HPL_rone, Acur, 1,
                    WORK+4+jj+2, 1, Mptr( Anxt, 0, 1, lda ), lda );*/
+#endif
 #endif
 /*
  * Same thing as above but with worse data access on y (A += x * y^T)
@@ -233,12 +257,22 @@ void HPL_pdpanrlN
  * Swap and broadcast last row - Scale last column by its absolute value
  * max entry
  */ 
+#ifdef PDFACT_OMP
+   if(thread_rank == 0) {
+      CPU::HPL_pdmxswp(PANEL, m, ii, jj, WORK);
+      CPU::HPL_dlocswpN(PANEL, ii, jj, WORK);
+   }
+#pragma omp barrier
+   if(WORK[0] != HPL_rzero)
+      CPU::HPL_dscal_omp(Mm1, HPL_rone / WORK[0], Mptr(A, iip1, jj, lda), 1, PANEL->nb, iip1, thread_rank, thread_size);
+#else
    HPL_pdmxswp(  PANEL, m, ii, jj, WORK );
    HPL_dlocswpN( PANEL,    ii, jj, WORK );
    if( WORK[0] != HPL_rzero )
       //Adil
       HPL_BE_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 , T_DEFAULT);
       /*HPL_dscal( Mm1, HPL_rone / WORK[0], Mptr( A, iip1, jj, lda ), 1 );*/
+#endif
 #ifdef HPL_CALL_VSIPL
 /*
  * Release the blocks

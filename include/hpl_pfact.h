@@ -57,6 +57,9 @@
 #include "hpl_pmisc.h"
 #include "hpl_pauxil.h"
 #include "hpl_panel.h"
+
+extern double max_value[128];
+extern int    max_index[128];
 /*
  * ---------------------------------------------------------------------
  * #typedefs and data structures
@@ -68,8 +71,11 @@ typedef void (*HPL_T_PFA_FUN)
 typedef void (*HPL_T_RFA_FUN)
 (  HPL_T_panel *,   const int,       const int,       const int,
    double * );
+
+#ifndef ROCM
 typedef void (*HPL_T_UPD_FUN)
 (  HPL_T_panel *,   int *,           HPL_T_panel *,   const int ); 
+#endif
 /*
  * ---------------------------------------------------------------------
  * Function prototypes

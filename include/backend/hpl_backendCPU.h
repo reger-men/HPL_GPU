@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
 extern "C" {
 //#include "hpl.h"
@@ -36,7 +37,6 @@ namespace CPU {
     void matgen(const HPL_T_grid *, const int, const int,
                 const int, double *, const int,
                 const int);
-    
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------
@@ -76,4 +76,18 @@ namespace CPU {
     void atcpy(const int, const int, const double *, const int,
                 double *, const int);                 
     void dlaswp00N(const int, const int, double *, const int, const int *);
+    double pdlange(const HPL_T_grid*, const HPL_T_NORM, const int, const int, const int, const double*, const int);
+    void pdmatfree(void* mat);
+    void HPL_set_zero(const int N, double* __restrict__ X);
+
+    /* split the math operation using the openmp */
+    void HPL_dgemm_omp(const enum HPL_ORDER, const enum HPL_TRANS, const enum HPL_TRANS, const int, const int, const int, const double, const double*, const int, const double*, const int, const double, double*, const int, const int, const int, const int thread_rank, const int thread_size);
+    void HPL_dscal_omp(const int, const double, double*, const int, const int, const int,  const int, const int);
+    void HPL_daxpy_omp(const int, const double, const double*, const int, double*, const int, const int,  const int, const int, const int);
+    void HPL_dger_omp(const enum HPL_ORDER, const int, const int, const double, const double*, const int, double*, const int, double*, const int, const int, const int, const int, const int);
+    void HPL_idamax_omp(const int, const double*, const int, const int, const int, const int, const int, int*, double*);
+    void HPL_dlacpy(const int, const int, const double*, const int, double*, const int);
+    void HPL_pdmxswp(HPL_T_panel*, const int, const int,const int, double*);
+    void HPL_dlocswpN(HPL_T_panel*, const int, const int, double*);
+    void HPL_all_reduce_dmxswp(double*, const int, const int, MPI_Comm, double*);
 }

@@ -151,3 +151,406 @@ void CPU::dlaswp00N(const int M, const int N, double * A, const int LDA, const i
     CPUInfo("%-25s %-8d%-8d \t%-5s", "[DLASWP00N]", "With A of (R:C)", M, N, "CPU");
     HPL_dlaswp00N( M, N, A, LDA, IPIV);
 }
+
+double CPU::pdlange(const HPL_T_grid* GRID, const HPL_T_NORM  NORM, const int M, const int N, const int NB, const double* A, const int LDA)
+{
+    CPUInfo("%-25s %-8d%-8d \t%-5s", "[PDLANGE]", "With A of (R:C)", M, N, "CPU");
+    return HPL_pdlange(GRID, NORM, M, N, NB, A, LDA);
+}
+
+void CPU::pdmatfree(void* mat)
+{
+    CPUInfo("%-40s \t%-5s", "[Deallocate]", "Matrix structure", "CPU");
+    CPU::free((void**)&mat);
+}
+
+void CPU::HPL_dgemm_omp(const enum HPL_ORDER ORDER, const enum HPL_TRANS TRANSA, const enum HPL_TRANS TRANSB,
+                   const int M, const int N, const int K,
+                   const double ALPHA, const double* A, const int LDA,
+                   const double* B, const int LDB, const double BETA,
+                   double* C, const int LDC, 
+                   const int NB, const int II,
+                   const int thread_rank, const int thread_size) 
+{
+  int tile = 0;
+  if(tile % thread_size == thread_rank) {
+    const int mm = Mmin(NB - II, M);
+    HPL_dgemm(ORDER, TRANSA, TRANSB, mm, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC);
+  }
+  ++tile;
+  int i = NB - II;
+  for(; i < M; i += NB) {
+    if(tile % thread_size == thread_rank) {
+      const int mm = Mmin(NB, M - i);
+      HPL_dgemm(ORDER, TRANSA, TRANSB, mm, N, K, ALPHA, A + i, LDA, B, LDB, BETA, C + i, LDC);
+    }
+    ++tile;
+  }
+}
+
+void CPU::HPL_dlacpy(const int M, const int N, const double* A, const int LDA, double* B, const int LDB) {
+  int j;
+
+  if((M <= 0) || (N <= 0)) return;
+
+  for(j = 0; j < N; j++, A += LDA, B += LDB) HPL_dcopy(M, A, 1, B, 1);
+}
+
+void CPU::HPL_pdmxswp(HPL_T_panel* PANEL, const int M, const int II, const int JJ, double* WORK) {
+
+  double *     A0, *Wmx, *Wwork;
+  HPL_T_grid*  grid;
+  MPI_Comm     comm;
+  int cnt_, cnt0, i, icurrow, lda, myrow, n0;
+
+#ifdef HPL_DETAILED_TIMING
+  HPL_ptimer(HPL_TIMING_MXSWP);
+#endif
+  grid  = PANEL->grid;
+  comm    = grid->col_comm;
+  myrow = grid->myrow;
+  n0      = PANEL->jb;
+  int NB  = PANEL->nb;
+  icurrow = PANEL->prow;
+  cnt0 = 4 + 2*NB;
+
+  A0    = (Wmx = WORK + 4) + NB;
+  Wwork = WORK + cnt0;
+
+  if(M > 0) {
+    lda = PANEL->lda;
+
+    HPL_dcopy(n0, Mptr(PANEL->A, II + (int)(WORK[1]), 0, lda), lda, Wmx, 1);
+    if(myrow == icurrow) {
+      HPL_dcopy(n0, Mptr(PANEL->A, II, 0, lda), lda, A0, 1);
+    } else {
+      for(i = 0; i < n0; i++) A0[i] = HPL_rzero;
+    }
+  } else {
+    for(i = 0; i < n0; i++) A0[i] = HPL_rzero;
+    for(i = 0; i < n0; i++) Wmx[i] = HPL_rzero;
+  }
+
+  /* Perform swap-broadcast */
+  CPU::HPL_all_reduce_dmxswp(WORK, cnt0, icurrow, comm, Wwork);
+
+  (PANEL->ipiv)[JJ] = (int)WORK[2];
+#ifdef HPL_DETAILED_TIMING
+  HPL_ptimer(HPL_TIMING_MXSWP);
+#endif
+}
+
+void CPU::HPL_dlocswpN(HPL_T_panel* PANEL, const int II, const int JJ, double* WORK) {
+
+  double  gmax;
+  double *A1, *A2, *L, *Wr0, *Wmx;
+  int     ilindx, lda, myrow, n0;
+
+  myrow = PANEL->grid->myrow;
+  n0    = PANEL->jb;
+  int NB = PANEL->nb;
+  lda   = PANEL->lda;
+
+  Wr0     = (Wmx = WORK + 4) + NB;
+  Wmx[JJ] = gmax = WORK[0];
+
+  /*
+   * Replicated swap and copy of the current (new) row of A into L1
+   */
+  L = Mptr(PANEL->L1, JJ, 0, n0);
+  /*
+   * If the pivot is non-zero ...
+   */
+  if(gmax != HPL_rzero) {
+    /*
+     * and if I own the current row of A ...
+     */
+    if(myrow == PANEL->prow) {
+      /*
+       * and if I also own the row to be swapped with the current row of A ...
+       */
+      if(myrow == (int)(WORK[3])) {
+        /*
+         * and if the current row of A is not to swapped with itself ...
+         */
+        if((ilindx = (int)(WORK[1])) != 0) {
+          /*
+           * then copy the max row into L1 and locally swap the 2 rows of A.
+           */
+          A1 = Mptr(PANEL->A, II, 0, lda);
+          A2 = Mptr(A1, ilindx, 0, lda);
+
+          HPL_dcopy(n0, Wmx, 1, L, n0);
+          HPL_dcopy(n0, Wmx, 1, A1, lda);
+          HPL_dcopy(n0, Wr0, 1, A2, lda);
+
+        } else {
+          /*
+           * otherwise the current row of  A  is swapped with itself, so just
+           * copy the current of A into L1.
+           */
+          *Mptr(PANEL->A, II, JJ, lda) = gmax;
+
+          HPL_dcopy(n0, Wmx, 1, L, n0);
+        }
+
+      } else {
+        /*
+         * otherwise, the row to be swapped with the current row of A is in Wmx,
+         * so copy Wmx into L1 and A.
+         */
+        A1 = Mptr(PANEL->A, II, 0, lda);
+
+        HPL_dcopy(n0, Wmx, 1, L, n0);
+        HPL_dcopy(n0, Wmx, 1, A1, lda);
+      }
+
+    } else {
+      /*
+       * otherwise I do not own the current row of A, so copy the max row  Wmx
+       * into L1.
+       */
+      HPL_dcopy(n0, Wmx, 1, L, n0);
+
+      /*
+       * and if I own the max row, overwrite it with the current row Wr0.
+       */
+      if(myrow == (int)(WORK[3])) {
+        A2 = Mptr(PANEL->A, II + (size_t)(WORK[1]), 0, lda);
+
+        HPL_dcopy(n0, Wr0, 1, A2, lda);
+      }
+    }
+  } else {
+    /*
+     * Otherwise the max element in the current column is zero,  simply copy
+     * the current row Wr0 into L1. The matrix is singular.
+     */
+    HPL_dcopy(n0, Wr0, 1, L, n0);
+
+    /*
+     * set INFO.
+     */
+    if(*(PANEL->DINFO) == 0.0) *(PANEL->DINFO) = (double)(PANEL->ia + JJ + 1);
+  }
+}
+
+void CPU::HPL_dscal_omp(const int N, const double ALPHA, double* X, const int INCX, const int NB, const int II, const int thread_rank, const int thread_size) 
+{
+  int tile = 0;
+  if(tile % thread_size == thread_rank) {
+    const int nn = Mmin(NB - II, N);
+    HPL_dscal(nn, ALPHA, X, INCX);
+  }
+  ++tile;
+  int i = NB - II;
+  for(; i < N; i += NB) {
+    if(tile % thread_size == thread_rank) {
+      const int nn = Mmin(NB, N - i);
+      HPL_dscal(nn, ALPHA, X + i * INCX, INCX);
+    }
+    ++tile;
+  }
+}
+
+void CPU::HPL_daxpy_omp(const int N, const double ALPHA, const double* X, const int INCX, double* Y, const int INCY, const int NB, const int II, const int thread_rank, const int thread_size) 
+{
+  int tile = 0;
+  if(tile % thread_size == thread_rank) {
+    const int nn = Mmin(NB - II, N);
+    HPL_daxpy(nn, ALPHA, X, INCX, Y, INCY);
+  }
+  ++tile;
+  int i = NB - II;
+  for(; i < N; i += NB) {
+    if(tile % thread_size == thread_rank) {
+      const int nn = Mmin(NB, N - i);
+      HPL_daxpy(nn, ALPHA, X + i * INCX, INCX, Y + i * INCY, INCY);
+    }
+    ++tile;
+  }
+}
+
+void CPU::HPL_dger_omp(const enum HPL_ORDER ORDER, const int M, const int N,
+                  const double ALPHA, const double* X, const int INCX, double* Y, const int INCY, 
+                  double* A, const int LDA,
+                  const int NB, const int II, const int thread_rank, const int thread_size) {
+
+  int tile = 0;
+  if(tile % thread_size == thread_rank) {
+    const int mm = Mmin(NB - II, M);
+    HPL_dger(ORDER, mm, N, ALPHA, X, INCX, Y, INCY, A, LDA);
+  }
+  ++tile;
+  int i = NB - II;
+  for(; i < M; i += NB) {
+    if(tile % thread_size == thread_rank) {
+      const int mm = Mmin(NB, M - i);
+      HPL_dger(ORDER, mm, N, ALPHA, X + i * INCX, INCX, Y, INCY, A + i, LDA);
+    }
+    ++tile;
+  }
+}
+
+
+void CPU::HPL_idamax_omp(const int N, const double* X, const int INCX, const int NB, const int II, const int thread_rank, const int thread_size, int* max_index, double* max_value) 
+{
+  max_index[thread_rank] = 0;
+  max_value[thread_rank] = 0.0;
+
+  if(N < 1) return;
+
+  int tile = 0;
+  if(tile % thread_size == thread_rank) {
+    const int nn           = Mmin(NB - II, N);
+    max_index[thread_rank] = HPL_idamax(nn, X, INCX);
+    max_value[thread_rank] = X[max_index[thread_rank] * INCX];
+  }
+  ++tile;
+  int i = NB - II;
+  for(; i < N; i += NB) {
+    if(tile % thread_size == thread_rank) {
+      const int nn  = Mmin(NB, N - i);
+      const int idm = HPL_idamax(nn, X + i * INCX, INCX);
+      if(abs(X[(idm + i) * INCX]) > abs(max_value[thread_rank])) {
+        max_value[thread_rank] = X[(idm + i) * INCX];
+        max_index[thread_rank] = idm + i;
+      }
+    }
+    ++tile;
+  }
+
+#pragma omp barrier
+
+  // finish reduction
+  if(thread_rank == 0) {
+    for(int rank = 1; rank < thread_size; ++rank) {
+      if(abs(max_value[rank]) > abs(max_value[0])) {
+        max_value[0] = max_value[rank];
+        max_index[0] = max_index[rank];
+      }
+    }
+  }
+}
+
+MPI_Datatype PDFACT_ROW;
+
+void CPU::HPL_all_reduce_dmxswp(double* BUFFER, const int COUNT, const int ROOT, MPI_Comm COMM, double* WORK) 
+{
+  double       gmax, tmp1;
+  double *     A0, *Wmx;
+  unsigned int hdim, ip2, ip2_, ipow, k, mask;
+  int Np2, cnt_, cnt0, i, icurrow, mydist, mydis_, myrow, n0, nprow,
+      partner, rcnt, root, scnt, size_;
+
+  MPI_Comm_rank(COMM, &myrow);
+  MPI_Comm_size(COMM, &nprow);
+
+  hdim = 0;
+  ip2  = 1;
+  k    = nprow;
+  while(k > 1) {
+    k >>= 1;
+    ip2 <<= 1;
+    hdim++;
+  }
+
+  n0      = (COUNT-4)/2;
+  icurrow = ROOT;
+  Np2     = (int)((size_ = nprow - ip2) != 0);
+  mydist  = MModSub(myrow, icurrow, nprow);
+
+  cnt0 = (cnt_ = n0 + 4) + n0;
+  A0    = (Wmx = BUFFER + 4) + n0;
+
+  if((Np2 != 0) && ((partner = (int)((unsigned int)(mydist) ^ ip2)) < nprow)) {
+    if((mydist & ip2) != 0) {
+      if(mydist == (int)(ip2))
+        (void)HPL_sdrv(BUFFER, cnt_, MSGID_BEGIN_PFACT, A0, n0, MSGID_BEGIN_PFACT, MModAdd(partner, icurrow, nprow), COMM);
+      else
+        (void)HPL_send(BUFFER, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+    } else {
+      if(mydist == 0)
+        (void)HPL_sdrv(A0, n0, MSGID_BEGIN_PFACT, WORK, cnt_, MSGID_BEGIN_PFACT, MModAdd(partner, icurrow, nprow), COMM);
+      else
+        (void)HPL_recv(WORK, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+
+      tmp1 = Mabs(WORK[0]);
+      gmax = Mabs(BUFFER[0]);
+      if((tmp1 > gmax) || ((tmp1 == gmax) && (WORK[3] < BUFFER[3]))) {
+        HPL_dcopy(cnt_, WORK, 1, BUFFER, 1);
+      }
+    }
+  }
+
+  if(mydist < (int)(ip2)) {
+    k    = 0;
+    ipow = 1;
+
+    while(k < hdim) {
+      if(((unsigned int)(mydist) >> (k + 1)) == 0) {
+        if(((unsigned int)(mydist) >> k) == 0) {
+          scnt = cnt0;
+          rcnt = cnt_;
+        } else {
+          scnt = cnt_;
+          rcnt = cnt0;
+        }
+      } else {
+        scnt = rcnt = cnt_;
+      }
+
+      partner = (int)((unsigned int)(mydist) ^ ipow);
+      (void)HPL_sdrv(BUFFER, scnt, MSGID_BEGIN_PFACT, WORK, rcnt, MSGID_BEGIN_PFACT, MModAdd(partner, icurrow, nprow), COMM);
+
+      tmp1 = Mabs(WORK[0]);
+      gmax = Mabs(BUFFER[0]);
+      if((tmp1 > gmax) || ((tmp1 == gmax) && (WORK[3] < BUFFER[3]))) {
+        HPL_dcopy((rcnt == cnt0 ? cnt0 : cnt_), WORK, 1, BUFFER, 1);
+      } else if(rcnt == cnt0) {
+        HPL_dcopy(n0, WORK + cnt_, 1, A0, 1);
+      }
+
+      ipow <<= 1;
+      k++;
+    }
+  } else if(size_ > 1) {
+    k    = (unsigned int)(size_)-1;
+    ip2_ = mask = 1;
+    while(k > 1) {
+      k >>= 1;
+      ip2_ <<= 1;
+      mask <<= 1;
+      mask++;
+    }
+
+    root   = MModAdd(icurrow, (int)(ip2), nprow);
+    mydis_ = MModSub(myrow, root, nprow);
+
+    do {
+      mask ^= ip2_;
+      if((mydis_ & mask) == 0) {
+        partner = (int)(mydis_ ^ ip2_);
+        if((mydis_ & ip2_) != 0) {
+          (void)HPL_recv(
+              A0, n0, MModAdd(root, partner, nprow), MSGID_BEGIN_PFACT, COMM);
+        } else if(partner < size_) {
+          (void)HPL_send(
+              A0, n0, MModAdd(root, partner, nprow), MSGID_BEGIN_PFACT, COMM);
+        }
+      }
+      ip2_ >>= 1;
+    } while(ip2_ > 0);
+  }
+  if((Np2 != 0) && ((partner = (int)((unsigned int)(mydist) ^ ip2)) < nprow)) {
+    if((mydist & ip2) != 0) {
+      (void)HPL_recv(BUFFER, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+    } else {
+      (void)HPL_send(BUFFER, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+    }
+  }
+}
+
+void CPU::HPL_set_zero(const int N, double* __restrict__ X) {
+  for( int tmp1=0; tmp1 < N; tmp1++ ) X[tmp1] = HPL_rzero; 
+}
