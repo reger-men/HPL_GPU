@@ -100,7 +100,7 @@ void HPL_pdgesv
 
 #ifdef ROCM
    // Our current computation on GPU is only working with HPL_pdgesvK2.
-   HPL_pdgesvK2( GRID, ALGO, A );
+   HPL_pdgesvK2_HIP( GRID, ALGO, A );
 #else
    if( ( ALGO->depth == 0 ) || ( GRID->npcol == 1 ) )
    {

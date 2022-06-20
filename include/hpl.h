@@ -67,6 +67,12 @@
 #define HPL_CALL_FBLAS
 #endif
 #endif
+
+#ifdef ROCM
+#define HPL_TR  T_HIP
+#else
+#define HPL_TR  T_CPU
+#endif
 /*
  * ---------------------------------------------------------------------
  * Include files

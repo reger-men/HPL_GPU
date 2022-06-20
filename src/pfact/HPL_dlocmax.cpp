@@ -111,6 +111,10 @@ void HPL_dlocmax
 /*
  * .. Local Variables ..
  */
+#ifdef PDFACT_OMP
+    const int thread_rank = omp_get_thread_num();
+    const int thread_size = omp_get_num_threads();
+#endif
    double                     * A;
    int                        kk, igindx, ilindx, myrow, nb, nprow;
 /* ..
@@ -122,9 +126,18 @@ void HPL_dlocmax
       myrow  = PANEL->grid->myrow;
       nprow  = PANEL->grid->nprow;
       nb     = PANEL->nb;
+#ifdef PDFACT_OMP
+    CPU::HPL_idamax_omp(
+        N, A, 1, nb, II, thread_rank, thread_size, max_index, max_value);
+
+    if(thread_rank == 0) {
+      ilindx = max_index[0];
+      kk     = PANEL->ii + II + (ilindx);
+#else
       //Adil
       kk     = PANEL->ii + II + ( ilindx = HPL_BE_idamax(N, A, 1, T_DEFAULT));
       /*kk     = PANEL->ii + II + ( ilindx = HPL_idamax( N, A, 1 ) );*/
+#endif
       Mindxl2g( igindx, kk, nb, nb, myrow, 0, nprow );
 /*
  * WORK[0] := local maximum absolute value scalar,
@@ -134,6 +147,9 @@ void HPL_dlocmax
  */
       WORK[0] = A[ilindx];         WORK[1] = (double)(ilindx);
       WORK[2] = (double)(igindx);  WORK[3] = (double)(myrow);
+#ifdef PDFACT_OMP
+    }
+#endif
    }
    else
    {
@@ -142,8 +158,16 @@ void HPL_dlocmax
  * (WORK[3]) owning this "ghost" row,  such that it  will never be used,
  * even if there are only zeros in the current column of A.
  */
+#ifdef PDFACT_OMP
+      if(thread_rank == 0) {
+         WORK[0] = WORK[1] = WORK[2] = HPL_rzero;
+         WORK[3] = (double)(PANEL->grid->nprow);
+      }
+#pragma omp barrier
+#else
       WORK[0] = WORK[1] = WORK[2] = HPL_rzero;
       WORK[3] = (double)(PANEL->grid->nprow);
+#endif
    }
 /*
  * End of HPL_dlocmax

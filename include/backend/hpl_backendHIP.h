@@ -10,10 +10,12 @@
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <list>
 
 extern "C" {
 #include "hpl_pmatgen.h"
 #include "hpl_panel.h"
+#include "hpl_pgesv.h"
 }
 
 
@@ -68,6 +70,15 @@ extern "C" {
 #endif
 
 
+enum PDLASWP_OP{
+  SU0, SU1, SU2,  // start update for look-ahead, update1, update2
+  CU0, CU1, CU2,  // communication for look-ahead, update1, update2
+  EU0, EU1, EU2   // end update for look-ahead, update1, update2
+};
+
+enum SWP_PHASE {
+  SWP_START, SWP_COMM, SWP_END, SWP_NO
+};
 
 namespace HIP {
     void init(size_t);
@@ -86,19 +97,16 @@ namespace HIP {
     void panel_send_to_device(HPL_T_panel *);
     int panel_free(HPL_T_panel *);
     int panel_disp(HPL_T_panel**);
-
-    void matgen(const HPL_T_grid *, const int, const int,
-                 const int, double *, const int,
-                 const int);
-    void event_record(enum HPL_EVENT);
-    void event_synchronize(enum HPL_EVENT);
+    void matgen(const HPL_T_grid *, const int, const int, const int, double *, const int, const int);
+    int pdmatgen(HPL_T_test* TEST, HPL_T_grid* GRID, HPL_T_palg* ALGO,  HPL_T_pmat* mat,const int N, const int NB);
+    void pdmatfree(HPL_T_pmat* mat);
+    void event_record(enum HPL_EVENT, const HPL_T_UPD);
+    void event_synchronize(enum HPL_EVENT, const HPL_T_UPD);
     void stream_synchronize(enum HPL_STREAM);
     void stream_wait_event(enum HPL_STREAM, enum HPL_EVENT);
+    float elapsedTime(const HPL_T_UPD);
     void device_sync();
-
-    void binit_ibcst(HPL_T_panel*, int &);
-    void bcast_ibcst(HPL_T_panel*, int*, int&);
-    void bwait_ibcst(HPL_T_panel*, int &);
+    int bcast_ibcst(HPL_T_panel*, int*);
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------
@@ -141,25 +149,35 @@ namespace HIP {
     void move_data(double *, const double *, const size_t, const int);
     void move_data_2d(void*, size_t, const void*, size_t, size_t, size_t, const int);
 
-    void dlaswp00N(const int, const int, double *, const int, const int *);
-    void dlaswp01T(const int, const int, double*, const int, double*, const int, const int*, const int*);
-    void dlaswp06T(const int, const int, double*, const int, double*, const int, const int*);
-    void dlaswp10N(const int, const int, double*, const int, const int*);
+
     void gPrintMat(const int, const int, const int, const double*);
-    void pdlaswp(HPL_T_panel *PANEL, const int NN);
-    void pdlaswpTest(HPL_T_panel *PANEL, const int NN);
+    double pdlange(const HPL_T_grid*, const HPL_T_NORM, const int, const int, const int, const double*, const int);
+    void HPL_dlaswp00N(const int, const int, double*, const int, const int*);
+    void HPL_dlaswp01T(const int, const int, double*, const int,double*, const int, const int*);
+    void HPL_dlaswp02T(const int, const int, double*, const int, const int*, const int*);
+    void HPL_dlaswp03T(const int, const int, double*, const int, double*,
+                        const int, const int*);
+    void HPL_dlaswp04T(const int, const int, double*, const int, double*,const int, const int*);
+    void HPL_dlaswp10N(const int, const int, double*, const int, const int*); 
+    void HPL_set_zero(const int N, double* __restrict__ X);
+
+    void pdlaswp_set_var(HPL_T_panel* PANEL, double* &dU, double* &U, int &ldu, double* &dW, double* &W, int &ldw, int &n, double* &dA, const HPL_T_UPD UPD); 
+    void HPL_pdlaswp_hip(HPL_T_panel* PANEL, const HPL_T_UPD UPD, const SWP_PHASE phase);
+    void HPL_pdlaswp_hip(HPL_T_panel* PANEL, int icurcol, std::list<PDLASWP_OP> op_vec);
     // BLAS members
     namespace {
-      rocblas_handle _handle, small_handle, large_handle;
-      static char     host_name[MPI_MAX_PROCESSOR_NAME];
+      rocblas_handle _handle;
+      static char host_name[MPI_MAX_PROCESSOR_NAME];
       hipStream_t computeStream, dataStream, pdlaswpStream;
       hipEvent_t panelUpdate;
-      hipEvent_t panelCopy;
+      hipEvent_t panelCopy, swapDataTransfer;
       hipEvent_t panelSendToHost, panelSendToDevice;
-      hipEvent_t pdlaswpStart_1, pdlaswpStart_2, pdlaswpStart_3;
-      hipEvent_t pdlaswpStop_1, pdlaswpStop_2, pdlaswpStop_3;
-      hipEvent_t dtrsmStart, dtrsmStop;
-      hipEvent_t dgemmStart, dgemmStop;
+      hipEvent_t pdlaswpStart_1, pdlaswpStart_2;
+      hipEvent_t pdlaswpFinish_1, pdlaswpFinish_2;
+      hipEvent_t L1Transfer, L2Transfer;
+      hipEvent_t swapStartEvent[HPL_N_UPD], update[HPL_N_UPD];
+      hipEvent_t swapUCopyEvent[HPL_N_UPD], swapWCopyEvent[HPL_N_UPD];
+      hipEvent_t dgemmStart[HPL_N_UPD], dgemmStop[HPL_N_UPD];
       std::map<int, const char*> _memcpyKind;
     }
 }

@@ -52,6 +52,9 @@
 #ifdef STDC_HEADERS
 void HPL_pdupdateTN
 (
+#ifdef ROCM
+   const HPL_T_UPD                  UPD,
+#endif
    HPL_T_panel *                    PBCST,
    int *                            IFLAG,
    HPL_T_panel *                    PANEL,

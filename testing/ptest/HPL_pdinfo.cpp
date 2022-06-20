@@ -289,6 +289,7 @@ void HPL_pdinfo
  * Process 0 reads the input data, broadcasts to other processes and
  * writes needed information to TEST->outfp.
  */
+   char* status;
    if( rank == 0 )
    {
 /*
@@ -301,14 +302,14 @@ void HPL_pdinfo
          error = 1; goto label_error;
       }
 
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
-      (void) fgets( auth, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( auth, HPL_LINE_MAX - 2, infp );
 /*
  * Read name and unit number for summary output file
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", file );
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num  );
       fid = atoi( num );
       if     ( fid == 6 ) TEST->outfp = stdout;
@@ -324,7 +325,7 @@ void HPL_pdinfo
  *
  * Problem size (>=0) (N)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); 
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); 
       (void) sscanf( line, "%s", num ); *NS = atoi( num );
       if( ( *NS < 1 ) || ( *NS > HPL_MAX_PARAM ) )
       {
@@ -334,7 +335,7 @@ void HPL_pdinfo
          error = 1; goto label_error;
       }
 
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -348,7 +349,7 @@ void HPL_pdinfo
 /*
  * Block size (>=1) (NB)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NBS = atoi( num );
       if( ( *NBS < 1 ) || ( *NBS > HPL_MAX_PARAM ) )
       {
@@ -358,7 +359,7 @@ void HPL_pdinfo
          error = 1; goto label_error;
       }
 
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NBS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -382,11 +383,11 @@ void HPL_pdinfo
 /*
  * Process grids, mapping, (>=1) (P, Q)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num );
       *PMAPPIN = ( atoi( num ) == 1 ? HPL_COLUMN_MAJOR : HPL_ROW_MAJOR );
 
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NPQS = atoi( num );
       if( ( *NPQS < 1 ) || ( *NPQS > HPL_MAX_PARAM ) )
       {
@@ -396,7 +397,7 @@ void HPL_pdinfo
          error = 1; goto label_error;
       }
 
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NPQS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -407,7 +408,7 @@ void HPL_pdinfo
             error = 1; goto label_error;
          }
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NPQS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -433,12 +434,12 @@ void HPL_pdinfo
 /*
  * Checking threshold value (TEST->thrsh)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); TEST->thrsh = atof( num );
 /*
  * Panel factorization algorithm (PF)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NPFS = atoi( num );
       if( ( *NPFS < 1 ) || ( *NPFS > HPL_MAX_PARAM ) )
       {
@@ -447,7 +448,7 @@ void HPL_pdinfo
                     "is less than 1 or greater than", HPL_MAX_PARAM );
          error = 1; goto label_error;
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NPFS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -460,7 +461,7 @@ void HPL_pdinfo
 /*
  * Recursive stopping criterium (>=1) (NBM)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NBMS = atoi( num );
       if( ( *NBMS < 1 ) || ( *NBMS > HPL_MAX_PARAM ) )
       {
@@ -469,7 +470,7 @@ void HPL_pdinfo
                     "is less than 1 or greater than", HPL_MAX_PARAM );
          error = 1; goto label_error;
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NBMS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -483,7 +484,7 @@ void HPL_pdinfo
 /*
  * Number of panels in recursion (>=2) (NDV)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NDVS = atoi( num );
       if( ( *NDVS < 1 ) || ( *NDVS > HPL_MAX_PARAM ) )
       {
@@ -492,7 +493,7 @@ void HPL_pdinfo
                     "is less than 1 or greater than", HPL_MAX_PARAM );
          error = 1; goto label_error;
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NDVS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -506,7 +507,7 @@ void HPL_pdinfo
 /*
  * Recursive panel factorization (RF)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NRFS = atoi( num );
       if( ( *NRFS < 1 ) || ( *NRFS > HPL_MAX_PARAM ) )
       {
@@ -515,7 +516,7 @@ void HPL_pdinfo
                     "is less than 1 or greater than", HPL_MAX_PARAM );
          error = 1; goto label_error;
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NRFS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -528,7 +529,7 @@ void HPL_pdinfo
 /*
  * Broadcast topology (TP) (0=rg, 1=2rg, 2=rgM, 3=2rgM, 4=L)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NTPS = atoi( num );
       if( ( *NTPS < 1 ) || ( *NTPS > HPL_MAX_PARAM ) )
       {
@@ -537,7 +538,7 @@ void HPL_pdinfo
                     "is less than 1 or greater than", HPL_MAX_PARAM );
          error = 1; goto label_error;
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NTPS; i++ )
       {
          (void) sscanf( lineptr, "%s", num ); lineptr += strlen( num ) + 1;
@@ -554,7 +555,7 @@ void HPL_pdinfo
 /*
  * Lookahead depth (>=0) (NDH)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *NDHS = atoi( num );
       if( ( *NDHS < 1 ) || ( *NDHS > HPL_MAX_PARAM ) )
       {
@@ -563,7 +564,7 @@ void HPL_pdinfo
                     "is less than 1 or greater than", HPL_MAX_PARAM );
          error = 1; goto label_error;
       }
-      (void) fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
+      status = fgets( line, HPL_LINE_MAX - 2, infp ); lineptr = line;
       for( i = 0; i < *NDHS; i++ )
       {
          (void) sscanf( lineptr, "%s", num );
@@ -578,7 +579,7 @@ void HPL_pdinfo
 /*
  * Swapping algorithm (0,1 or 2) (FSWAP)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); j = atoi( num );
       if(      j == 0 ) *FSWAP = HPL_SWAP00;
       else if( j == 1 ) *FSWAP = HPL_SWAP01;
@@ -587,31 +588,31 @@ void HPL_pdinfo
 /*
  * Swapping threshold (>=0) (TSWAP)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *TSWAP = atoi( num );
       if( *TSWAP <= 0 ) *TSWAP = 0;
 /*
  * L1 in (no-)transposed form (0 or 1)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *L1NOTRAN = atoi( num );
       if( ( *L1NOTRAN != 0 ) && ( *L1NOTRAN != 1 ) ) *L1NOTRAN = 0; 
 /*
  * U  in (no-)transposed form (0 or 1)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *UNOTRAN = atoi( num );
       if( ( *UNOTRAN != 0 ) && ( *UNOTRAN != 1 ) ) *UNOTRAN = 0;
 /*
  * Equilibration (0=no, 1=yes)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *EQUIL = atoi( num );
       if( ( *EQUIL != 0 ) && ( *EQUIL != 1 ) ) *EQUIL = 1;
 /*
  * Memory alignment in bytes (> 0) (ALIGN)
  */
-      (void) fgets( line, HPL_LINE_MAX - 2, infp );
+      status = fgets( line, HPL_LINE_MAX - 2, infp );
       (void) sscanf( line, "%s", num ); *ALIGN = atoi( num );
       if( *ALIGN <= 0 ) *ALIGN = 4;
 /*

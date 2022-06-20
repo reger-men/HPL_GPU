@@ -18,3 +18,9 @@ namespace HPL
 
 #endif
 
+
+void HPL_piplen(HPL_T_panel*, const int, const int*, int*, int*);
+void HPL_plindx(HPL_T_panel*, const int, const int*, int*, int*, int*, int*, int*, int*, int*);
+int  HPL_scatterv(double*, const int*, const int*, const int, int, MPI_Comm);
+int  HPL_allgatherv(double*, const int, const int*, const int*, MPI_Comm);
+int  HPL_pdpanel_bcast(HPL_T_panel*);

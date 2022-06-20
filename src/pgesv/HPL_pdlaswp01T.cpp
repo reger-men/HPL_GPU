@@ -121,10 +121,6 @@ void HPL_pdlaswp01T
    static int                equil=-1;
    int                       icurrow, * iflag, * ipA, * ipl, jb, k,
                              lda, myrow, n, nprow;
-#ifdef ROCM
-   double * dA = PANEL->dA, * dU = PANEL->dU;
-   int *dlindxA = NULL, *dlindxAU, *dpermU, *dpermU_ex;
-#endif
 #define LDU                  n
 /* ..
  * .. Executable Statements ..
@@ -155,28 +151,13 @@ void HPL_pdlaswp01T
  * 1(iflag) + 1(ipl) + 1(ipA) + 9*jb + 3*nprow + 1 + MAX(2*jb,nprow+1)
  * i.e. 4 + 9*jb + 3*nprow + max(2*jb, nprow+1);
  */
-#ifdef ROCM
-   k = (int)((unsigned int)(jb) << 1); ipl     = iflag + 1; ipID    = ipl + 1;
-   ipA     = ipID + ((unsigned int)(k) << 1); iplen   = ipA + 1; ipmap   = iplen + nprow + 1;
-   ipmapm1 = ipmap + nprow; iwork   = ipmapm1 + nprow;
-
-   lindxA  = PANEL->lindxA; lindxAU = PANEL->lindxAU; permU   = PANEL->permU;
-
-   dlindxA   = PANEL->dlindxA; dlindxAU  = PANEL->dlindxAU; 
-   dpermU    = PANEL->dpermU; dpermU_ex = dpermU + jb;
-#elif
    k = (int)((unsigned int)(jb) << 1);  ipl = iflag + 1; ipID = ipl + 1;
    ipA     = ipID + ((unsigned int)(k) << 1); lindxA = ipA + 1;
    lindxAU = lindxA + k; iplen = lindxAU + k; ipmap = iplen + nprow + 1;
    ipmapm1 = ipmap + nprow; permU = ipmapm1 + nprow; iwork = permU + jb;
-#endif
 
    if( *iflag == -1 )    /* no index arrays have been computed so far */
    {
-      HPL_BE_move_data_2d(PANEL->ipiv, PANEL->jb * sizeof(int),
-                  PANEL->dipiv, PANEL->jb * sizeof(int),
-                  PANEL->jb * sizeof(int), 1,
-                  hipMemcpyDeviceToHost, T_HIP);
       HPL_pipid(   PANEL,  ipl, ipID );
       HPL_plindx1( PANEL, *ipl, ipID, ipA, lindxA, lindxAU, iplen,
                    ipmap, ipmapm1, permU, iwork );
@@ -197,15 +178,11 @@ void HPL_pdlaswp01T
  * Copy into U the rows to be spread (local to icurrow)
  */
    if( myrow == icurrow )
-   {
-      HPL_BE_dlaswp01T( *ipA, n, dA, lda, dU, LDU, dlindxA, dlindxAU, T_HIP); 
-      HPL_BE_event_record(HPL_RS_1, T_HIP);
-      HPL_BE_event_synchronize(HPL_RS_1, T_HIP);
-   }
+   { HPL_dlaswp01T( *ipA, n, A, lda, U, LDU, lindxA, lindxAU ); }
 /*
  * Spread U - optionally probe for column panel
  */
-   HPL_spreadT( PBCST, IFLAG, PANEL, HplRight, n, dU, LDU, 0, iplen,
+   HPL_spreadT( PBCST, IFLAG, PANEL, HplRight, n, U, LDU, 0, iplen,
                 ipmap, ipmapm1 );
 /*
  * Local exchange (everywhere but in process row icurrow)
@@ -213,10 +190,8 @@ void HPL_pdlaswp01T
    if( myrow != icurrow )
    {
       k = ipmapm1[myrow];
-      HPL_BE_dlaswp06T( iplen[k+1]-iplen[k], n, dA, lda, Mptr( dU, 0,
-                     iplen[k], LDU ), LDU, dlindxA, T_HIP);
-      HPL_BE_event_record(HPL_RS_1, T_HIP);
-      HPL_BE_event_synchronize(HPL_RS_1, T_HIP);
+      HPL_dlaswp06T( iplen[k+1]-iplen[k], n, A, lda, Mptr( U, 0,
+                     iplen[k], LDU ), LDU, lindxA );
    }
 /*
  * Equilibration
@@ -227,13 +202,11 @@ void HPL_pdlaswp01T
 /*
  * Rolling phase
  */
-   HPL_rollT( PBCST, IFLAG, PANEL, n, dU, LDU, iplen, ipmap, ipmapm1 );
+   HPL_rollT( PBCST, IFLAG, PANEL, n, U, LDU, iplen, ipmap, ipmapm1 );
 /*
  * Permute U in every process row
  */
-   HPL_BE_dlaswp10N( n, jb, dU, LDU, dpermU, T_HIP);
-   HPL_BE_event_record(HPL_RS_1, T_HIP);
-   HPL_BE_event_synchronize(HPL_RS_1, T_HIP);
+   HPL_dlaswp10N( n, jb, U, LDU, permU );
 
 #ifdef HPL_DETAILED_TIMING
    HPL_ptimer( HPL_TIMING_LASWP );

@@ -121,6 +121,10 @@ void HPL_pdrpanrlN
 /*
  * .. Local Variables ..
  */
+#ifdef PDFACT_OMP
+    const int thread_rank = omp_get_thread_num();
+    const int thread_size = omp_get_num_threads();
+#endif
    double                     * A, * Aptr, * L1, * L1ptr;
 #ifdef HPL_CALL_VSIPL
    vsip_mview_d               * Av0, * Lv0, * Av1, * Av2, * Lv1;
@@ -168,6 +172,9 @@ void HPL_pdrpanrlN
  */
       HPL_pdrpanrlN( PANEL, m, jb, ioff, WORK );
 
+#ifdef PDFACT_OMP
+      if(thread_rank == 0)
+#endif
       //Adil
       HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
                  HplUnit, jb, n, HPL_rone, Mptr( L1ptr, jj, jj, n0 ),
@@ -223,6 +230,14 @@ void HPL_pdrpanrlN
       (void) vsip_mdestroy_d( Lv0 );
       (void) vsip_mdestroy_d( Av0 );
 #else
+#ifdef PDFACT_OMP
+#pragma omp barrier
+      CPU::HPL_dgemm_omp(HplColumnMajor, HplNoTrans, HplNoTrans, m, n, 
+                        jb, -HPL_rone, Mptr(Aptr, ii, jj, lda), lda, 
+                        Mptr(L1ptr, jj, jj + jb, n0), n0, HPL_rone,
+                        Mptr(Aptr, ii, jj + jb, lda), lda, 
+                        PANEL->nb, (curr != 0) ? ICOFF + ii : 0, thread_rank, thread_size);
+#else
       //Adil
       HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, m, n,
                  jb, -HPL_rone, Mptr( Aptr, ii, jj, lda ), lda,
@@ -233,11 +248,15 @@ void HPL_pdrpanrlN
                  Mptr( L1ptr, jj, jj+jb, n0 ), n0, HPL_rone,
                  Mptr( Aptr, ii, jj+jb, lda ), lda );*/
 #endif
+#endif
 /*
  * Copy back upper part of A in current process row - Go the next block
  */
       if( curr != 0 )
       {
+#ifdef PDFACT_OMP
+      if(thread_rank == 0) 
+#endif
          //Adil
          HPL_BE_dlacpy( ioff, jb, Mptr( L1, 0, ioff, n0 ), n0,
                      Mptr( A, 0, ioff, lda ), lda, T_DEFAULT);
