@@ -74,6 +74,18 @@ typedef enum
    HPL_NO_SWP        = 499
 } HPL_T_SWAP;
 
+typedef enum {
+  HPL_LOOK_AHEAD = 0, /* look-ahead update */
+  HPL_UPD_1 = 1,      /* first update */
+  HPL_UPD_2 = 2,      /* second update */
+  HPL_N_UPD = 3
+} HPL_T_UPD;
+
+#ifdef ROCM
+typedef void (*HPL_T_UPD_FUN)
+(const HPL_T_UPD,  HPL_T_panel *, int *, HPL_T_panel *, const int); 
+#endif
+
 typedef struct HPL_S_palg
 {
    HPL_T_TOP           btopo;               /* row broadcast topology */
@@ -104,10 +116,11 @@ typedef struct HPL_S_pmat
    int                 mp;                    /* local number of rows */
    int                 nq;                 /* local number of columns */
    int                 info;                    /* computational flag */
-#ifdef ROCM
+
    double              * d_A;            /* device pointer to local piece of A */
    double              * d_X;             /* device pointer to solution vector */
-#endif
+   double              * W;
+   double              * dW;
 } HPL_T_pmat;
 /*
  * ---------------------------------------------------------------------
@@ -286,6 +299,9 @@ STDC_ARGS( (
 
 void                             HPL_pdupdateNN
 STDC_ARGS( (
+#ifdef ROCM
+   const HPL_T_UPD,
+#endif
    HPL_T_panel *,
    int *,
    HPL_T_panel *,
@@ -293,6 +309,9 @@ STDC_ARGS( (
 ) );
 void                             HPL_pdupdateNT
 STDC_ARGS( (
+#ifdef ROCM
+   const HPL_T_UPD,
+#endif
    HPL_T_panel *,
    int *,
    HPL_T_panel *,
@@ -300,6 +319,9 @@ STDC_ARGS( (
 ) );
 void                             HPL_pdupdateTN
 STDC_ARGS( (
+#ifdef ROCM
+   const HPL_T_UPD,
+#endif
    HPL_T_panel *,
    int *,
    HPL_T_panel *,
@@ -307,6 +329,9 @@ STDC_ARGS( (
 ) );
 void                             HPL_pdupdateTT
 STDC_ARGS( (
+#ifdef ROCM
+   const HPL_T_UPD,
+#endif
    HPL_T_panel *,
    int *,
    HPL_T_panel *,
@@ -326,6 +351,12 @@ STDC_ARGS( (
    HPL_T_pmat *
 ) );
 void                             HPL_pdgesvK2
+STDC_ARGS( (
+   HPL_T_grid *,
+   HPL_T_palg *,
+   HPL_T_pmat *
+) );
+void                             HPL_pdgesvK2_HIP
 STDC_ARGS( (
    HPL_T_grid *,
    HPL_T_palg *,

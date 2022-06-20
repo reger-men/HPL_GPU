@@ -192,27 +192,27 @@ extern "C" {
             DO_NOTHING();
       }
    }
-   void HPL_BE_event_record(HPL_EVENT event, HPL_TARGET TR)
+   void HPL_BE_event_record(HPL_EVENT event, const HPL_T_UPD UPD, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
             DO_NOTHING();
             break;
          case T_HIP:
-            HPL::dispatch(HIP::event_record, event);
+            HPL::dispatch(HIP::event_record, event, UPD);
             break;
          default:
             DO_NOTHING();
       }
    }
-   void HPL_BE_event_synchronize(HPL_EVENT event, HPL_TARGET TR)
+   void HPL_BE_event_synchronize(HPL_EVENT event, const HPL_T_UPD UPD, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
             DO_NOTHING();
             break;
          case T_HIP:
-            HPL::dispatch(HIP::event_synchronize, event);
+            HPL::dispatch(HIP::event_synchronize, event, UPD);
             break;
          default:
             DO_NOTHING();
@@ -247,6 +247,20 @@ extern "C" {
    /*
    * Matrix generator
    */
+   int HPL_BE_pdmatgen(HPL_T_test* TEST, HPL_T_grid* GRID, HPL_T_palg* ALGO, HPL_T_pmat* mat, const int N, const int NB, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            return 0;
+            break;
+         case T_HIP:
+            return HPL::dispatch(HIP::pdmatgen, TEST, GRID, ALGO, mat, N, NB);
+            break;
+         default:
+            return 0;
+            break; 
+      }
+   }
    void HPL_BE_dmatgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
                  const int ISEED, HPL_TARGET TR)
@@ -262,49 +276,54 @@ extern "C" {
             HPL::dispatch(CPU::matgen, GRID, M, N, NB, A, LDA, ISEED);
       }
    }
-
+   void HPL_BE_pdmatfree(void* mat, HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::pdmatfree, (void*)mat);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::pdmatfree, (HPL_T_pmat*)mat);
+            break;
+         default:
+            HPL::dispatch(CPU::pdmatfree, (void*)mat);
+            break;
+      }
+   }
    /*
    * Broadcast routine
    */
-   void HPL_BE_binit_ibcast(HPL_T_panel* PANEL, int &result, HPL_TARGET TR)
+   int HPL_BE_bwait_ibcast(HPL_T_panel* PANEL, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
-            DO_NOTHING();
-            break;
+            return HPL_bwait_2rinM( PANEL );
          case T_HIP:
-            HPL::dispatch(HIP::binit_ibcst, PANEL, result);
-            break;
+            return HPL_SUCCESS;
          default:
-            DO_NOTHING();
+            return HPL_SUCCESS;
       }
    }
-
-   void HPL_BE_bcast_ibcast(HPL_T_panel* PANEL, int* FLAG, int &result, HPL_TARGET TR)
+   int HPL_BE_binit_ibcast(HPL_T_panel* PANEL, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
-            DO_NOTHING();
-            break;
+            return HPL_binit_2rinM( PANEL );
          case T_HIP:
-            HPL::dispatch(HIP::bcast_ibcst, PANEL, FLAG, result);
-            break;
+            return HPL_SUCCESS;
          default:
-            DO_NOTHING();
+            return HPL_binit_2rinM( PANEL );
       }
    }
-
-   void HPL_BE_bwait_ibcast(HPL_T_panel* PANEL, int &result, HPL_TARGET TR)
+   int HPL_BE_bcast_ibcast(HPL_T_panel* PANEL, int* FLAG, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
-            DO_NOTHING();
-            break;
+            return HPL_bcast_2rinM( PANEL, FLAG );
          case T_HIP:
-            HPL::dispatch(HIP::bwait_ibcst, PANEL, result);
-            break;
+            return HPL::dispatch(HIP::bcast_ibcst, PANEL, FLAG);
          default:
-            DO_NOTHING();
+            return HPL_bcast_2rinM( PANEL, FLAG );
       }
    }
 
@@ -563,75 +582,48 @@ extern "C" {
             DO_NOTHING();
       }
    }
+ 
+   double HPL_BE_pdlange(const HPL_T_grid* GRID, const HPL_T_NORM NORM, const int M, const int N, const int NB, const double* A, const int LDA, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            return HPL::dispatch(CPU::pdlange, GRID, NORM, M, N, NB, A, LDA);
+            break;
+         case T_HIP:
+            return HPL::dispatch(HIP::pdlange, GRID, NORM, M, N, NB, A, LDA);
+            break;
+         default:
+            return HPL::dispatch(CPU::pdlange, GRID, NORM, M, N, NB, A, LDA);
+            break;
+      }
+   }
+   
+   void HPL_BE_set_zero(const int N, double* __restrict__ X, enum HPL_TARGET TR)
+   {
+      switch(TR) {
+         case T_CPU :
+            HPL::dispatch(CPU::HPL_set_zero, N, X);
+            break;
+         case T_HIP:
+            HPL::dispatch(HIP::HPL_set_zero, N, X);
+            break;
+         default:
+            HPL::dispatch(CPU::HPL_set_zero, N, X);
+            break;
+      }
+   }
 
-   void HPL_BE_dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV, enum HPL_TARGET TR) 
+   void HPL_BE_dlaswp00N(const int M, const int N, double * A, const int LDA, const int * IPIV, HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU :
             HPL::dispatch(CPU::dlaswp00N, M, N, A, LDA, IPIV);
             break;
          case T_HIP:
-            HPL::dispatch(HIP::dlaswp00N, M, N, A, LDA, IPIV);
+            HPL::dispatch(HIP::HPL_dlaswp00N, M, N, A, LDA, IPIV);
             break;
          default:
             HPL::dispatch(CPU::dlaswp00N, M, N, A, LDA, IPIV);
-      }
-   }
-
-   void HPL_BE_pdlaswp(HPL_T_panel* PANEL, const int NN, enum HPL_TARGET TR)
-   {
-      switch(TR) {
-         case T_CPU :
-            break;
-         case T_HIP:
-            HPL::dispatch(HIP::pdlaswp, PANEL, NN);
-            break;
-         default:
-            break;
-      }
-   }
-  
-   void HPL_BE_dlaswp01T(const int M, const int N, double* A, const int LDA, double* U, const int LDU, const int* LINDXA, const int* LINDXAU, enum HPL_TARGET TR)
-   {
-      switch(TR) {
-         case T_CPU :
-            HPL_dlaswp01T(M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
-            break;
-         case T_HIP:
-            HPL::dispatch(HIP::dlaswp01T, M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
-            break;
-         default:
-            HPL_dlaswp01T(M, N, A, LDA, U, LDU, LINDXA, LINDXAU);
-            break;
-      }
-   }
-
-   void HPL_BE_dlaswp06T(const int M, const int N, double* A, const int LDA, double* U, const int LDU, const int* LINDXA, enum HPL_TARGET TR) 
-   {
-      switch(TR) {
-         case T_CPU :
-            HPL_dlaswp06T(M, N, A, LDA, U, LDU, LINDXA);
-            break;
-         case T_HIP:
-            HPL::dispatch(HIP::dlaswp06T, M, N, A, LDA, U, LDU, LINDXA);
-            break;
-         default:
-            HPL_dlaswp06T(M, N, A, LDA, U, LDU, LINDXA);
-            break;
-      }
-   }
-
-   void HPL_BE_dlaswp10N(const int M, const int N, double* A, const int LDA, const int* IPIV, enum HPL_TARGET TR) 
-   {
-      switch(TR) {
-         case T_CPU :
-            HPL_dlaswp10N(M, N, A, LDA, IPIV);
-            break;
-         case T_HIP:
-            HPL::dispatch(HIP::dlaswp10N, M, N, A, LDA, IPIV);
-            break;
-         default:
-            HPL_dlaswp10N(M, N, A, LDA, IPIV);
             break;
       }
    }
