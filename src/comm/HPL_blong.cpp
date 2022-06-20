@@ -58,6 +58,12 @@
 #define   I_SEND    0
 #define   I_RECV    1
 
+#ifdef ROCM
+#define L2ptr PANEL->dL2
+#else
+#define L2ptr PANEL->L2
+#endif
+
 #ifdef STDC_HEADERS
 int HPL_binit_blong
 (
@@ -109,19 +115,19 @@ int HPL_binit_blong( PANEL )
  
 #else
  
-#define   _M_BUFF_S         (void *)(PANEL->dL2 + ibuf)
+#define   _M_BUFF_S         (void *)(L2ptr + ibuf)
 #define   _M_COUNT_S        lbuf
 #define   _M_TYPE_S         MPI_DOUBLE
  
-#define   _M_BUFF_R         (void *)(PANEL->dL2 + ibuf)
+#define   _M_BUFF_R         (void *)(L2ptr + ibuf)
 #define   _M_COUNT_R        lbuf
 #define   _M_TYPE_R         MPI_DOUBLE
  
-#define   _M_ROLL_BUFF_S    (void *)(PANEL->dL2 + ibufS)
+#define   _M_ROLL_BUFF_S    (void *)(L2ptr + ibufS)
 #define   _M_ROLL_COUNT_S   lbufS
 #define   _M_ROLL_TYPE_S    MPI_DOUBLE
  
-#define   _M_ROLL_BUFF_R    (void *)(PANEL->dL2 + ibufR)
+#define   _M_ROLL_BUFF_R    (void *)(L2ptr + ibufR)
 #define   _M_ROLL_COUNT_R   lbufR
 #define   _M_ROLL_TYPE_R    MPI_DOUBLE
  

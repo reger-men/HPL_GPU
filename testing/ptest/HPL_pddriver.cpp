@@ -155,7 +155,7 @@ int main( ARGC, ARGV )
    /*
    * Init Target Device
    */
-   HPL_BE_init(1, T_HIP);
+   HPL_BE_init(1, HPL_TR);
 
 /*
  * Loop over different process grids - Define process grid. Go to bottom

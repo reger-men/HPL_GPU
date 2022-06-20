@@ -24,4 +24,3 @@ mpi_args="--map-by node:PE=${total_cpu_cores} --bind-to core:overload-allowed --
 
 ${mpi_bin} --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 
 grep --color "e+" HPL.out
-

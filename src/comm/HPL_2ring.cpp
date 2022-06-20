@@ -55,6 +55,12 @@
 #endif
 #endif
 
+#ifdef ROCM
+#define L2ptr PANEL->dL2
+#else
+#define L2ptr PANEL->L2
+#endif
+
 #ifdef STDC_HEADERS
 int HPL_binit_2ring
 (
@@ -107,7 +113,7 @@ int HPL_binit_2ring( PANEL )
  
 #else
  
-#define   _M_BUFF     (void *)(PANEL->dL2)
+#define   _M_BUFF     (void *)(L2ptr)
 #define   _M_COUNT    PANEL->len
 #define   _M_TYPE     MPI_DOUBLE
  

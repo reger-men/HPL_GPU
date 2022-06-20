@@ -135,11 +135,17 @@ void HPL_pipid
  */
    int                        dst, fndd, fnds, ia, i, j, jb, lst, off,
                               src;
+#ifndef ROCM
+   double                  * dpiv;
+   dpiv = PANEL->DPIV;
+#else
    int                     * dpiv;
+   dpiv = PANEL->ipiv;
+#endif
 /* ..
  * .. Executable Statements ..
  */
-   dpiv = PANEL->ipiv; jb = PANEL->jb; src = ia = PANEL->ia;
+   jb = PANEL->jb; src = ia = PANEL->ia;
    dst  = (int)(dpiv[0]); IPID[0] = dst; IPID[1] = src; *K = 2;
    if( src != dst ) { IPID[2] = src; IPID[3] = dst; *K += 2; }
 

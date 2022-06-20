@@ -84,6 +84,14 @@ void HPL_copyL
  * .. Local Variables ..
  */
    int                        jb, lda;
+   double *Aptr, *L2ptr;
+#ifdef ROCM
+   Aptr = PANEL->dA;
+   L2ptr = PANEL->dL2;
+#else
+   Aptr = PANEL->A;
+   L2ptr = PANEL->L2;
+#endif
 /* ..
  * .. Executable Statements ..
  */
@@ -94,16 +102,16 @@ void HPL_copyL
       if( PANEL->grid->myrow == PANEL->prow )
       {
          //Adil
-         HPL_BE_dlacpy(PANEL->mp-jb, jb, Mptr( PANEL->dA, jb, -jb, lda ),
-                     lda, PANEL->dL2, PANEL->ldl2, T_HIP);
+         HPL_BE_dlacpy(PANEL->mp-jb, jb, Mptr( Aptr, jb, -jb, lda ),
+                     lda, L2ptr, PANEL->ldl2, HPL_TR);
          /*HPL_dlacpy( PANEL->mp-jb, jb, Mptr( PANEL->A, jb, -jb, lda ),
                      lda, PANEL->L2, PANEL->ldl2 );*/
       }
       else
       {
          //Adil
-         HPL_BE_dlacpy( PANEL->mp,    jb, Mptr( PANEL->dA,  0, -jb, lda ),
-                     lda, PANEL->dL2, PANEL->ldl2, T_HIP);
+         HPL_BE_dlacpy( PANEL->mp,    jb, Mptr( Aptr,  0, -jb, lda ),
+                     lda, L2ptr, PANEL->ldl2, HPL_TR);
          /*HPL_dlacpy( PANEL->mp,    jb, Mptr( PANEL->A,  0, -jb, lda ),
                      lda, PANEL->L2, PANEL->ldl2 );*/
       }

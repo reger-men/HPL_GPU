@@ -99,7 +99,6 @@ void HPL_pdgesvK2
    int                        N, depth, icurcol=0, j, jb, jj=0, jstart,
                               k, mycol, n, nb, nn, npcol, nq,
                               tag=MSGID_BEGIN_FACT, test=HPL_KEEP_TESTING;
-   int                        coef = (GRID->nprow == 1? 4: 0);  // to split pdupdate
 #ifdef HPL_PROGRESS_REPORT
    double start_time, time, gflops;
 #endif
@@ -121,6 +120,7 @@ void HPL_pdgesvK2
  */
    //Adil
    HPL_BE_malloc((void**)&panel, (size_t)(depth+1) * sizeof( HPL_T_panel *), T_DEFAULT);
+   /*panel = (HPL_T_panel **)malloc( (size_t)(depth+1) * sizeof( HPL_T_panel *) );*/
    if( panel == NULL )
    { HPL_pabort( __LINE__, "HPL_pdgesvK2", "Memory allocation failed" ); }
 /*
@@ -131,8 +131,8 @@ void HPL_pdgesvK2
    for( k = 0; k < depth; k++ )
    {
       jb = Mmin( nn, nb );
-      HPL_BE_panel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
-                       tag, &panel[k], T_HIP);
+      HPL_pdpanel_new( GRID, ALGO, nn, nn+1, jb, A, jstart, jstart,
+                       tag, &panel[k] );
       nn -= jb; jstart += jb;
       if( mycol == icurcol ) { jj += jb; nq -= jb; }
       icurcol = MModAdd1( icurcol, npcol );
@@ -141,8 +141,8 @@ void HPL_pdgesvK2
 /*
  * Create last depth+1 panel
  */
-   HPL_BE_panel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
-                    jstart, tag, &panel[depth], T_HIP);
+   HPL_pdpanel_new( GRID, ALGO, nn, nn+1, Mmin( nn, nb ), A, jstart,
+                    jstart, tag, &panel[depth] );
    tag = MNxtMgid( tag, MSGID_BEGIN_FACT, MSGID_END_FACT );
 /*
  * Initialize the lookahead - Factor jstart columns: panel[0..depth-1]
@@ -153,32 +153,19 @@ void HPL_pdgesvK2
 /*
  * Factor and broadcast k-th panel
  */
-      HPL_BE_panel_send_to_host( panel[k], T_HIP );
-      HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
-      HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
-
       HPL_pdfact(         panel[k] );
-
-      HPL_BE_panel_send_to_device( panel[k], T_HIP );
-      HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
-      HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
-
       (void) HPL_binit(   panel[k] );
       do
       { (void) HPL_bcast( panel[k], &test ); }
       while( test != HPL_SUCCESS );
       (void) HPL_bwait(   panel[k] );
-
 /*
  * Partial update of the depth-k-1 panels in front of me
  */
       if( k < depth - 1 )
       {
          nn = HPL_numrocI( jstart-j, j, nb, nb, mycol, 0, npcol );
-         HPL_BE_pdlaswp(panel[k], nn, T_HIP);
          HPL_pdupdate( NULL, NULL, panel[k], nn );
-         HPL_BE_event_record(HPL_PANEL_UPDATE, T_HIP);
-         HPL_BE_event_synchronize(HPL_PANEL_UPDATE, T_HIP);
       }
    }
 /*
@@ -200,78 +187,21 @@ void HPL_pdgesvK2
  * Initialize current panel - Finish latest update, Factor and broadcast
  * current panel
  */
-      HPL_BE_panel_free(panel[depth], T_HIP);
-      HPL_BE_panel_init(GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth], T_HIP);
+      (void) HPL_pdpanel_free( panel[depth] );
+      HPL_pdpanel_init( GRID, ALGO, n, n+1, jb, A, j, j, tag, panel[depth] );
+
       if( mycol == icurcol )
       {
          nn = HPL_numrocI( jb, j, nb, nb, mycol, 0, npcol );
-         for( k = 0; k < depth; k++ ){   /* partial updates 0..depth-1 */
-            if (GRID->nprow == 1) {
-               HPL_BE_pdlaswp(panel[k], nn, T_HIP);
-               HPL_BE_event_record(HPL_RS_1, T_HIP);
-               HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_1, T_HIP);
-            }
+         for( k = 0; k < depth; k++ )   /* partial updates 0..depth-1 */
             (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-            // overlap row swap2 with update1
-            if (GRID->nprow == 1) {
-               HPL_BE_pdlaswp(panel[0], nn * coef, T_HIP);
-               HPL_BE_event_record(HPL_RS_2, T_HIP);
-            }
-         }
-         HPL_BE_device_sync(T_HIP);
-
-         if (GRID->nprow == 1) {
-            // split update and row swap step    
-            // overlap row swap3 with update2
-            HPL_pdupdate( NULL, NULL, panel[0], nn * coef );
-         
-            HPL_BE_pdlaswp(panel[0], nq - (nn * coef), T_HIP);        
-            HPL_BE_event_record(HPL_RS_3, T_HIP);
-
-            //overlap row swap1 of next iteration with update3
-            HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
-         }
-
-         HPL_pdupdate( NULL, NULL, panel[0], nq - (nn * coef) );
-
-         // overlap update with data copy
-         
-         HPL_BE_panel_send_to_host( panel[depth], T_HIP);
-         HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
-         HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
-
          HPL_pdfact(       panel[depth] );    /* factor current panel */
-
-         HPL_BE_panel_send_to_device(panel[depth], T_HIP);  
-         HPL_BE_event_record(HPL_PANEL_COPY, T_HIP);
-         HPL_BE_event_synchronize(HPL_PANEL_COPY, T_HIP);
-
-         (void) HPL_binit(   panel[depth] );
-         do
-         { (void) HPL_bcast( panel[depth], &test ); }
-         while( test != HPL_SUCCESS );
-         (void) HPL_bwait(   panel[depth] );
-
       }
-      else { 
-         nn = 0; 
+      else { nn = 0; }
           /* Finish the latest update and broadcast the current panel */
-         (void) HPL_binit( panel[depth] );
-         do
-         { (void) HPL_bcast( panel[depth], &test ); }
-         while( test != HPL_SUCCESS );
-         
-         if (GRID->nprow == 1) {
-            HPL_BE_pdlaswp(panel[0], nq-nn, T_HIP);        
-            HPL_BE_event_record(HPL_RS_3, T_HIP);
-            HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, HPL_RS_3, T_HIP);
-         }
-         HPL_pdupdate( NULL, NULL, panel[0], nq-nn );
-
-         (void) HPL_bwait( panel[depth] );
-      }
-
-     HPL_BE_device_sync(T_HIP);
+      (void) HPL_binit( panel[depth] );
+      HPL_pdupdate( panel[depth], &test, panel[0], nq-nn );
+      (void) HPL_bwait( panel[depth] );
 /*
  * Circular  of the panel pointers:
  * xtmp = x[0]; for( k=0; k < depth; k++ ) x[k] = x[k+1]; x[d] = xtmp;
@@ -284,7 +214,6 @@ void HPL_pdgesvK2
       if( mycol == icurcol ) { jj += jb; nq -= jb; }
       icurcol = MModAdd1( icurcol, npcol );
       tag     = MNxtMgid( tag, MSGID_BEGIN_FACT, MSGID_END_FACT );
-
    }
 /*
  * Clean-up: Finish updates - release panels and panel list
@@ -292,17 +221,14 @@ void HPL_pdgesvK2
    nn = HPL_numrocI( 1, N, nb, nb, mycol, 0, npcol );
    for( k = 0; k < depth; k++ )
    {
-      if (GRID->nprow == 1)
-         HPL_BE_pdlaswp(panel[k], nn, T_HIP);
       (void) HPL_pdupdate( NULL, NULL, panel[k], nn );
-      HPL_BE_device_sync(T_HIP);
-      (void) HPL_BE_panel_disp(  &panel[k], T_HIP);
-      // (void) HPL_pdpanel_disp(  &panel[k] );
+      (void) HPL_pdpanel_disp(  &panel[k] );
    }
-   (void) HPL_BE_panel_disp( &panel[depth], T_HIP);
-   // (void) HPL_pdpanel_disp( &panel[depth] );
+   (void) HPL_pdpanel_disp( &panel[depth] );
 
+   //Adil
    if( panel ) HPL_BE_free((void**)&panel, T_DEFAULT);
+   /*if( panel ) free( panel );*/
 /*
  * End of HPL_pdgesvK2
  */

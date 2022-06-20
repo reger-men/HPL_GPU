@@ -52,6 +52,9 @@
 #ifdef STDC_HEADERS
 void HPL_pdupdateNN
 (
+#ifdef ROCM
+   const HPL_T_UPD                  UPD,
+#endif
    HPL_T_panel *                    PBCST,
    int *                            IFLAG,
    HPL_T_panel *                    PANEL,
@@ -183,14 +186,14 @@ void HPL_pdupdateNN
  */
 #ifdef HPL_DETAILED_TIMING
          HPL_ptimer( HPL_TIMING_LASWP );
-         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, HPL_TR);
          HPL_ptimer( HPL_TIMING_LASWP );
 #else
-         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, T_HIP);
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, HPL_TR);
 #endif
 
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, HPL_TR);
 #ifdef HPL_CALL_VSIPL
 /*
  * Create the matrix subviews
@@ -208,7 +211,7 @@ void HPL_pdupdateNN
 #else
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
+                    Mptr( Aptr, jb, 0, lda ), lda, HPL_TR);
 #endif
          Aptr = Mptr( Aptr, 0, nn, lda ); nq0 += nn; 
 
@@ -219,9 +222,15 @@ void HPL_pdupdateNN
  */
       if( ( nn = n - nq0 ) > 0 )
       {
-
+#ifdef HPL_DETAILED_TIMING
+         HPL_ptimer( HPL_TIMING_LASWP );
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, HPL_TR);
+         HPL_ptimer( HPL_TIMING_LASWP );
+#else
+         HPL_BE_dlaswp00N(jb, nn, Aptr, lda, ipiv, HPL_TR);
+#endif
          HPL_BE_dtrsm( HplColumnMajor, HplLeft, HplLower, HplNoTrans,
-                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, T_HIP);
+                    HplUnit, jb, nn, HPL_rone, L1ptr, jb, Aptr, lda, HPL_TR);
 
 #ifdef HPL_CALL_VSIPL
 /*
@@ -240,7 +249,7 @@ void HPL_pdupdateNN
 #else
          HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                     jb, -HPL_rone, L2ptr, ldl2, Aptr, lda, HPL_rone,
-                    Mptr( Aptr, jb, 0, lda ), lda, T_HIP);
+                    Mptr( Aptr, jb, 0, lda ), lda, HPL_TR);
 
 
 
@@ -311,7 +320,6 @@ void HPL_pdupdateNN
          //Adil
          HPL_BE_dtrsm( HplColumnMajor, HplLeft,  HplLower, HplNoTrans,
                     HplUnit, jb, nn, HPL_rone, L1ptr, jb, Uptr, LDU, T_DEFAULT);
-
          if( curr != 0 )
          {
 #ifdef HPL_CALL_VSIPL
@@ -333,8 +341,6 @@ void HPL_pdupdateNN
             HPL_BE_dgemm( HplColumnMajor, HplNoTrans, HplNoTrans, mp, nn,
                        jb, -HPL_rone, L2ptr, ldl2, Uptr, LDU, HPL_rone,
                        Mptr( Aptr, jb, 0, lda ), lda, T_DEFAULT);
-
-
 #endif
             HPL_BE_dlacpy( jb, nn, Uptr, LDU, Aptr, lda, T_DEFAULT);
          }
