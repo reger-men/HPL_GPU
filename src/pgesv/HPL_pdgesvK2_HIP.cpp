@@ -173,7 +173,7 @@ void HPL_pdgesvK2_HIP
  */
   float  smallDgemmTime, largeDgemm1Time, largeDgemm2Time;
   double smallDgemmGflops, pdfactGflops, largeDgemm1Gflops, largeDgemm2Gflops;
-  double stepStart, stepEnd, pdfactStart, pdfactEnd;
+  double stepStart, stepEnd, pdfactStart, pdfactEnd, bcastStart, bcastEnd;
    for( j = jstart; j < N; j += nb )
    {
       stepStart = MPI_Wtime();
@@ -232,7 +232,13 @@ void HPL_pdgesvK2_HIP
          HPL_pdupdate(HPL_UPD_2, NULL, NULL, panel[0], panel[0]->nu2);
       }
      
-    HPL_pdpanel_bcast(panel[1]);
+    bcastStart = MPI_Wtime();
+    (void) HPL_binit(   panel[1] );
+    do
+    { (void) HPL_bcast( panel[1], &test ); }
+    while( test != HPL_SUCCESS );
+    (void) HPL_bwait(   panel[1] );
+    bcastEnd = MPI_Wtime();
 
     // start local row swapping for second part
     HIP::HPL_pdlaswp_hip(panel[1], icurcol, {SU2});
@@ -289,9 +295,11 @@ void HPL_pdgesvK2_HIP
       if (panel[0]->nu0) {
         printf("Small DGEMM Gflops=%9.3e ", smallDgemmGflops);
         printf("pdfact Gflops=%9.3e ", pdfactGflops);
+        printf("Bcast Time(ms)=%9.7f ", (bcastEnd - bcastStart)*1000);
       } else {
         printf("Small DGEMM Gflops=--------- ");
         printf("pdfact Gflops=--------- ");
+        printf("Bcast Time(ms)=--------- ");
       }
       if (panel[0]->nu2) {
         printf("DGEMM1 Gflops=%9.3e ", largeDgemm2Gflops);

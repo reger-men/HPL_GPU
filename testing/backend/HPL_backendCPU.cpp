@@ -432,11 +432,50 @@ void CPU::HPL_idamax_omp(const int N, const double* X, const int INCX, const int
     }
   }
 }
-
+MPI_Op HPL_DMXSWP;
 MPI_Datatype PDFACT_ROW;
+
+/* Swap-broadcast comparison function usable in MPI_Allreduce */
+void HPL_dmxswp(void* invec, void* inoutvec, int* len,
+                MPI_Datatype* datatype) {
+
+  assert(*datatype == PDFACT_ROW);
+  assert(*len == 1);
+
+  int N;
+  MPI_Type_size(PDFACT_ROW, &N);
+
+  double* Wwork = static_cast<double*>(invec);
+  double* WORK  = static_cast<double*>(inoutvec);
+
+  const int jb = ((N/sizeof(double))-4)/2;
+
+  //check max column value and overwirte row if new max is found
+  const double gmax = Mabs(WORK[0]);
+  const double tmp1 = Mabs(Wwork[0]);
+  if((tmp1 > gmax) || ((tmp1 == gmax) && (Wwork[3] < WORK[3]))) {
+    HPL_dcopy(jb+4, Wwork, 1, WORK, 1);
+  }
+
+  // Add the input top row to the inout top row.
+  HPL_daxpy(jb, 1.0, Wwork+jb+4, 1, WORK+jb+4, 1);
+
+}
+
+const int max_req = 128;
+MPI_Request reqs[max_req];
+int req_idx = 0;
 
 void CPU::HPL_all_reduce_dmxswp(double* BUFFER, const int COUNT, const int ROOT, MPI_Comm COMM, double* WORK) 
 {
+
+#if 0
+  MPI_Op_create(HPL_dmxswp, true, &HPL_DMXSWP);
+  MPI_Request req;
+   (void) MPI_Iallreduce(MPI_IN_PLACE, BUFFER, 1, PDFACT_ROW, HPL_DMXSWP, COMM, &req);
+  MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+#else
   double       gmax, tmp1;
   double *     A0, *Wmx;
   unsigned int hdim, ip2, ip2_, ipow, k, mask;
@@ -465,15 +504,21 @@ void CPU::HPL_all_reduce_dmxswp(double* BUFFER, const int COUNT, const int ROOT,
 
   if((Np2 != 0) && ((partner = (int)((unsigned int)(mydist) ^ ip2)) < nprow)) {
     if((mydist & ip2) != 0) {
-      if(mydist == (int)(ip2))
-        (void)HPL_sdrv(BUFFER, cnt_, MSGID_BEGIN_PFACT, A0, n0, MSGID_BEGIN_PFACT, MModAdd(partner, icurrow, nprow), COMM);
-      else
-        (void)HPL_send(BUFFER, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+      if(mydist == (int)(ip2)) {
+        int mpartner = MModAdd(partner, icurrow, nprow);
+        MPI_Sendrecv(BUFFER, cnt_, MPI_DOUBLE, mpartner, MSGID_BEGIN_PFACT, A0, n0, MPI_DOUBLE, mpartner, MSGID_BEGIN_PFACT, COMM, MPI_STATUS_IGNORE);
+      }
+      else {
+        MPI_Isend(BUFFER, cnt_, MPI_DOUBLE, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM, &reqs[req_idx++]);
+      }
     } else {
-      if(mydist == 0)
-        (void)HPL_sdrv(A0, n0, MSGID_BEGIN_PFACT, WORK, cnt_, MSGID_BEGIN_PFACT, MModAdd(partner, icurrow, nprow), COMM);
-      else
-        (void)HPL_recv(WORK, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+      if(mydist == 0) {
+        int mpartner = MModAdd(partner, icurrow, nprow);
+        MPI_Sendrecv(A0, n0, MPI_DOUBLE, mpartner, MSGID_BEGIN_PFACT, WORK, cnt_, MPI_DOUBLE, mpartner, MSGID_BEGIN_PFACT, COMM, MPI_STATUS_IGNORE);
+      }
+      else {
+        MPI_Irecv(WORK, cnt_, MPI_DOUBLE, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM, &reqs[req_idx++]);
+      }
 
       tmp1 = Mabs(WORK[0]);
       gmax = Mabs(BUFFER[0]);
@@ -501,7 +546,8 @@ void CPU::HPL_all_reduce_dmxswp(double* BUFFER, const int COUNT, const int ROOT,
       }
 
       partner = (int)((unsigned int)(mydist) ^ ipow);
-      (void)HPL_sdrv(BUFFER, scnt, MSGID_BEGIN_PFACT, WORK, rcnt, MSGID_BEGIN_PFACT, MModAdd(partner, icurrow, nprow), COMM);
+      int mpartner = MModAdd(partner, icurrow, nprow);
+      MPI_Sendrecv(BUFFER, scnt, MPI_DOUBLE, mpartner, MSGID_BEGIN_PFACT, WORK, rcnt, MPI_DOUBLE, mpartner, MSGID_BEGIN_PFACT, COMM, MPI_STATUS_IGNORE);
 
       tmp1 = Mabs(WORK[0]);
       gmax = Mabs(BUFFER[0]);
@@ -532,11 +578,9 @@ void CPU::HPL_all_reduce_dmxswp(double* BUFFER, const int COUNT, const int ROOT,
       if((mydis_ & mask) == 0) {
         partner = (int)(mydis_ ^ ip2_);
         if((mydis_ & ip2_) != 0) {
-          (void)HPL_recv(
-              A0, n0, MModAdd(root, partner, nprow), MSGID_BEGIN_PFACT, COMM);
+          MPI_Irecv(A0, n0, MPI_DOUBLE, MModAdd(root, partner, nprow), MSGID_BEGIN_PFACT, COMM, &reqs[req_idx++]);
         } else if(partner < size_) {
-          (void)HPL_send(
-              A0, n0, MModAdd(root, partner, nprow), MSGID_BEGIN_PFACT, COMM);
+          MPI_Isend(A0, n0, MPI_DOUBLE, MModAdd(root, partner, nprow), MSGID_BEGIN_PFACT, COMM, &reqs[req_idx++]);
         }
       }
       ip2_ >>= 1;
@@ -544,11 +588,15 @@ void CPU::HPL_all_reduce_dmxswp(double* BUFFER, const int COUNT, const int ROOT,
   }
   if((Np2 != 0) && ((partner = (int)((unsigned int)(mydist) ^ ip2)) < nprow)) {
     if((mydist & ip2) != 0) {
-      (void)HPL_recv(BUFFER, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+      MPI_Irecv(BUFFER, cnt_, MPI_DOUBLE, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM, &reqs[req_idx++]);
     } else {
-      (void)HPL_send(BUFFER, cnt_, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM);
+      MPI_Isend(BUFFER, cnt_, MPI_DOUBLE, MModAdd(partner, icurrow, nprow), MSGID_BEGIN_PFACT, COMM, &reqs[req_idx++]);
     }
   }
+
+  MPI_Waitall(req_idx, reqs, MPI_STATUSES_IGNORE);
+  req_idx = 0;
+#endif
 }
 
 void CPU::HPL_set_zero(const int N, double* __restrict__ X) {
