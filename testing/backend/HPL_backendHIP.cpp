@@ -1348,7 +1348,14 @@ int HIP::bcast_ibcst(HPL_T_panel* PANEL, int* IFLAG) {
   int root  = PANEL->pcol;
 
   if(PANEL->len <= 0) return HPL_SUCCESS;
-  int ierr = MPI_Bcast(L2ptr, PANEL->len, MPI_DOUBLE, root, comm);
+  int ierr = MPI_Ibcast(L2ptr, PANEL->len, MPI_DOUBLE, root, comm, &bcast_req);
+  *IFLAG = ((ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE));
+  return *IFLAG;
+}
+
+int HIP::bwait_ibcast(HPL_T_panel* PANEL) {
+  int ierr;
+  ierr = MPI_Wait(&bcast_req, MPI_STATUS_IGNORE);
   return ((ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE));
 }
 

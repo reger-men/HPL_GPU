@@ -107,6 +107,7 @@ namespace HIP {
     float elapsedTime(const HPL_T_UPD);
     void device_sync();
     int bcast_ibcst(HPL_T_panel*, int*);
+    int bwait_ibcast(HPL_T_panel* PANEL); 
 /*
 *  ----------------------------------------------------------------------
 *  - BLAS ---------------------------------------------------------------
@@ -178,6 +179,7 @@ namespace HIP {
       hipEvent_t swapStartEvent[HPL_N_UPD], update[HPL_N_UPD];
       hipEvent_t swapUCopyEvent[HPL_N_UPD], swapWCopyEvent[HPL_N_UPD];
       hipEvent_t dgemmStart[HPL_N_UPD], dgemmStop[HPL_N_UPD];
+      MPI_Request bcast_req;
       std::map<int, const char*> _memcpyKind;
     }
 }
