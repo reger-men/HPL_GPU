@@ -181,7 +181,9 @@ int HPL_scatterv(double* BUF, const int* SCOUNT, const int* DISPL,
 int HPL_allgatherv(double* BUF, const int SCOUNT, const int* RCOUNT,
                    const int* DISPL, MPI_Comm COMM) {
 
-  int ierr = MPI_Allgatherv(MPI_IN_PLACE, SCOUNT, MPI_DOUBLE, BUF, RCOUNT, DISPL, MPI_DOUBLE, COMM);
+  MPI_Request req;
+  int ierr = MPI_Iallgatherv(MPI_IN_PLACE, SCOUNT, MPI_DOUBLE, BUF, RCOUNT, DISPL, MPI_DOUBLE, COMM, &req);
+  MPI_Wait(&req, MPI_STATUS_IGNORE);
 
   return ((ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE));
 }

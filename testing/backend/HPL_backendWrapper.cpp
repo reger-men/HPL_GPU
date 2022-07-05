@@ -299,7 +299,7 @@ extern "C" {
          case T_CPU :
             return HPL_bwait_2rinM( PANEL );
          case T_HIP:
-            return HPL_SUCCESS;
+            return HPL::dispatch(HIP::bwait_ibcast, PANEL);
          default:
             return HPL_SUCCESS;
       }
