@@ -22,5 +22,6 @@ export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 #Default MPI options
 mpi_args="--map-by slot:PE=${total_cpu_cores} --bind-to core:overload-allowed --mca btl ^openib --mca pml ucx --report-bindings -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib ${mpi_args}"
 
-${mpi_bin} --hostfile hostfile --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 
+${mpi_bin} --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 
+# ${mpi_bin} --hostfile hostfile --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 
 grep --color "e+" HPL.out
