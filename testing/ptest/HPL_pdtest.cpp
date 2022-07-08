@@ -149,8 +149,7 @@ void HPL_pdtest
  * Ensure that lda is a multiple of ALIGN and not a power of 2
  */
 #ifdef ROCM
-  int ierr;
-  ierr = HPL_BE_pdmatgen(TEST, GRID, ALGO, &mat, N, NB, HPL_TR);
+  int ierr = HPL_BE_pdmatgen(TEST, GRID, ALGO, &mat, N, NB, HPL_TR);
   if(ierr != HPL_SUCCESS) {
     (TEST->kskip)++;
     HPL_BE_pdmatfree(&mat, HPL_TR);
@@ -403,8 +402,8 @@ void HPL_pdtest
  */
 #ifdef ROCM
    size_t BptrBytes = Mmax(mat.nq, mat.ld) * sizeof(double);
-   Bptr             = (double*)malloc(BptrBytes);
-   nq    = HPL_numroc(N, NB, NB, mycol, 0, npcol);
+   Bptr = (double*)malloc(BptrBytes);
+   nq = HPL_numroc(N, NB, NB, mycol, 0, npcol);
    double *dBptr = Mptr( mat.d_A, 0, nq, mat.ld );
 #else
    Bptr = Mptr( mat.A, 0, nq, mat.ld );
@@ -413,8 +412,7 @@ void HPL_pdtest
       if( mat.mp > 0 )
       {
 #ifdef ROCM
-         int id;
-         id = HPL_BE_idamax(mat.mp, dBptr, 1, HPL_TR);
+         int id = HPL_BE_idamax(mat.mp, dBptr, 1, HPL_TR);
          HPL_BE_move_data(&BnormI, dBptr + id - 1, 1 * sizeof(double), M_D2H, HPL_TR);
 #else
          BnormI = Bptr[HPL_idamax( mat.mp, Bptr, 1 )]; 

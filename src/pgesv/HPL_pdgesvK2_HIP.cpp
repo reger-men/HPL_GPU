@@ -270,11 +270,10 @@ void HPL_pdgesvK2_HIP
  */
 #ifdef HPL_PROGRESS_REPORT
 #ifdef ROCM
-    const int curr  = (panel[0]->grid->myrow == panel[0]->prow ? 1 : 0);
-    const int mp    = panel[0]->mp - (curr != 0 ? jb : 0);
+    const int curr = (panel[0]->grid->myrow == panel[0]->prow ? 1 : 0);
+    const int mp = panel[0]->mp - (curr != 0 ? jb : 0);
 
-    largeDgemm1Time = 0.0;
-    largeDgemm2Time = 0.0;
+    largeDgemm1Time = 0.0; largeDgemm2Time = 0.0;
     if (panel[0]->nu1) {
       largeDgemm1Time = HIP::elapsedTime(HPL_UPD_1);
       largeDgemm1Gflops = (2.0 * mp * jb * (panel[0]->nu1)) / (1000.0 * 1000.0 * (largeDgemm1Time));
@@ -286,9 +285,8 @@ void HPL_pdgesvK2_HIP
 
     /* if this is process 0,0 and not the first panel */
     if(GRID->myrow == 0 && mycol == 0 && j > 0) {
-      time   = HPL_ptimer_walltime() - start_time;
-      gflops = 2.0 * (N * (double)N * N - n * (double)n * n) / 3.0 /
-               (time > 0.0 ? time : 1.e-6) / 1.e9;
+      time = HPL_ptimer_walltime() - start_time;
+      gflops = 2.0 * (N * (double)N * N - n * (double)n * n) / 3.0 / (time > 0.0 ? time : 1.e-6) / 1.e9;
       printf("Column=%09d (%4.1f%%) ", j, j * 100.0 / N);
       printf("Step Time(s)=%9.7f ", stepEnd-stepStart);
 
@@ -301,18 +299,12 @@ void HPL_pdgesvK2_HIP
         printf("pdfact Gflops=--------- ");
         printf("Bcast Time(ms)=--------- ");
       }
-      if (panel[0]->nu2) {
-        printf("DGEMM1 Gflops=%9.3e ", largeDgemm2Gflops);
-      } else {
-        printf("DGEMM1 Gflops=--------- ");
-      }
-
-      if (panel[0]->nu1) {
-        printf("DGEMM2 Gflops=%9.3e ", largeDgemm1Gflops);
-      } else {
-        printf("DGEMM2 Gflops=--------- ");
-      }
-
+      if (panel[0]->nu2) printf("DGEMM1 Gflops=%9.3e ", largeDgemm2Gflops);
+      else printf("DGEMM1 Gflops=--------- ");
+      
+      if (panel[0]->nu1) printf("DGEMM2 Gflops=%9.3e ", largeDgemm1Gflops);
+      else printf("DGEMM2 Gflops=--------- ");
+      
       printf("Overall Gflops=%9.3e\n", gflops);
     }
 #endif
