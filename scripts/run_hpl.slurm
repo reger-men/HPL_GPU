@@ -10,7 +10,7 @@
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 
-source ../env/env.crusher-rocm510.sh
+source ../env/env.crusher.sh
 
 NP=$SLURM_NPROCS
 NODES=$SLURM_NNODES
