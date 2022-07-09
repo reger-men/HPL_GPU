@@ -280,13 +280,13 @@ extern "C" {
    {
       switch(TR) {
          case T_CPU :
-            HPL::dispatch(CPU::pdmatfree, (void*)mat);
+            DO_NOTHING();
             break;
          case T_HIP:
             HPL::dispatch(HIP::pdmatfree, (HPL_T_pmat*)mat);
             break;
          default:
-            HPL::dispatch(CPU::pdmatfree, (void*)mat);
+            DO_NOTHING();
             break;
       }
    }
