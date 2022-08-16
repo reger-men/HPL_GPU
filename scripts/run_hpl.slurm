@@ -10,7 +10,8 @@
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 
-source ../env/env.crusher.sh
+#source ../env/env.crusher.sh
+source ../env/env.lumi.sh
 
 NP=$SLURM_NPROCS
 NODES=$SLURM_NNODES
@@ -33,10 +34,6 @@ CMD+="-c 8 "
 CMD+="-o $LOG -e $LOG "
 #CMD+="${HOME}/mpich_bind.sh "
 CMD+="$EXE"
-
-#export MPICH_SMP_SINGLE_COPY_MODE=NONE # does not work
-export FI_MR_CACHE_MAX_COUNT=0
-export MPICH_RANK_REORDER_DISPLAY=1
 
 echo $CMD >> $LOG
 echo $CMD 2>&1 | tee -a $LOG
