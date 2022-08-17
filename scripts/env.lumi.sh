@@ -17,5 +17,5 @@ module load rocm/5.3.0-10584
 # enable GPU aware MPI
 export MPICH_GPU_SUPPORT_ENABLED=1
 # to work around the OFI registration cache issue for > 8 nodes
-export FI_MR_CACHE_MAX_COUNT=0
+#export FI_MR_CACHE_MAX_COUNT=0
 export MPICH_RANK_REORDER_DISPLAY=1
