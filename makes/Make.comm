@@ -56,7 +56,7 @@ INCdep           = \
 #
 HPL_comobj       = \
    HPL_1ring.o            HPL_1rinM.o            HPL_2ring.o            \
-   HPL_2rinM.o            HPL_blong.o            HPL_blonM.o            \
+   HPL_2rinM.o            HPL_blong.o            HPL_bidir.o           HPL_blonM.o            \
    HPL_packL.o            HPL_copyL.o            HPL_binit.o            \
    HPL_bcast.o            HPL_bwait.o            HPL_send.o             \
    HPL_recv.o             HPL_sdrv.o
@@ -84,6 +84,8 @@ HPL_2rinM.o            : ../HPL_2rinM.cpp            $(INCdep)
 	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_2rinM.cpp
 HPL_blong.o            : ../HPL_blong.cpp            $(INCdep)
 	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_blong.cpp
+HPL_bidir.o            : ../HPL_bidir.cpp            $(INCdep)
+	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_bidir.cpp
 HPL_blonM.o            : ../HPL_blonM.cpp            $(INCdep)
 	$(CC) -o $@ -c $(CCFLAGS)  ../HPL_blonM.cpp
 HPL_packL.o            : ../HPL_packL.cpp            $(INCdep)

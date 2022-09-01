@@ -274,6 +274,7 @@ void HPL_pdtest
       else if( ALGO->btopo == HPL_2RING_M ) ctop = '3';
       else if( ALGO->btopo == HPL_BLONG   ) ctop = '4';
       else if( ALGO->btopo == HPL_IBCAST  ) ctop = '6';
+      else if( ALGO->btopo == HPL_BIDIR   ) ctop = '7';
       else /* if( ALGO->btopo == HPL_BLONG_M ) */ ctop = '5';
 
       if( wtime[0] > HPL_rzero ) {
