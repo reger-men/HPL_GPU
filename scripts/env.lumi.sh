@@ -3,12 +3,13 @@ module load LUMI/22.06 partition/G
 #module load rocm/5.1.4
 
 module use /project/project_462000075/paklui/modulefiles
-module load rocm/5.3.0-10584
+#module load rocm/5.3.0-10584
 #module load rocm/5.3.0-10619
+module load rocm/5.3.0-10670
 #module load openblas/0.3.17-omp
 #module load cce/14.0.2
 #module load cray-libsci/22.08.1.1
-#module load cray-mpich/8.1.18
+module load cray-mpich/8.1.18
 #module load craype/2.7.17
 
 #
