@@ -119,6 +119,9 @@ int HPL_binit_bidir( PANEL )
  
 #endif
 
+int recv_from_bi(int id, int np, int root, int prev, int next);
+int send_to_bi(int id, int np, int root, int prev, int next);
+
 #ifdef STDC_HEADERS
 int HPL_bcast_bidir
 (
@@ -154,7 +157,21 @@ int HPL_bcast_bidir( PANEL, IFLAG )
    root = PANEL->pcol;                  msgid = PANEL->msgid;
    next = MModAdd1( rank, size );       roo2  = ( ( size + 1 ) >> 1 );
    roo2 = MModAdd(  root, roo2, size );
-   
+   // nprocs becomes size
+   // tag becomes msgid
+   // prev becomes roo2
+   // stays the same: rank, comm, next
+   // if (rank == root) {
+   //    if (nprocs > 2) {
+   //          MPI_Send(sbuf, count, datatype, next, tag, comm);
+   //          MPI_Send(sbuf, count, datatype, prev, tag, comm);
+   //    }
+   //    else {
+   //          MPI_Send(sbuf, count, datatype, next, tag, comm);
+   //    }
+
+   //    return 0;
+   // }
    if( rank == root )
    {
       ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, next, msgid, comm );
@@ -166,35 +183,43 @@ int HPL_bcast_bidir( PANEL, IFLAG )
    }
    else
    {
-      // int fm = recv_from_bi(rank, nprocs, root, prev, next);
-      partner = MModSub1( rank, size );
+      // partner becomes fm
+      // comm beocmes msgid
+      // rcvd becomes go
+      // st becomes PANEL->status[0]
+
+      int fm = recv_from_bi(rank, size, root, roo2, next);
+      //int fm = recv_from_bi(rank, nprocs, root, prev, next);
+      //partner = MModSub1( rank, size );
       if( ( partner == root ) || ( rank == roo2 ) ) partner = root;
  
       // /* check */
       // MPI_Iprobe(fm, tag, comm, &rcvd, &st);
       ierr = MPI_Iprobe( partner, msgid, comm, &go, &PANEL->status[0] );
 
-      //       if (rcvd) {
-      //           MPI_Recv(sbuf, count, datatype, fm, tag, comm, &st);
-      //           /* copy to GPU */
-      //           if (!gpu_aware) {
-      //               CheckHipError(hipMemcpyAsync(buf, sbuf, bsize, hipMemcpyHostToDevice, m_stm));
-      //           }
-      //           int si = send_to_bi(rank, nprocs, root, prev, next);
-      //           if (si >= 0) MPI_Send(sbuf, count, datatype, si, tag, comm);
-      //           return 0;
-      //       }
+
       if( ierr == MPI_SUCCESS )
       {
+         // if (rcvd) {
          if( go != 0 )
          {
-            ierr = MPI_Recv( _M_BUFF, _M_COUNT, _M_TYPE, partner, msgid,
-                             comm, &PANEL->status[0] );
-            if( ( ierr == MPI_SUCCESS ) &&
-                ( next != roo2 ) && ( next != root ) )
+            // MPI_Recv(sbuf, count, datatype, fm, tag, comm, &st);
+            ierr = MPI_Recv( _M_BUFF, _M_COUNT, _M_TYPE, partner, msgid, comm, &PANEL->status[0] );
+
+            // /* copy to GPU */
+            // if (!gpu_aware) {
+            //   CheckHipError(hipMemcpyAsync(buf, sbuf, bsize, hipMemcpyHostToDevice, m_stm));
+            // }
+
+            int si = send_to_bi(rank, size, root, roo2, next);
+            if (si >= 0) 
+            /*if( ( ierr == MPI_SUCCESS ) &&
+                ( next != roo2 ) && ( next != root ) )*/
             {
-               ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, next, msgid,
-                                comm );
+               // MPI_Send(sbuf, count, datatype, si, tag, comm);
+               ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, next, msgid, comm );
+               // return 0;
+               // }
             }
          }
          // else {
@@ -243,4 +268,21 @@ int HPL_bwait_bidir( PANEL )
 #else
    return( HPL_SUCCESS );
 #endif
+}
+
+int send_to_bi(int id, int np, int root, int prev, int next)
+{
+    int end = np / 2;
+    int tid = (id < root ? id + np - root : id - root);
+
+    if (tid < end) return next;
+    else if (tid > end + 1)  return prev;
+    else return -1;
+}
+
+int recv_from_bi(int id, int np, int root, int prev, int next)
+{
+    int end = np / 2;
+    int tid = (id < root ? id + np - root : id - root);
+    return (tid <= end ? prev : next);
 }
