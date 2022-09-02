@@ -20,7 +20,7 @@ HPL.out      output file name (if any)
 1            # of recursive panel fact.
 2            RFACTs (0=left, 1=Crout, 2=Right)
 8            # of broadcast
-7            BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM,6=ibcast,7=bidir)
+6            BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM,6=ibcast,7=BiDir)
 1            # of lookahead depth
 1            DEPTHs (>=0)
 1            SWAP (0=bin-exch,1=long,2=mix)
