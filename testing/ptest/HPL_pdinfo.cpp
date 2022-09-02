@@ -1028,7 +1028,7 @@ label_error:
          else if( TP[i] == HPL_IBCAST )
             HPL_fprintf( TEST->outfp,       "  IBCAST " );
          else if( TP[i] == HPL_BIDIR )
-            HPL_fprintf( TEST->outfp,       "  BIDIR " );
+            HPL_fprintf( TEST->outfp,       "   BiDir " );
       }
       if( *NTPS > 8 )
       {
@@ -1050,7 +1050,7 @@ label_error:
             else if( TP[i] == HPL_IBCAST )
                HPL_fprintf( TEST->outfp,       "  IBCAST " );
             else if( TP[i] == HPL_BIDIR )
-               HPL_fprintf( TEST->outfp,       "  BIDIR " );
+               HPL_fprintf( TEST->outfp,       "   BiDir " );
          }
          if( *NTPS > 16 )
          {
@@ -1072,7 +1072,7 @@ label_error:
                else if( TP[i] == HPL_IBCAST )
                   HPL_fprintf( TEST->outfp,       "  IBCAST " );
                else if( TP[i] == HPL_BIDIR )
-                  HPL_fprintf( TEST->outfp,       "  BIDIR " );
+                  HPL_fprintf( TEST->outfp,       "   BiDir " );
             }
          }
       }

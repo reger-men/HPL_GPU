@@ -155,21 +155,21 @@ int HPL_bcast_bidir( PANEL, IFLAG )
  */
    rank = PANEL->grid->mycol;           comm  = PANEL->grid->row_comm;
    root = PANEL->pcol;                  msgid = PANEL->msgid;
-   next = MModAdd1( rank, size );       roo2  = ( ( size + 1 ) >> 1 );
-   roo2 = MModAdd(  root, roo2, size );
+   int prev = (rank - 1 + size) % size;
+   next = (rank + 1) % size;
 
    if( rank == root )
    {
       ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, next, msgid, comm );
       if( ( ierr == MPI_SUCCESS ) && ( size > 2 ) )
       {
-         ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, roo2, msgid,
+         ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, prev, msgid,
                           comm );
       }
    }
    else
    {
-      partner = recv_from_bi(rank, size, root, roo2, next);
+      partner = recv_from_bi(rank, size, root, prev, next);
  
       ierr = MPI_Iprobe( partner, msgid, comm, &go, &PANEL->status[0] );
 
@@ -179,7 +179,7 @@ int HPL_bcast_bidir( PANEL, IFLAG )
          {
             ierr = MPI_Recv( _M_BUFF, _M_COUNT, _M_TYPE, partner, msgid, 
                              comm, &PANEL->status[0] );
-            int si = send_to_bi(rank, size, root, roo2, next);
+            int si = send_to_bi(rank, size, root, prev, next);
             if( ( ierr == MPI_SUCCESS ) &&
                 (si >= 0) )
             {
