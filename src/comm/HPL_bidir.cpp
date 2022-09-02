@@ -181,7 +181,7 @@ int HPL_bcast_bidir( PANEL, IFLAG )
                              comm, &PANEL->status[0] );
             int si = send_to_bi(rank, size, root, roo2, next);
             if( ( ierr == MPI_SUCCESS ) &&
-                (si >= 0) 
+                (si >= 0) )
             {
                ierr = MPI_Send( _M_BUFF, _M_COUNT, _M_TYPE, next, msgid, 
                                 comm );
