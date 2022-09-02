@@ -66,7 +66,7 @@ typedef enum
    HPL_BLONG         = 405,                         /* long broadcast */
    HPL_BLONG_M       = 406,               /* long broadcast (modified) */
    HPL_IBCAST        = 407,               /* default bcast in MPI */
-   HPL_BIDIR         = 408                /* bidirectional */
+   HPL_BIDIR         = 408,               /* bidirectional */
 } HPL_T_TOP;
 /*
  * ---------------------------------------------------------------------
