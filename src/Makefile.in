@@ -147,7 +147,7 @@ am_libhpl_a_OBJECTS = auxil/HPL_dlatcpy.$(OBJEXT) \
 	comm/HPL_recv.$(OBJEXT) comm/HPL_bcast.$(OBJEXT) \
 	comm/HPL_binit.$(OBJEXT) comm/HPL_bwait.$(OBJEXT) \
 	comm/HPL_blong.$(OBJEXT) comm/HPL_1ring.$(OBJEXT) \
-	comm/HPL_bidir.$(OBJEXT) comm/HPL_1ring.$(OBJEXT) \
+	comm/HPL_bidir.$(OBJEXT) \
 	comm/HPL_1rinM.$(OBJEXT) comm/HPL_2rinM.$(OBJEXT) \
 	comm/HPL_2ring.$(OBJEXT) comm/HPL_blonM.$(OBJEXT) \
 	comm/HPL_packL.$(OBJEXT) grid/HPL_reduce.$(OBJEXT) \
