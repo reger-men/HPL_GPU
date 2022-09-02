@@ -100,6 +100,7 @@ int HPL_bwait
       case HPL_BLONG_M : ierr = HPL_bwait_blonM( PANEL ); break;
       case HPL_BLONG   : ierr = HPL_bwait_blong( PANEL ); break;
       case HPL_IBCAST  : ierr = HPL_BE_bwait_ibcast(PANEL, HPL_TR); break;
+      case HPL_BIDIR   : ierr = HPL_bwait_bidir( PANEL ); break;
       default          : ierr = HPL_SUCCESS;
    }
  

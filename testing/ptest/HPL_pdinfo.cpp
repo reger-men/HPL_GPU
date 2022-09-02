@@ -550,6 +550,7 @@ void HPL_pdinfo
          else if( j == 4 ) TP[ i ] = HPL_BLONG;
          else if( j == 5 ) TP[ i ] = HPL_BLONG_M;
          else if( j == 6 ) TP[ i ] = HPL_IBCAST;
+         else if( j == 7 ) TP[ i ] = HPL_BIDIR;
          else              TP[ i ] = HPL_1RING_M;
       }
 /*
@@ -714,7 +715,8 @@ label_error:
          else if( TP[i] == HPL_2RING_M ) iwork[j] = 3;
          else if( TP[i] == HPL_BLONG   ) iwork[j] = 4;
          else if( TP[i] == HPL_BLONG_M ) iwork[j] = 5;
-         else if( TP[i] == HPL_IBCAST )  iwork[j] = 6;
+         else if( TP[i] == HPL_IBCAST  ) iwork[j] = 6;
+         else if( TP[i] == HPL_BIDIR   ) iwork[j] = 7;
          j++;
       }
       for( i = 0; i < *NDHS; i++ ) { iwork[j] = DH[i]; j++; }
@@ -759,6 +761,7 @@ label_error:
          else if( iwork[j] == 4 ) TP[i] = HPL_BLONG;
          else if( iwork[j] == 5 ) TP[i] = HPL_BLONG_M;
          else if( iwork[j] == 6 ) TP[i] = HPL_IBCAST;
+         else if( iwork[j] == 7 ) TP[i] = HPL_BIDIR;
          j++;
       }
       for( i = 0; i < *NDHS; i++ ) { DH[i] = iwork[j]; j++; }
@@ -1024,6 +1027,8 @@ label_error:
             HPL_fprintf( TEST->outfp,       "  BlongM " );
          else if( TP[i] == HPL_IBCAST )
             HPL_fprintf( TEST->outfp,       "  IBCAST " );
+         else if( TP[i] == HPL_BIDIR )
+            HPL_fprintf( TEST->outfp,       "   BiDir " );
       }
       if( *NTPS > 8 )
       {
@@ -1044,6 +1049,8 @@ label_error:
                HPL_fprintf( TEST->outfp,       "  BlongM " );
             else if( TP[i] == HPL_IBCAST )
                HPL_fprintf( TEST->outfp,       "  IBCAST " );
+            else if( TP[i] == HPL_BIDIR )
+               HPL_fprintf( TEST->outfp,       "   BiDir " );
          }
          if( *NTPS > 16 )
          {
@@ -1064,6 +1071,8 @@ label_error:
                   HPL_fprintf( TEST->outfp,       "  BlongM " );
                else if( TP[i] == HPL_IBCAST )
                   HPL_fprintf( TEST->outfp,       "  IBCAST " );
+               else if( TP[i] == HPL_BIDIR )
+                  HPL_fprintf( TEST->outfp,       "   BiDir " );
             }
          }
       }

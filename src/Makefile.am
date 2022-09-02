@@ -8,7 +8,7 @@ blas/HPL_dscal.c blas/HPL_dtrsm.c blas/HPL_dtrsv.c blas/HPL_idamax.c \
 blas/HPL_dgemv.c blas/HPL_dscal.c blas/HPL_daxpy.c \
 blas/HPL_dcopy.c blas/HPL_dgemm.c blas/HPL_dgemv.c blas/HPL_dger.c \
 comm/HPL_sdrv.c comm/HPL_send.c comm/HPL_recv.c comm/HPL_bcast.c \
-comm/HPL_binit.c comm/HPL_bwait.c comm/HPL_blong.c comm/HPL_1ring.c \
+comm/HPL_binit.c comm/HPL_bwait.c comm/HPL_blong.c comm/HPL_bidir.c comm/HPL_1ring.c \
 comm/HPL_1rinM.c comm/HPL_2rinM.c comm/HPL_2ring.c comm/HPL_blonM.c comm/HPL_packL.c \
 grid/HPL_reduce.c grid/HPL_sum.c grid/HPL_grid_info.c grid/HPL_grid_init.c \
 grid/HPL_all_reduce.c grid/HPL_broadcast.c grid/HPL_grid_exit.c grid/HPL_max.c \

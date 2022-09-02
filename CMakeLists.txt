@@ -148,7 +148,7 @@ src/pgesv/HPL_pdupdateNT.cpp
 src/pgesv/HPL_pdupdateNN.cpp src/pgesv/HPL_pdupdateTN.cpp src/pgesv/HPL_pdupdateTT.cpp
 src/pgesv/HPL_pdupdateTN.cpp src/pgesv/HPL_pdupdateTT.cpp
 src/pauxil/HPL_pwarn.cpp src/comm/HPL_bcast.cpp src/comm/HPL_blong.cpp
-src/comm/HPL_blonM.cpp src/comm/HPL_1ring.cpp src/comm/HPL_2ring.cpp
+src/comm/HPL_blonM.cpp src/comm/HPL_bidir.cpp src/comm/HPL_1ring.cpp src/comm/HPL_2ring.cpp
 src/comm/HPL_1rinM.cpp src/comm/HPL_2rinM.cpp src/comm/HPL_packL.cpp
 src/comm/HPL_sdrv.cpp src/comm/HPL_send.cpp src/pgesv/HPL_pdlaswp00N.cpp
 src/comm/HPL_recv.cpp src/grid/HPL_reduce.cpp src/comm/HPL_binit.cpp
