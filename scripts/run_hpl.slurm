@@ -3,14 +3,16 @@
 #SBATCH -N 1
 ##SBATCH -n 8
 #SBATCH -c 8
-#SBATCH -t 1:00:00
-#SBATCH -A VEN114
+#SBATCH -t 2:00:00
+##SBATCH -A VEN114
+#SBATCH -A project_462000075
 #SBATCH -J xhplhip
 #SBATCH --gpu-bind=closest
 #SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=8
 
-source ../env/env.crusher.sh
+#source ../env/env.crusher.sh
+source ../env/env.lumi.sh
 
 NP=$SLURM_NPROCS
 NODES=$SLURM_NNODES
@@ -34,9 +36,17 @@ CMD+="-o $LOG -e $LOG "
 #CMD+="${HOME}/mpich_bind.sh "
 CMD+="$EXE"
 
+if [ $NODES -gt 8 ]; then
+    echo "export FI_MR_CACHE_MAX_COUNT=0"
+          export FI_MR_CACHE_MAX_COUNT=0
+else
+    echo "unset FI_MR_CACHE_MAX_COUNT"
+          unset FI_MR_CACHE_MAX_COUNT
+fi
+
 #export MPICH_SMP_SINGLE_COPY_MODE=NONE # does not work
-export FI_MR_CACHE_MAX_COUNT=0
-export MPICH_RANK_REORDER_DISPLAY=1
+#export FI_MR_CACHE_MAX_COUNT=0 # workaround for failed to allocate memory
+#export MPICH_RANK_REORDER_DISPLAY=1
 
 echo $CMD >> $LOG
 echo $CMD 2>&1 | tee -a $LOG

@@ -3,13 +3,13 @@ Innovative Computing Laboratory, University of Tennessee
 HPL.out      output file name (if any)
 0            device out (6=stdout,7=stderr,file)
 1            # of problems sizes (N)
-256512       N
+5786112      N
 1            # of NBs
 384          NBs
 0            PMAP process mapping (0=Row-,1=Column-major)
 1            # of process grids (P x Q)
-4            Ps
-2            Qs
+64           Ps
+64           Qs
 16.0         threshold
 1            # of panel fact
 2            PFACTs (0=left, 1=Crout, 2=Right)
@@ -19,8 +19,8 @@ HPL.out      output file name (if any)
 2            NDIVs
 1            # of recursive panel fact.
 2            RFACTs (0=left, 1=Crout, 2=Right)
-8            # of broadcast
-6            BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM,6=ibcast,7=BiDir)
+1            # of broadcast
+6            BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM,6=ibcast)
 1            # of lookahead depth
 1            DEPTHs (>=0)
 1            SWAP (0=bin-exch,1=long,2=mix)

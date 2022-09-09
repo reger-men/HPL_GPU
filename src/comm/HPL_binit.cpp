@@ -99,6 +99,7 @@ int HPL_binit
       case HPL_BLONG_M : ierr = HPL_binit_blonM( PANEL ); break;
       case HPL_BLONG   : ierr = HPL_binit_blong( PANEL ); break;
       case HPL_IBCAST  : ierr = HPL_BE_binit_ibcast(PANEL, HPL_TR); break;
+      case HPL_BIDIR   : ierr = HPL_binit_bidir( PANEL ); break;
       default          : ierr = HPL_SUCCESS;
    }
  
