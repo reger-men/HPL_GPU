@@ -6,14 +6,14 @@ extern "C" {
    /*
    * Initialize the Target device
    */
-   void HPL_BE_init(size_t num_devices, enum HPL_TARGET TR)
+   void HPL_BE_init(const HPL_T_grid* GRID, enum HPL_TARGET TR)
    {
       switch(TR) {
          case T_CPU:
             DO_NOTHING();
             break;
          case T_HIP:
-            HPL::dispatch(HIP::init, num_devices);
+            HPL::dispatch(HIP::init, GRID);
             break;
          default:
             DO_NOTHING();

@@ -121,6 +121,7 @@ typedef struct HPL_S_pmat
    double              * d_X;             /* device pointer to solution vector */
    double              * W;
    double              * dW;
+   int                 dN;
 } HPL_T_pmat;
 /*
  * ---------------------------------------------------------------------

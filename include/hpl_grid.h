@@ -84,6 +84,10 @@ typedef struct HPL_S_grid
    int             col_hdim;     /* col_ip2 procs hypercube dimension */
    int             col_ip2m1;      /* largest power of two <= npcol-1 */
    int             col_mask;        /* col_ip2m1 procs hypercube mask */
+   int             local_myrow;
+   int             local_mycol; 
+   int             local_nprow; 
+   int             local_npcol; 
 } HPL_T_grid;
 
 /*
@@ -130,6 +134,8 @@ int                              HPL_grid_init
 STDC_ARGS( (
    MPI_Comm,
    const HPL_T_ORDER,
+   const int,
+   const int,
    const int,
    const int,
    HPL_T_grid *

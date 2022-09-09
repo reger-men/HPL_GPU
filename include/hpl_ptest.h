@@ -108,12 +108,16 @@ typedef struct HPL_S_test
  */
 void                             HPL_pdinfo
 STDC_ARGS( (
+   int,
+   char**,
    HPL_T_test *,
    int *,
    int *,
    int *,
    int *,
    HPL_T_ORDER *,
+   int *,
+   int *,
    int *,
    int *,
    int *,

@@ -20,7 +20,7 @@ total_cpu_cores=$(($num_cpu_cores*$num_cpu_sockets))
 export LD_LIBRARY_PATH=${mpi_lib}:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 #Default MPI options
-mpi_args="--map-by slot:PE=${total_cpu_cores} --bind-to core:overload-allowed --mca btl ^openib --mca pml ucx --report-bindings -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib ${mpi_args}"
+mpi_args="--map-by slot:PE=${total_cpu_cores} --bind-to core:overload-allowed --mca btl ^openib --mca pml ucx -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib ${mpi_args}"
 
 ${mpi_bin} --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 
 # ${mpi_bin} --hostfile hostfile --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 

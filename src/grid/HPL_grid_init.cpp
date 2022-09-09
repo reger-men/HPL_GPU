@@ -56,6 +56,8 @@ int HPL_grid_init
    const HPL_T_ORDER                ORDER,
    const int                        NPROW,
    const int                        NPCOL,
+   const int                        p,
+   const int                        q,
    HPL_T_grid *                     GRID
 )
 #else
@@ -65,6 +67,8 @@ int HPL_grid_init
    const HPL_T_ORDER                ORDER;
    const int                        NPROW;
    const int                        NPCOL;
+   const int                        p,
+   const int                        q,
    HPL_T_grid *                     GRID;
 #endif
 {
@@ -111,7 +115,8 @@ int HPL_grid_init
  * .. Local Variables ..
  */
    int                        hdim, hplerr=MPI_SUCCESS, ierr, ip2, k,
-                              mask, mycol, myrow, nprocs, rank, size;
+                              mask, mycol, myrow, nprocs, rank, size,
+                              local_myrow, local_mycol;
 /* ..
  * .. Executable Statements ..
  */
@@ -125,18 +130,29 @@ int HPL_grid_init
 /*
  * Row- or column-major ordering of the processes
  */
+   int local_size = p * q;
+   int local_rank = rank % local_size;
+   int node       = rank / local_size; // node number
+
    if( ORDER == HPL_ROW_MAJOR )
    {
       GRID->order = HPL_ROW_MAJOR;
+      local_mycol = local_rank % q; local_myrow = local_rank / q;
+      int noderow = node / (NPCOL / q); int nodecol = node % (NPCOL / q);
+      myrow = noderow * p + local_myrow; mycol = nodecol * q + local_mycol;
       myrow = rank / NPCOL; mycol = rank - myrow * NPCOL;
    }
    else
    {
       GRID->order = HPL_COLUMN_MAJOR;
-      mycol = rank / NPROW; myrow = rank - mycol * NPROW;
+      local_mycol = local_rank / p; local_myrow = local_rank % p;
+      int noderow = node % (NPROW / p); int nodecol = node / (NPROW / p);
+      myrow = noderow * p + local_myrow; mycol = nodecol * q + local_mycol;
    }
    GRID->iam   = rank;  GRID->myrow = myrow; GRID->mycol  = mycol;
    GRID->nprow = NPROW; GRID->npcol = NPCOL; GRID->nprocs = nprocs;
+   GRID->local_myrow = local_myrow; GRID->local_mycol = local_mycol;
+   GRID->local_nprow = p; GRID->local_npcol = q;
 /*
  * row_ip2   : largest power of two <= nprow;
  * row_hdim  : row_ip2 procs hypercube dim;

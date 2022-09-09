@@ -158,7 +158,7 @@ void HPL_pdtest
 /*
  * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
  */
-  MPI_Type_contiguous(2*NB+4, MPI_DOUBLE, &PDFACT_ROW);
+  MPI_Type_contiguous(NB+4, MPI_DOUBLE, &PDFACT_ROW);
   MPI_Type_commit(&PDFACT_ROW);
 
   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);

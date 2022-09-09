@@ -21,7 +21,7 @@ find_package(OpenMP)
 
 # Add rocM root dir to CMAKE_PREFIX_PATH, usually /opt/rocm
 list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
-include(/opt/rocm/hip/cmake/FindHIP.cmake)
+include(/opt/rocm/lib/cmake/hip/FindHIP.cmake)
 include(/opt/rocm/share/rocm/cmake/ROCMCheckTargetIds.cmake)
 find_package( hip REQUIRED )
 find_package( rocblas REQUIRED )
@@ -212,12 +212,12 @@ hip_add_executable( xhplhip ${hpl_device_source} ${hpl_host_source})
 
 target_compile_options(xhplhip PRIVATE ${CMAKE_HOST_FLAGS})
 target_include_directories( xhplhip PUBLIC hip:device
-    ${HIP_ROOT_DIR}/include
+    # ${HIP_ROOT_DIR}/include
     ${HPLHIP_DEVRAND_INCLUDE_DIRS}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-# target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES} /global/home/lulu/mun-node-3/blis-multi-thread/lib/zen3/libblis.so)
+# target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES} OpenMP::OpenMP_CXX /global/home/lulu/mun-node-3/blis-multi-thread/lib/zen3/libblis.so)
 target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES} OpenMP::OpenMP_CXX)
 
 configure_file( include/hplhip_config.hin ${CMAKE_CURRENT_SOURCE_DIR}/include/hplhip_config.h @ONLY NEWLINE_STYLE LF )

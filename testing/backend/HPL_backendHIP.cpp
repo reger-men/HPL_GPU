@@ -3,12 +3,15 @@
 
 
 
-void HIP::init(size_t num_gpus)
+void HIP::init(const HPL_T_grid* GRID)
 {
     int rank, size, count, namelen; 
     size_t bytes;
     char (*host_names)[MPI_MAX_PROCESSOR_NAME];
+    int nprow, npcol, myrow, mycol;
 
+
+    (void)HPL_grid_info(GRID, &nprow, &npcol, &myrow, &mycol);
 
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
@@ -23,14 +26,9 @@ void HIP::init(size_t num_gpus)
     for (int n=0; n < size; n++){
         MPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD);
     }
-    int localRank = 0;
-    for (int n = 0; n < rank; n++){
-        if (!strcmp(host_name, host_names[n])) localRank++;
-    }
-    int localSize = 0;
-    for (int n = 0; n < size; n++){
-        if (!strcmp(host_name, host_names[n])) localSize++;
-    }
+
+    int localRank = GRID->local_mycol + GRID->local_myrow * GRID->local_npcol;
+    int localSize = GRID->local_npcol * GRID->local_nprow;
 
 
     hipDeviceProp_t hipDeviceProp;
@@ -169,393 +167,7 @@ void HIP::panel_new(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N
 }
 
 
-void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB,
-                     HPL_T_pmat *A, const int IA, const int JA, const int TAG, HPL_T_panel *PANEL)
-{
-  size_t dalign;
-  int icurcol, icurrow, ii, itmp1, jj, lwork,
-      ml2, mp, mycol, myrow, nb, npcol, nprow,
-      nq, nu, ldu;
-  /* ..
-   * .. Executable Statements ..
-   */
-  PANEL->grid = GRID; /* ptr to the process grid */
-  PANEL->algo = ALGO; /* ptr to the algo parameters */
-  PANEL->pmat = A;    /* ptr to the local array info */
 
-  myrow = GRID->myrow;
-  mycol = GRID->mycol;
-  nprow = GRID->nprow;
-  npcol = GRID->npcol;
-  nb = A->nb;
-
-  HPL_infog2l(IA, JA, nb, nb, nb, nb, 0, 0, myrow, mycol,
-              nprow, npcol, &ii, &jj, &icurrow, &icurcol);
-  mp = HPL_numrocI(M, IA, nb, nb, myrow, 0, nprow);
-  nq = HPL_numrocI(N, JA, nb, nb, mycol, 0, npcol);
-
-  const int inxtcol = MModAdd1(icurcol, npcol);
-  const int inxtrow = MModAdd1(icurrow, nprow);
-
-  /* ptr to trailing part of A */
-  PANEL->A = A->A;
-  PANEL->dA = Mptr((double *)(A->d_A), ii, jj, A->ld);
-
-  /*
-   * Workspace pointers are initialized to NULL.
-   */
-  PANEL->L2 = nullptr;
-  PANEL->dL2 = nullptr;
-  PANEL->L1 = nullptr;
-  PANEL->dL1 = nullptr;
-  PANEL->DINFO = nullptr;
-  PANEL->U = nullptr;
-  PANEL->dU = nullptr;
-  PANEL->W = nullptr;
-  PANEL->dW = nullptr;
-  PANEL->U1 = nullptr;
-  PANEL->dU1 = nullptr;
-  PANEL->W1 = nullptr;
-  PANEL->dW1 = nullptr;
-  PANEL->U2 = nullptr;
-  PANEL->dU2 = nullptr;
-  PANEL->W2 = nullptr;
-  PANEL->dW2 = nullptr;
-  /*
-   * Local lengths, indexes process coordinates
-   */
-  PANEL->nb = nb;           /* distribution blocking factor */
-  PANEL->jb = JB;           /* panel width */
-  PANEL->m = M;             /* global # of rows of trailing part of A */
-  PANEL->n = N;             /* global # of cols of trailing part of A */
-  PANEL->ia = IA;           /* global row index of trailing part of A */
-  PANEL->ja = JA;           /* global col index of trailing part of A */
-  PANEL->mp = mp;           /* local # of rows of trailing part of A */
-  PANEL->nq = nq;           /* local # of cols of trailing part of A */
-  PANEL->ii = ii;           /* local row index of trailing part of A */
-  PANEL->jj = jj;           /* local col index of trailing part of A */
-  PANEL->lda = Mmax(1, mp); /* local leading dim of array A */
-  PANEL->dlda = A->ld;      /* local leading dim of array A */
-  PANEL->prow = icurrow;    /* proc row owning 1st row of trailing A */
-  PANEL->pcol = icurcol;    /* proc col owning 1st col of trailing A */
-  PANEL->msgid = TAG;       /* message id to be used for panel bcast */
-  /*
-   * Initialize  ldl2 and len to temporary dummy values and Update tag for
-   * next panel
-   */
-  PANEL->ldl2 = 0;  /* local leading dim of array L2 */
-  PANEL->dldl2 = 0; /* local leading dim of array L2 */
-  PANEL->len = 0;   /* length of the buffer to broadcast */
-  PANEL->nu0 = 0;
-  PANEL->nu1 = 0;
-  PANEL->nu2 = 0;
-  PANEL->ldu0 = 0;
-  PANEL->ldu1 = 0;
-  PANEL->ldu2 = 0;
-
-  /*Split fraction*/
-  const double fraction = 0.7;
-
-  dalign = ALGO->align * sizeof(double);
-  size_t lpiv = (5 * JB * sizeof(int) + sizeof(double) - 1) / (sizeof(double));
-
-  if (npcol == 1) /* P x 1 process grid */
-  {               /* space for L1, DPIV, DINFO */
-    lwork = ALGO->align + (PANEL->len = JB * JB + lpiv) + 1;
-    nu = Mmax(0, nq - JB);
-    ldu = nu + 256; /*extra space for padding*/
-    lwork += JB * ldu;
-
-    if (PANEL->max_work_size < (size_t)(lwork) * sizeof(double))
-    {
-      if (PANEL->WORK)
-      {
-        HIP_CHECK_ERROR(hipFree(PANEL->dWORK));
-        HIP_CHECK_ERROR(hipHostFree(PANEL->WORK));
-      }
-      size_t numbytes = (size_t)(lwork) * sizeof(double);
-
-      if (hipMalloc((void **)&(PANEL->dWORK), numbytes) != HIP_SUCCESS ||
-          hipHostMalloc((void **)&(PANEL->WORK), numbytes, hipHostMallocDefault) != HIP_SUCCESS)
-      {
-        HPL_pabort(__LINE__, "HPL_pdpanel_init", "Memory allocation failed");
-      }
-      PANEL->max_work_size = (size_t)(lwork) * sizeof(double);
-
-#ifdef HPL_VERBOSE_PRINT
-      if ((myrow == 0) && (mycol == 0))
-      {
-        printf("Allocating %g GBs of storage on CPU...",
-               ((double)numbytes) / (1024 * 1024 * 1024));
-        fflush(stdout);
-
-        printf("done.\n");
-        printf("Allocating %g GBs of storage on GPU...",
-               ((double)numbytes) / (1024 * 1024 * 1024));
-        fflush(stdout);
-        printf("done.\n");
-      }
-#endif
-    }
-    /*
-     * Initialize the pointers of the panel structure  -  Always re-use A in
-     * the only process column
-     */
-    PANEL->ldl2 = Mmax(1, mp);
-    PANEL->dldl2 = A->ld;
-    PANEL->dL2 = PANEL->dA + (myrow == icurrow ? JB : 0);
-    PANEL->L2 = PANEL->A + (myrow == icurrow ? JB : 0);
-    PANEL->U = (double *)PANEL->WORK;
-    PANEL->dU = (double *)PANEL->dWORK;
-    PANEL->L1 = (double *)PANEL->WORK + (JB * Mmax(0, ldu));
-    PANEL->dL1 = (double *)PANEL->dWORK + (JB * Mmax(0, ldu));
-    PANEL->W = A->W;
-    PANEL->dW = A->dW;
-
-    if (nprow == 1)
-    {
-      PANEL->nu0 = Mmin(JB, nu);
-      PANEL->ldu0 = PANEL->nu0;
-
-      PANEL->nu1 = 0;
-      PANEL->ldu1 = 0;
-
-      PANEL->nu2 = nu - PANEL->nu0;
-      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
-
-      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
-      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
-      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
-      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
-
-      PANEL->permU = (int *)(PANEL->L1 + JB * JB);
-      PANEL->dpermU = (int *)(PANEL->dL1 + JB * JB);
-      PANEL->ipiv = PANEL->permU + JB;
-      PANEL->dipiv = PANEL->dpermU + JB;
-
-      PANEL->DINFO = (double *)(PANEL->ipiv + 2 * JB);
-      PANEL->dDINFO = (double *)(PANEL->dipiv + 2 * JB);
-    }
-    else
-    {
-      const int NSplit = Mmax(0, ((((int)(A->nq * fraction)) / nb) * nb));
-      PANEL->nu0 = Mmin(JB, nu);
-      PANEL->ldu0 = PANEL->nu0;
-
-      PANEL->nu2 = Mmin(nu - PANEL->nu0, NSplit);
-      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
-
-      PANEL->nu1 = nu - PANEL->nu0 - PANEL->nu2;
-      PANEL->ldu1 = ((PANEL->nu1 + 95) / 128) * 128 + 32; /*pad*/
-
-      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
-      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
-      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
-      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
-
-      PANEL->W1 = PANEL->W + PANEL->ldu0 * JB;
-      PANEL->dW1 = PANEL->dW + PANEL->ldu0 * JB;
-      PANEL->W2 = PANEL->W1 + PANEL->ldu1 * JB;
-      PANEL->dW2 = PANEL->dW1 + PANEL->ldu1 * JB;
-
-      PANEL->lindxA = (int *)(PANEL->L1 + JB * JB);
-      PANEL->dlindxA = (int *)(PANEL->dL1 + JB * JB);
-      PANEL->lindxAU = PANEL->lindxA + JB;
-      PANEL->dlindxAU = PANEL->dlindxA + JB;
-      PANEL->lindxU = PANEL->lindxAU + JB;
-      PANEL->dlindxU = PANEL->dlindxAU + JB;
-      PANEL->permU = PANEL->lindxU + JB;
-      PANEL->dpermU = PANEL->dlindxU + JB;
-
-      // Put ipiv array at the end
-      PANEL->dipiv = PANEL->dpermU + JB;
-      PANEL->ipiv = PANEL->permU + JB;
-
-      PANEL->DINFO = ((double *)PANEL->lindxA) + lpiv;
-      PANEL->dDINFO = ((double *)PANEL->dlindxA) + lpiv;
-    }
-
-    *(PANEL->DINFO) = 0.0;
-  }
-  else  // for ncol != 1
-  { /* space for L2, L1, DPIV */
-    ml2 = (myrow == icurrow ? mp - JB : mp);
-    ml2 = Mmax(0, ml2);
-    ml2 = ((ml2 + 95) / 128) * 128 + 32; /*pad*/
-    itmp1 = JB * JB + lpiv;              // L1, integer arrays
-    PANEL->len = ml2 * JB + itmp1;
-
-    lwork = ALGO->align + PANEL->len + 1;
-
-    nu = Mmax(0, (mycol == icurcol ? nq - JB : nq));
-    ldu = nu + 256; /*extra space for potential padding*/
-
-    // if( nprow > 1 )                                 /* space for U */
-    {
-      lwork += JB * ldu;
-    }
-    if (PANEL->max_work_size < (size_t)(lwork) * sizeof(double))
-    {
-      if (PANEL->WORK)
-      {
-        HIP_CHECK_ERROR(hipFree(PANEL->dWORK));
-        HIP_CHECK_ERROR(hipHostFree(PANEL->WORK));
-      }
-      size_t numbytes = (size_t)(lwork) * sizeof(double);
-
-      if (hipMalloc((void **)&(PANEL->dWORK), numbytes) != HIP_SUCCESS ||
-          hipHostMalloc((void **)&(PANEL->WORK), numbytes, hipHostMallocDefault) != HIP_SUCCESS)
-      {
-        HPL_pabort(__LINE__, "HPL_pdpanel_init", "Memory allocation failed");
-      }
-      PANEL->max_work_size = (size_t)(lwork) * sizeof(double);
-#ifdef HPL_VERBOSE_PRINT
-      if ((myrow == 0) && (mycol == 0))
-      {
-        printf("Allocating %g GBs of storage on CPU...",
-               ((double)numbytes) / (1024 * 1024 * 1024));
-        fflush(stdout);
-        printf("done.\n");
-        printf("Allocating %g GBs of storage on GPU...",
-               ((double)numbytes) / (1024 * 1024 * 1024));
-        fflush(stdout);
-        printf("done.\n");
-      }
-#endif
-    }
-    /*
-     * Initialize the pointers of the panel structure - Re-use A in the cur-
-     * rent process column when HPL_COPY_L is not defined.
-     */
-    PANEL->U = (double *)PANEL->WORK;
-    PANEL->dU = (double *)PANEL->dWORK;
-
-    PANEL->W = A->W;
-    PANEL->dW = A->dW;
-
-    PANEL->L2 = (double *)PANEL->WORK + (JB * Mmax(0, ldu));
-    PANEL->dL2 = (double *)PANEL->dWORK + (JB * Mmax(0, ldu));
-    PANEL->L1 = PANEL->L2 + ml2 * JB;
-    PANEL->dL1 = PANEL->dL2 + ml2 * JB;
-    PANEL->ldl2 = Mmax(1, ml2);
-    PANEL->dldl2 = Mmax(1, ml2);
-
-    if (nprow == 1)
-    {
-      PANEL->nu0 = (mycol == inxtcol) ? Mmin(JB, nu) : 0;
-      PANEL->ldu0 = PANEL->nu0;
-
-      PANEL->nu1 = 0;
-      PANEL->ldu1 = 0;
-
-      PANEL->nu2 = nu - PANEL->nu0;
-      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
-
-      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
-      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
-      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
-      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
-
-      PANEL->permU = (int *)(PANEL->L1 + JB * JB);
-      PANEL->dpermU = (int *)(PANEL->dL1 + JB * JB);
-      PANEL->ipiv = PANEL->permU + JB;
-      PANEL->dipiv = PANEL->dpermU + JB;
-
-      PANEL->DINFO = (double *)(PANEL->ipiv + 2 * JB);
-      PANEL->dDINFO = (double *)(PANEL->dipiv + 2 * JB);
-    }
-    else
-    {
-      const int NSplit = Mmax(0, ((((int)(A->nq * fraction)) / nb) * nb));
-      PANEL->nu0 = (mycol == inxtcol) ? Mmin(JB, nu) : 0;
-      PANEL->ldu0 = PANEL->nu0;
-
-      PANEL->nu2 = Mmin(nu - PANEL->nu0, NSplit);
-      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
-
-      PANEL->nu1 = nu - PANEL->nu0 - PANEL->nu2;
-      PANEL->ldu1 = ((PANEL->nu1 + 95) / 128) * 128 + 32; /*pad*/
-
-      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
-      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
-      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
-      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
-
-      PANEL->W1 = PANEL->W + PANEL->ldu0 * JB;
-      PANEL->dW1 = PANEL->dW + PANEL->ldu0 * JB;
-      PANEL->W2 = PANEL->W1 + PANEL->ldu1 * JB;
-      PANEL->dW2 = PANEL->dW1 + PANEL->ldu1 * JB;
-
-      PANEL->lindxA = (int *)(PANEL->L1 + JB * JB);
-      PANEL->dlindxA = (int *)(PANEL->dL1 + JB * JB);
-      PANEL->lindxAU = PANEL->lindxA + JB;
-      PANEL->dlindxAU = PANEL->dlindxA + JB;
-      PANEL->lindxU = PANEL->lindxAU + JB;
-      PANEL->dlindxU = PANEL->dlindxAU + JB;
-      PANEL->permU = PANEL->lindxU + JB;
-      PANEL->dpermU = PANEL->dlindxU + JB;
-
-      // Put ipiv array at the end
-      PANEL->ipiv = PANEL->permU + JB;
-      PANEL->dipiv = PANEL->dpermU + JB;
-
-      PANEL->DINFO = ((double *)PANEL->lindxA) + lpiv;
-      PANEL->dDINFO = ((double *)PANEL->dlindxA) + lpiv;
-    }
-
-    *(PANEL->DINFO) = 0.0;
-  }
-
-  if (nprow == 1)
-  {
-    lwork = mp + JB;
-  }
-  else
-  {
-    itmp1 = (JB << 1);
-    lwork = nprow + 1;
-    itmp1 = Mmax(itmp1, lwork);
-    lwork = mp + 4 + (5 * JB) + (3 * nprow) + itmp1;
-  }
-
-  if (PANEL->max_iwork_size < (size_t)(lwork) * sizeof(int))
-  {
-    if (PANEL->IWORK)
-    {
-      std::free(PANEL->IWORK);
-    }
-    size_t numbytes = (size_t)(lwork) * sizeof(int);
-    PANEL->IWORK = (int *)std::malloc(numbytes);
-    if (PANEL->IWORK == NULL)
-    {
-      HPL_pabort(__LINE__, "HPL_pdpanel_init", "Panel Host Integer Memory allocation failed");
-    }
-    PANEL->max_iwork_size = (size_t)(lwork) * sizeof(int);
-  }
-  if (lwork)
-    *(PANEL->IWORK) = -1;
-
-  /* ensure the temp buffer in HPL_pdfact is allocated once*/
-  lwork = (size_t)(((4 + ((unsigned int)(JB) << 1)) << 1));
-  if (PANEL->max_fwork_size < (size_t)(lwork) * sizeof(double))
-  {
-    if (PANEL->fWORK)
-    {
-      HIP_CHECK_ERROR(hipHostFree(PANEL->fWORK));
-    }
-    size_t numbytes = (size_t)(lwork) * sizeof(double);
-
-    HIP_CHECK_ERROR(hipHostMalloc((void **)&PANEL->fWORK, numbytes));
-    if (PANEL->fWORK == NULL)
-    {
-      HPL_pabort(__LINE__, "HPL_pdpanel_init", "Panel Host pdfact Scratch Memory allocation failed");
-    }
-    PANEL->max_fwork_size = (size_t)(lwork) * sizeof(double);
-  }
-  /*
-   * End of HPL_pdpanel_init
-   */
-}
 
 void HIP::panel_send_to_host(HPL_T_panel *PANEL)
 {
@@ -723,16 +335,6 @@ int HIP::panel_free(HPL_T_panel *PANEL)
   return HPL_SUCCESS;
 }
 
-int HIP::panel_disp(HPL_T_panel **PANEL)
-{
-    GPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel structure", "HIP");
-    (*PANEL)->free_work_now = 1;
-    int err = HIP::panel_free(*PANEL);
-    if (*PANEL) free(*PANEL);
-    *PANEL = NULL;
-    return( err );
-}
-
 void HIP::gPrintMat(const int M, const int N, const int LDA, const double *A)
 {
     // Last row is the vector b
@@ -751,7 +353,7 @@ int HIP::pdmatgen(HPL_T_test* TEST, HPL_T_grid* GRID, HPL_T_palg* ALGO,  HPL_T_p
   int mycol, myrow, npcol, nprow, nq, info[3];
   (void)HPL_grid_info(GRID, &nprow, &npcol, &myrow, &mycol);
 
-  mat->n    = N; mat->nb   = NB; mat->info = 0;
+  mat->n    = N; mat->nb   = NB; mat->info = 0; mat->dN = N;
   mat->mp   = HPL_numroc(N, NB, NB, myrow, 0, nprow);
   nq        = HPL_numroc(N, NB, NB, mycol, 0, npcol);
   /*
@@ -764,16 +366,8 @@ int HIP::pdmatgen(HPL_T_test* TEST, HPL_T_grid* GRID, HPL_T_palg* ALGO,  HPL_T_p
    * Ensure that lda is a multiple of ALIGN and not a power of 2, and not
    * a multiple of 4096 bytes
    */
-  mat->ld = ((Mmax(1, mat->mp) - 1) / ALGO->align) * ALGO->align;
-  do {
-    ii  = (mat->ld += ALGO->align);
-    ip2 = 1;
-    while(ii > 1) {
-      ii >>= 1;
-      ip2 <<= 1;
-    }
-    im4096 = (mat->ld % 512 ) ? 0 : 1;
-  } while((mat->ld == ip2) || im4096);
+  mat->ld = Mmax(1, mat->mp);
+  mat->ld = ((mat->ld + 95) / 128) * 128 + 32; /*pad*/
 
   mat->nq = nq + 1;
 
@@ -861,8 +455,8 @@ int HIP::pdmatgen(HPL_T_test* TEST, HPL_T_grid* GRID, HPL_T_palg* ALGO,  HPL_T_p
   workspace_size  = Mmax((2 * Anp + nq) * sizeof(double), workspace_size);
 
   /*Scratch space for rows in pdlaswp (with extra space for padding) */
-  dworkspace_size = Mmax((nq+256) * mat->nb * sizeof(double), dworkspace_size);
-  workspace_size  = Mmax((nq+256) * mat->nb * sizeof(double), workspace_size);
+  dworkspace_size = Mmax((nq + mat->nb + 256) * mat->nb * sizeof(double), dworkspace_size);
+  workspace_size = Mmax((nq + mat->nb + 256) * mat->nb * sizeof(double), workspace_size);
 
 #ifdef HPL_VERBOSE_PRINT
   if((myrow == 0) && (mycol == 0)) {
@@ -918,6 +512,18 @@ void HIP::pdmatfree(HPL_T_pmat* mat) {
   if(mat->W) {hipHostFree(mat->W); mat->W=nullptr;}
 
 }
+
+int HIP::panel_disp(HPL_T_panel **PANEL)
+{
+    GPUInfo("%-40s \t%-5s", "[Deallocate]", "Panel structure", "HIP");
+    (*PANEL)->pmat->n = (*PANEL)->pmat->dN;
+    (*PANEL)->free_work_now = 1;
+    int err = HIP::panel_free(*PANEL);
+    if (*PANEL) free(*PANEL);
+    *PANEL = NULL;
+    return( err );
+}
+
 
 void HIP::matgen(const HPL_T_grid *GRID, const int M, const int N,
                  const int NB, double *A, const int LDA,
@@ -1319,6 +925,135 @@ int HIP::bwait_ibcast(HPL_T_panel* PANEL) {
   int ierr;
   ierr = MPI_Wait(&bcast_req, MPI_STATUS_IGNORE);
   return ((ierr == MPI_SUCCESS ? HPL_SUCCESS : HPL_FAILURE));
+}
+
+void HIP::HPL_pdlaswp_hip(HPL_T_panel* PANEL, const HPL_T_UPD UPD, const SWP_PHASE phase) {
+  double *U, *W;
+  double *dA, *dU, *dW;
+  int *ipID, *iplen, *ipcounts, *ipoffsets, *iwork, *lindxU = NULL, *lindxA = NULL, *lindxAU, *permU;
+  int *dlindxU = NULL, *dlindxA = NULL, *dlindxAU, *dpermU, *dpermU_ex;
+  int  icurrow, *iflag, *ipA, *ipl, jb, k, lda, myrow, n, nprow, LDU, LDW; 
+  MPI_Comm comm;
+
+  /*
+   * Retrieve parameters from the PANEL data structure
+   */
+  n = PANEL->n; jb = PANEL->jb;
+  nprow = PANEL->grid->nprow; myrow = PANEL->grid->myrow;
+  comm = PANEL->grid->col_comm; icurrow = PANEL->prow;
+  iflag = PANEL->IWORK;
+  dA = PANEL->dA; lda = PANEL->dlda;
+  PANEL->pmat->n = PANEL->dldl1;
+
+  // Quick return if we're 1xQ
+  if(phase != SWP_END && nprow == 1) return;
+
+  pdlaswp_set_var(PANEL, dU, U, LDU, dW, W, LDW, n, dA, UPD);
+
+  /* Quick return if there is nothing to do */
+  if((n <= 0) || (jb <= 0)) return;
+
+  // Quick swapping if P==1
+  if (phase == SWP_END && nprow == 1) {
+    // wait for swapping data to arrive
+    HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, SWAPDATATRANSFER, HPL_TR);
+
+    HIP::HPL_dlaswp00N(jb, n, dA, lda, PANEL->dipiv);
+    return;
+  }
+
+  /*
+   * Compute ipID (if not already done for this panel). lindxA and lindxAU
+   * are of length at most 2*jb - iplen is of size nprow+1, ipmap, ipmapm1
+   * are of size nprow,  permU is of length jb, and  this function needs a
+   * workspace of size max( 2 * jb (plindx1), nprow+1(equil)):
+   * 1(iflag) + 1(ipl) + 1(ipA) + 9*jb + 3*nprow + 1 + MAX(2*jb,nprow+1)
+   * i.e. 4 + 9*jb + 3*nprow + max(2*jb, nprow+1);
+   */
+  k = (int)((unsigned int)(jb) << 1);
+  ipl = iflag + 1;
+  ipID = ipl + 1;
+  ipA = ipID + ((unsigned int)(k) << 1);
+  iplen = ipA + 1;
+  ipcounts = iplen + nprow + 1;
+  ipoffsets = ipcounts + nprow;
+  iwork = ipoffsets + nprow;
+
+  if (phase == SWP_START) {
+    if(*iflag == -1) {/* no index arrays have been computed so far */
+        // get the ipivs on the host after the Bcast
+        if(PANEL->grid->mycol != PANEL->pcol) {
+          HIP_CHECK_ERROR(hipMemcpy2DAsync(PANEL->ipiv, PANEL->jb * sizeof(int),
+                          PANEL->dipiv, PANEL->jb * sizeof(int),
+                          PANEL->jb * sizeof(int), 1,
+                          hipMemcpyDeviceToHost, HIP::dataStream));
+        }
+        HPL_BE_stream_synchronize(HPL_DATASTREAM, HPL_TR);
+
+        // compute spreading info
+        HPL_pipid(PANEL, ipl, ipID);
+        HPL_plindx(PANEL, *ipl, ipID, ipA, PANEL->lindxU, PANEL->lindxAU, PANEL->lindxA, iplen, PANEL->permU, iwork);
+        *iflag = 1;
+    }
+
+      /*
+      * For i in [0..2*jb),  lindxA[i] is the offset in A of a row that ulti-
+      * mately goes to U( :, lindxAU[i] ).  In each rank, we directly pack
+      * into U, otherwise we pack into workspace. The  first
+      * entry of each column packed in workspace is in fact the row or column
+      * offset in U where it should go to.
+      */
+      if(myrow == icurrow) {
+        // copy needed rows of A into U
+        HIP::HPL_dlaswp01T(jb, n, dA, lda, dU, LDU, PANEL->dlindxU);
+        // record the evernt when packing completes
+        HIP::event_record(SWAPSTART, UPD);
+      } else {
+        // copy needed rows from A into U(:, iplen[myrow])
+        HIP::HPL_dlaswp03T(iplen[myrow + 1] - iplen[myrow], n, dA, lda, Mptr(dU, 0, iplen[myrow], LDU), LDU, PANEL->dlindxU);
+        // record the event when packing completes
+        HIP::event_record(SWAPSTART, UPD);
+      }
+  }
+  else if (phase == SWP_COMM) {
+    /* Set MPI message counts and offsets */
+    ipcounts[0] = (iplen[1] - iplen[0]) * LDU;
+    ipoffsets[0] = 0;
+    PANEL->pmat->n = PANEL->dldl1;
+    // if (phase == SWP_END)
+    //   PANEL->pmat->n = PANEL->pmat->dN;
+    for(int i = 1; i < nprow; ++i) {
+      ipcounts[i] = (iplen[i + 1] - iplen[i]) * LDU;
+      ipoffsets[i] = ipcounts[i - 1] + ipoffsets[i - 1];
+    }
+
+    if(myrow == icurrow) {
+      HIP::event_synchronize(SWAPSTART, UPD);
+      // Send rows info to other ranks
+      HPL_scatterv(dU, ipcounts, ipoffsets, ipcounts[myrow], icurrow, comm);
+      // All gather dU (gather + broadcast)
+      HPL_allgatherv(dU, ipcounts[myrow], ipcounts, ipoffsets, comm);
+    } else {
+      // Wait for dU to be ready
+      HIP::event_synchronize(SWAPSTART, UPD);
+      // Receive rows from icurrow into dW
+      HPL_scatterv(dW, ipcounts, ipoffsets, ipcounts[myrow], icurrow, comm);
+      // All gather dU
+      HPL_allgatherv(dU, ipcounts[myrow], ipcounts, ipoffsets, comm);
+    }
+  }
+  else if (phase == SWP_END) {
+    if(myrow == icurrow) {
+        // Swap rows local to A on device
+        HIP::HPL_dlaswp02T(*ipA, n, dA, lda, PANEL->dlindxAU, PANEL->dlindxA);
+    } else {
+        // Queue inserting recieved rows in W into A on device
+        HIP::HPL_dlaswp04T(iplen[myrow + 1] - iplen[myrow], n, dA, lda, dW, LDW, PANEL->dlindxU);
+    }
+    /* Permute U in every process row */
+    HIP::HPL_dlaswp10N(n, jb, dU, LDU, PANEL->dpermU);
+
+  }
 }
 
 #define BLOCK_SIZE_PDLANGE 512
@@ -1793,130 +1528,7 @@ void HIP::HPL_set_zero(const int N, double* __restrict__ X) {
     hipLaunchKernelGGL((setZero), dim3((N + block_size - 1) / block_size), dim3(block_size), 0, HIP::computeStream, N, X);
 }
 
-void HIP::HPL_pdlaswp_hip(HPL_T_panel* PANEL, const HPL_T_UPD UPD, const SWP_PHASE phase) {
-  double *U, *W;
-  double *dA, *dU, *dW;
-  int *ipID, *iplen, *ipcounts, *ipoffsets, *iwork, *lindxU = NULL, *lindxA = NULL, *lindxAU, *permU;
-  int *dlindxU = NULL, *dlindxA = NULL, *dlindxAU, *dpermU, *dpermU_ex;
-  int  icurrow, *iflag, *ipA, *ipl, jb, k, lda, myrow, n, nprow, LDU, LDW; 
-  MPI_Comm comm;
 
-  /*
-   * Retrieve parameters from the PANEL data structure
-   */
-  n = PANEL->n; jb = PANEL->jb;
-  nprow = PANEL->grid->nprow; myrow = PANEL->grid->myrow;
-  comm = PANEL->grid->col_comm; icurrow = PANEL->prow;
-  iflag = PANEL->IWORK;
-  dA = PANEL->dA; lda = PANEL->dlda;
-
-  // Quick return if we're 1xQ
-  if(phase != SWP_END && nprow == 1) return;
-
-  pdlaswp_set_var(PANEL, dU, U, LDU, dW, W, LDW, n, dA, UPD);
-
-  /* Quick return if there is nothing to do */
-  if((n <= 0) || (jb <= 0)) return;
-
-  // Quick swapping if P==1
-  if (phase == SWP_END && nprow == 1) {
-    // wait for swapping data to arrive
-    HPL_BE_stream_wait_event(HPL_COMPUTESTREAM, SWAPDATATRANSFER, HPL_TR);
-
-    HIP::HPL_dlaswp00N(jb, n, dA, lda, PANEL->dipiv);
-    return;
-  }
-
-  /*
-   * Compute ipID (if not already done for this panel). lindxA and lindxAU
-   * are of length at most 2*jb - iplen is of size nprow+1, ipmap, ipmapm1
-   * are of size nprow,  permU is of length jb, and  this function needs a
-   * workspace of size max( 2 * jb (plindx1), nprow+1(equil)):
-   * 1(iflag) + 1(ipl) + 1(ipA) + 9*jb + 3*nprow + 1 + MAX(2*jb,nprow+1)
-   * i.e. 4 + 9*jb + 3*nprow + max(2*jb, nprow+1);
-   */
-  k = (int)((unsigned int)(jb) << 1);
-  ipl = iflag + 1;
-  ipID = ipl + 1;
-  ipA = ipID + ((unsigned int)(k) << 1);
-  iplen = ipA + 1;
-  ipcounts = iplen + nprow + 1;
-  ipoffsets = ipcounts + nprow;
-  iwork = ipoffsets + nprow;
-
-  if (phase == SWP_START) {
-    if(*iflag == -1) {/* no index arrays have been computed so far */
-        // get the ipivs on the host after the Bcast
-        if(PANEL->grid->mycol != PANEL->pcol) {
-          HIP_CHECK_ERROR(hipMemcpy2DAsync(PANEL->ipiv, PANEL->jb * sizeof(int),
-                          PANEL->dipiv, PANEL->jb * sizeof(int),
-                          PANEL->jb * sizeof(int), 1,
-                          hipMemcpyDeviceToHost, HIP::dataStream));
-        }
-        HPL_BE_stream_synchronize(HPL_DATASTREAM, HPL_TR);
-
-        // compute spreading info
-        HPL_pipid(PANEL, ipl, ipID);
-        HPL_plindx(PANEL, *ipl, ipID, ipA, PANEL->lindxU, PANEL->lindxAU, PANEL->lindxA, iplen, PANEL->permU, iwork);
-        *iflag = 1;
-    }
-
-      /*
-      * For i in [0..2*jb),  lindxA[i] is the offset in A of a row that ulti-
-      * mately goes to U( :, lindxAU[i] ).  In each rank, we directly pack
-      * into U, otherwise we pack into workspace. The  first
-      * entry of each column packed in workspace is in fact the row or column
-      * offset in U where it should go to.
-      */
-      if(myrow == icurrow) {
-        // copy needed rows of A into U
-        HIP::HPL_dlaswp01T(jb, n, dA, lda, dU, LDU, PANEL->dlindxU);
-        // record the evernt when packing completes
-        HIP::event_record(SWAPSTART, UPD);
-      } else {
-        // copy needed rows from A into U(:, iplen[myrow])
-        HIP::HPL_dlaswp03T(iplen[myrow + 1] - iplen[myrow], n, dA, lda, Mptr(dU, 0, iplen[myrow], LDU), LDU, PANEL->dlindxU);
-        // record the event when packing completes
-        HIP::event_record(SWAPSTART, UPD);
-      }
-  }
-  else if (phase == SWP_COMM) {
-    /* Set MPI message counts and offsets */
-    ipcounts[0] = (iplen[1] - iplen[0]) * LDU;
-    ipoffsets[0] = 0;
-
-    for(int i = 1; i < nprow; ++i) {
-      ipcounts[i] = (iplen[i + 1] - iplen[i]) * LDU;
-      ipoffsets[i] = ipcounts[i - 1] + ipoffsets[i - 1];
-    }
-
-    if(myrow == icurrow) {
-      HIP::event_synchronize(SWAPSTART, UPD);
-      // Send rows info to other ranks
-      HPL_scatterv(dU, ipcounts, ipoffsets, ipcounts[myrow], icurrow, comm);
-      // All gather dU (gather + broadcast)
-      HPL_allgatherv(dU, ipcounts[myrow], ipcounts, ipoffsets, comm);
-    } else {
-      // Wait for dU to be ready
-      HIP::event_synchronize(SWAPSTART, UPD);
-      // Receive rows from icurrow into dW
-      HPL_scatterv(dW, ipcounts, ipoffsets, ipcounts[myrow], icurrow, comm);
-      // All gather dU
-      HPL_allgatherv(dU, ipcounts[myrow], ipcounts, ipoffsets, comm);
-    }
-  }
-  else if (phase == SWP_END) {
-    if(myrow == icurrow) {
-        // Swap rows local to A on device
-        HIP::HPL_dlaswp02T(*ipA, n, dA, lda, PANEL->dlindxAU, PANEL->dlindxA);
-    } else {
-        // Queue inserting recieved rows in W into A on device
-        HIP::HPL_dlaswp04T(iplen[myrow + 1] - iplen[myrow], n, dA, lda, dW, LDW, PANEL->dlindxU);
-    }
-    /* Permute U in every process row */
-    HIP::HPL_dlaswp10N(n, jb, dU, LDU, PANEL->dpermU);
-  }
-}
 
 // Setting the matrix section and phase of pdupdate
 void HIP::HPL_pdlaswp_hip(HPL_T_panel* PANEL, int icurcol, std::list<PDLASWP_OP> op_list) {
@@ -1964,3 +1576,398 @@ void HIP::pdlaswp_set_var(HPL_T_panel* PANEL, double* &dU, double* &U, int &ldu,
     break;
   }
 }
+
+void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int N, const int JB,
+                     HPL_T_pmat *A, const int IA, const int JA, const int TAG, HPL_T_panel *PANEL)
+{
+  size_t dalign;
+  int icurcol, icurrow, ii, itmp1, jj, lwork,
+      ml2, mp, mycol, myrow, nb, npcol, nprow,
+      nq, nu, ldu;
+  /* ..
+   * .. Executable Statements ..
+   */
+  PANEL->grid = GRID; /* ptr to the process grid */
+  PANEL->algo = ALGO; /* ptr to the algo parameters */
+  PANEL->pmat = A;    /* ptr to the local array info */
+
+  myrow = GRID->myrow;
+  mycol = GRID->mycol;
+  nprow = GRID->nprow;
+  npcol = GRID->npcol;
+  nb = A->nb;
+
+  HPL_infog2l(IA, JA, nb, nb, nb, nb, 0, 0, myrow, mycol,
+              nprow, npcol, &ii, &jj, &icurrow, &icurcol);
+  mp = HPL_numrocI(M, IA, nb, nb, myrow, 0, nprow);
+  nq = HPL_numrocI(N, JA, nb, nb, mycol, 0, npcol);
+
+  const int inxtcol = MModAdd1(icurcol, npcol);
+  const int inxtrow = MModAdd1(icurrow, nprow);
+
+  /* ptr to trailing part of A */
+  PANEL->A = A->A;
+  PANEL->dA = Mptr((double *)(A->d_A), ii, jj, A->ld);
+
+  /*
+   * Workspace pointers are initialized to NULL.
+   */
+  PANEL->L2 = nullptr;
+  PANEL->dL2 = nullptr;
+  PANEL->L1 = nullptr;
+  PANEL->dL1 = nullptr;
+  PANEL->DINFO = nullptr;
+  PANEL->U = nullptr;
+  PANEL->dU = nullptr;
+  PANEL->W = nullptr;
+  PANEL->dW = nullptr;
+  PANEL->U1 = nullptr;
+  PANEL->dU1 = nullptr;
+  PANEL->W1 = nullptr;
+  PANEL->dW1 = nullptr;
+  PANEL->U2 = nullptr;
+  PANEL->dU2 = nullptr;
+  PANEL->W2 = nullptr;
+  PANEL->dW2 = nullptr;
+  /*
+   * Local lengths, indexes process coordinates
+   */
+  PANEL->nb = nb;           /* distribution blocking factor */
+  PANEL->jb = JB;           /* panel width */
+  PANEL->m = M;             /* global # of rows of trailing part of A */
+  PANEL->n = N;             /* global # of cols of trailing part of A */
+  PANEL->ia = IA;           /* global row index of trailing part of A */
+  PANEL->ja = JA;           /* global col index of trailing part of A */
+  PANEL->mp = mp;           /* local # of rows of trailing part of A */
+  PANEL->nq = nq;           /* local # of cols of trailing part of A */
+  PANEL->ii = ii;           /* local row index of trailing part of A */
+  PANEL->jj = jj;           /* local col index of trailing part of A */
+  PANEL->lda = Mmax(1, mp); /* local leading dim of array A */
+  PANEL->dlda = A->ld;      /* local leading dim of array A */
+  PANEL->prow = icurrow;    /* proc row owning 1st row of trailing A */
+  PANEL->pcol = icurcol;    /* proc col owning 1st col of trailing A */
+  PANEL->msgid = TAG;       /* message id to be used for panel bcast */
+  /*
+   * Initialize  ldl2 and len to temporary dummy values and Update tag for
+   * next panel
+   */
+  PANEL->ldl2 = 0;  /* local leading dim of array L2 */
+  PANEL->dldl2 = 0; /* local leading dim of array L2 */
+  PANEL->dldl1 = 1.02 * A->dN; // padding
+  PANEL->len = 0;   /* length of the buffer to broadcast */
+  PANEL->nu0 = 0;
+  PANEL->nu1 = 0;
+  PANEL->nu2 = 0;
+  PANEL->ldu0 = 0;
+  PANEL->ldu1 = 0;
+  PANEL->ldu2 = 0;
+
+  
+  /*Split fraction*/
+  const double fraction = 0.6;
+
+  if ((double)M / A->dN > 0.97) {
+    HPL_ptimer_boot();
+    HPL_ptimer( 0 );
+  }
+  dalign = ALGO->align * sizeof(double);
+  size_t lpiv = (5 * JB * sizeof(int) + sizeof(double) - 1) / (sizeof(double));
+
+  if (npcol == 1) /* P x 1 process grid */
+  {               /* space for L1, DPIV, DINFO */
+    lwork = ALGO->align + (PANEL->len = JB * JB + lpiv) + 1;
+    nu = Mmax(0, nq - JB);
+    ldu = nu + 256; /*extra space for padding*/
+    lwork += JB * ldu;
+
+    if (PANEL->max_work_size < (size_t)(lwork) * sizeof(double))
+    {
+      if (PANEL->WORK)
+      {
+        HIP_CHECK_ERROR(hipFree(PANEL->dWORK));
+        HIP_CHECK_ERROR(hipHostFree(PANEL->WORK));
+      }
+      size_t numbytes = (size_t)(lwork) * sizeof(double);
+
+      if (hipMalloc((void **)&(PANEL->dWORK), numbytes) != HIP_SUCCESS ||
+          hipHostMalloc((void **)&(PANEL->WORK), numbytes, hipHostMallocDefault) != HIP_SUCCESS)
+      {
+        HPL_pabort(__LINE__, "HPL_pdpanel_init", "Memory allocation failed");
+      }
+      PANEL->max_work_size = (size_t)(lwork) * sizeof(double);
+
+#ifdef HPL_VERBOSE_PRINT
+      if ((myrow == 0) && (mycol == 0))
+      {
+        printf("Allocating %g GBs of storage on CPU...",
+               ((double)numbytes) / (1024 * 1024 * 1024));
+        fflush(stdout);
+
+        printf("done.\n");
+        printf("Allocating %g GBs of storage on GPU...",
+               ((double)numbytes) / (1024 * 1024 * 1024));
+        fflush(stdout);
+        printf("done.\n");
+      }
+#endif
+    }
+    /*
+     * Initialize the pointers of the panel structure  -  Always re-use A in
+     * the only process column
+     */
+    PANEL->ldl2 = Mmax(1, mp);
+    PANEL->dldl2 = A->ld;
+    PANEL->dL2 = PANEL->dA + (myrow == icurrow ? JB : 0);
+    PANEL->L2 = PANEL->A + (myrow == icurrow ? JB : 0);
+    PANEL->U = (double *)PANEL->WORK;
+    PANEL->dU = (double *)PANEL->dWORK;
+    PANEL->L1 = (double *)PANEL->WORK + (JB * Mmax(0, ldu));
+    PANEL->dL1 = (double *)PANEL->dWORK + (JB * Mmax(0, ldu));
+    PANEL->W = A->W;
+    PANEL->dW = A->dW;
+
+    if (nprow == 1)
+    {
+      PANEL->nu0 = Mmin(JB, nu);
+      PANEL->ldu0 = PANEL->nu0;
+
+      PANEL->nu1 = 0;
+      PANEL->ldu1 = 0;
+
+      PANEL->nu2 = nu - PANEL->nu0;
+      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
+
+      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
+      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
+      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
+      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
+
+      PANEL->permU = (int *)(PANEL->L1 + JB * JB);
+      PANEL->dpermU = (int *)(PANEL->dL1 + JB * JB);
+      PANEL->ipiv = PANEL->permU + JB;
+      PANEL->dipiv = PANEL->dpermU + JB;
+
+      PANEL->DINFO = (double *)(PANEL->ipiv + 2 * JB);
+      PANEL->dDINFO = (double *)(PANEL->dipiv + 2 * JB);
+    }
+    else
+    {
+      const int NSplit = Mmax(0, ((((int)(A->nq * fraction)) / nb) * nb));
+      PANEL->nu0 = Mmin(JB, nu);
+      PANEL->ldu0 = PANEL->nu0;
+
+      PANEL->nu2 = Mmin(nu - PANEL->nu0, NSplit);
+      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
+
+      PANEL->nu1 = nu - PANEL->nu0 - PANEL->nu2;
+      PANEL->ldu1 = ((PANEL->nu1 + 95) / 128) * 128 + 32; /*pad*/
+
+      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
+      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
+      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
+      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
+
+      PANEL->W1 = PANEL->W + PANEL->ldu0 * JB;
+      PANEL->dW1 = PANEL->dW + PANEL->ldu0 * JB;
+      PANEL->W2 = PANEL->W1 + PANEL->ldu1 * JB;
+      PANEL->dW2 = PANEL->dW1 + PANEL->ldu1 * JB;
+
+      PANEL->lindxA = (int *)(PANEL->L1 + JB * JB);
+      PANEL->dlindxA = (int *)(PANEL->dL1 + JB * JB);
+      PANEL->lindxAU = PANEL->lindxA + JB;
+      PANEL->dlindxAU = PANEL->dlindxA + JB;
+      PANEL->lindxU = PANEL->lindxAU + JB;
+      PANEL->dlindxU = PANEL->dlindxAU + JB;
+      PANEL->permU = PANEL->lindxU + JB;
+      PANEL->dpermU = PANEL->dlindxU + JB;
+
+      // Put ipiv array at the end
+      PANEL->dipiv = PANEL->dpermU + JB;
+      PANEL->ipiv = PANEL->permU + JB;
+
+      PANEL->DINFO = ((double *)PANEL->lindxA) + lpiv;
+      PANEL->dDINFO = ((double *)PANEL->dlindxA) + lpiv;
+    }
+
+    *(PANEL->DINFO) = 0.0;
+  }
+  else  // for ncol != 1
+  { /* space for L2, L1, DPIV */
+    ml2 = (myrow == icurrow ? mp - JB : mp);
+    ml2 = Mmax(0, ml2);
+    ml2 = ((ml2 + 95) / 128) * 128 + 32; /*pad*/
+    itmp1 = JB * JB + lpiv;              // L1, integer arrays
+    PANEL->len = ml2 * JB + itmp1;
+
+    lwork = ALGO->align + PANEL->len + 1;
+
+    nu = Mmax(0, (mycol == icurcol ? nq - JB : nq));
+    ldu = nu + 256; /*extra space for potential padding*/
+
+    // if( nprow > 1 )                                 /* space for U */
+    {
+      lwork += JB * ldu;
+    }
+    if (PANEL->max_work_size < (size_t)(lwork) * sizeof(double))
+    {
+      if (PANEL->WORK)
+      {
+        HIP_CHECK_ERROR(hipFree(PANEL->dWORK));
+        HIP_CHECK_ERROR(hipHostFree(PANEL->WORK));
+      }
+      size_t numbytes = (size_t)(lwork) * sizeof(double);
+
+      if (hipMalloc((void **)&(PANEL->dWORK), numbytes) != HIP_SUCCESS ||
+          hipHostMalloc((void **)&(PANEL->WORK), numbytes, hipHostMallocDefault) != HIP_SUCCESS)
+      {
+        HPL_pabort(__LINE__, "HPL_pdpanel_init", "Memory allocation failed");
+      }
+      PANEL->max_work_size = (size_t)(lwork) * sizeof(double);
+#ifdef HPL_VERBOSE_PRINT
+      if ((myrow == 0) && (mycol == 0))
+      {
+        printf("Allocating %g GBs of storage on CPU...",
+               ((double)numbytes) / (1024 * 1024 * 1024));
+        fflush(stdout);
+        printf("done.\n");
+        printf("Allocating %g GBs of storage on GPU...",
+               ((double)numbytes) / (1024 * 1024 * 1024));
+        fflush(stdout);
+        printf("done.\n");
+      }
+#endif
+    }
+    /*
+     * Initialize the pointers of the panel structure - Re-use A in the cur-
+     * rent process column when HPL_COPY_L is not defined.
+     */
+    PANEL->U = (double *)PANEL->WORK;
+    PANEL->dU = (double *)PANEL->dWORK;
+
+    PANEL->W = A->W;
+    PANEL->dW = A->dW;
+
+    PANEL->L2 = (double *)PANEL->WORK + (JB * Mmax(0, ldu));
+    PANEL->dL2 = (double *)PANEL->dWORK + (JB * Mmax(0, ldu));
+    PANEL->L1 = PANEL->L2 + ml2 * JB;
+    PANEL->dL1 = PANEL->dL2 + ml2 * JB;
+    PANEL->ldl2 = Mmax(1, ml2);
+    PANEL->dldl2 = Mmax(1, ml2);
+
+    if (nprow == 1)
+    {
+      PANEL->nu0 = (mycol == inxtcol) ? Mmin(JB, nu) : 0;
+      PANEL->ldu0 = PANEL->nu0;
+
+      PANEL->nu1 = 0;
+      PANEL->ldu1 = 0;
+
+      PANEL->nu2 = nu - PANEL->nu0;
+      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
+
+      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
+      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
+      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
+      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
+
+      PANEL->permU = (int *)(PANEL->L1 + JB * JB);
+      PANEL->dpermU = (int *)(PANEL->dL1 + JB * JB);
+      PANEL->ipiv = PANEL->permU + JB;
+      PANEL->dipiv = PANEL->dpermU + JB;
+
+      PANEL->DINFO = (double *)(PANEL->ipiv + 2 * JB);
+      PANEL->dDINFO = (double *)(PANEL->dipiv + 2 * JB);
+    }
+    else
+    {
+      const int NSplit = Mmax(0, ((((int)(A->nq * fraction)) / nb) * nb));
+      PANEL->nu0 = (mycol == inxtcol) ? Mmin(JB, nu) : 0;
+      PANEL->ldu0 = PANEL->nu0;
+
+      PANEL->nu2 = Mmin(nu - PANEL->nu0, NSplit);
+      PANEL->ldu2 = ((PANEL->nu2 + 95) / 128) * 128 + 32; /*pad*/
+
+      PANEL->nu1 = nu - PANEL->nu0 - PANEL->nu2;
+      PANEL->ldu1 = ((PANEL->nu1 + 95) / 128) * 128 + 32; /*pad*/
+
+      PANEL->U1 = PANEL->U + PANEL->ldu0 * JB;
+      PANEL->dU1 = PANEL->dU + PANEL->ldu0 * JB;
+      PANEL->U2 = PANEL->U1 + PANEL->ldu1 * JB;
+      PANEL->dU2 = PANEL->dU1 + PANEL->ldu1 * JB;
+
+      PANEL->W1 = PANEL->W + PANEL->ldu0 * JB;
+      PANEL->dW1 = PANEL->dW + PANEL->ldu0 * JB;
+      PANEL->W2 = PANEL->W1 + PANEL->ldu1 * JB;
+      PANEL->dW2 = PANEL->dW1 + PANEL->ldu1 * JB;
+
+      PANEL->lindxA = (int *)(PANEL->L1 + JB * JB);
+      PANEL->dlindxA = (int *)(PANEL->dL1 + JB * JB);
+      PANEL->lindxAU = PANEL->lindxA + JB;
+      PANEL->dlindxAU = PANEL->dlindxA + JB;
+      PANEL->lindxU = PANEL->lindxAU + JB;
+      PANEL->dlindxU = PANEL->dlindxAU + JB;
+      PANEL->permU = PANEL->lindxU + JB;
+      PANEL->dpermU = PANEL->dlindxU + JB;
+
+      // Put ipiv array at the end
+      PANEL->ipiv = PANEL->permU + JB;
+      PANEL->dipiv = PANEL->dpermU + JB;
+
+      PANEL->DINFO = ((double *)PANEL->lindxA) + lpiv;
+      PANEL->dDINFO = ((double *)PANEL->dlindxA) + lpiv;
+    }
+
+    *(PANEL->DINFO) = 0.0;
+  }
+
+  if (nprow == 1)
+  {
+    lwork = mp + JB;
+  }
+  else
+  {
+    itmp1 = (JB << 1);
+    lwork = nprow + 1;
+    itmp1 = Mmax(itmp1, lwork);
+    lwork = mp + 4 + (5 * JB) + (3 * nprow) + itmp1;
+  }
+
+  if (PANEL->max_iwork_size < (size_t)(lwork) * sizeof(int))
+  {
+    if (PANEL->IWORK)
+    {
+      std::free(PANEL->IWORK);
+    }
+    size_t numbytes = (size_t)(lwork) * sizeof(int);
+    PANEL->IWORK = (int *)std::malloc(numbytes);
+    if (PANEL->IWORK == NULL)
+    {
+      HPL_pabort(__LINE__, "HPL_pdpanel_init", "Panel Host Integer Memory allocation failed");
+    }
+    PANEL->max_iwork_size = (size_t)(lwork) * sizeof(int);
+  }
+  if (lwork)
+    *(PANEL->IWORK) = -1;
+
+  /* ensure the temp buffer in HPL_pdfact is allocated once*/
+  lwork = (size_t)(((4 + ((unsigned int)(JB) << 1)) << 1));
+  if (PANEL->max_fwork_size < (size_t)(lwork) * sizeof(double))
+  {
+    if (PANEL->fWORK)
+    {
+      HIP_CHECK_ERROR(hipHostFree(PANEL->fWORK));
+    }
+    size_t numbytes = (size_t)(lwork) * sizeof(double);
+
+    HIP_CHECK_ERROR(hipHostMalloc((void **)&PANEL->fWORK, numbytes));
+    if (PANEL->fWORK == NULL)
+    {
+      HPL_pabort(__LINE__, "HPL_pdpanel_init", "Panel Host pdfact Scratch Memory allocation failed");
+    }
+    PANEL->max_fwork_size = (size_t)(lwork) * sizeof(double);
+  }
+  /*
+   * End of HPL_pdpanel_init
+   */
+}
+

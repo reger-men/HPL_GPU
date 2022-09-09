@@ -52,6 +52,8 @@
 #ifdef STDC_HEADERS
 void HPL_pdinfo
 (
+   int                              ARGC,
+   char**                           ARGV,
    HPL_T_test *                     TEST,
    int *                            NS,
    int *                            N,
@@ -61,6 +63,8 @@ void HPL_pdinfo
    int *                            NPQS,
    int *                            P,
    int *                            Q,
+   int *                            p,
+   int *                            q,
    int *                            NPFS,
    HPL_T_FACT *                     PF,
    int *                            NBMS,
@@ -274,7 +278,7 @@ void HPL_pdinfo
    int                        * iwork = NULL;
    char                       * lineptr;
    int                        error=0, fid, i, j, lwork, maxp, nprocs,
-                              rank, size;
+                              rank, size, _p = -1, _q = -1;
 /* ..
  * .. Executable Statements ..
  */
@@ -289,6 +293,20 @@ void HPL_pdinfo
  * Process 0 reads the input data, broadcasts to other processes and
  * writes needed information to TEST->outfp.
  */
+
+   for(int i = 1; i < ARGC; i++) {
+      if(strcmp(ARGV[i], "-p") == 0) {
+         _p = atoi(ARGV[i + 1]);
+         i++;
+      }
+    if(strcmp(ARGV[i], "-q") == 0) {
+      _q = atoi(ARGV[i + 1]);
+      i++;
+      }
+   }
+  *p = _p;
+  *q = _q;
+
    char* status;
    if( rank == 0 )
    {
@@ -346,6 +364,7 @@ void HPL_pdinfo
             error = 1; goto label_error;
          }
       }
+
 /*
  * Block size (>=1) (NB)
  */

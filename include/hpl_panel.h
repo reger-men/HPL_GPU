@@ -125,6 +125,7 @@ typedef struct HPL_S_panel
    int                dlda;
    double*            U2;          /* ptr to U2 */
    double*            dU2;
+   int                dldl1;
    int                dldl2;
    int                ldu1;
    int                ldu2;
