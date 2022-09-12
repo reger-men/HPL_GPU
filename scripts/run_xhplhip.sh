@@ -2,8 +2,9 @@
 # set -x #echo on
 
 hpl_bin=./xhplhip
-rocblas_dir=/opt/rocm-5.2.0/lib
-blas_dir=/global/home/lulu/hyc/rocHPL-main/tpl/blis/lib
+if [ -z "${ROCM_PATH}" ]; then rocblas_dir="/opt/rocm/lib"
+else rocblas_dir="${ROCM_PATH}/lib"; fi
+blas_dir="${BLAS_DIR}/lib/zen3"
 
 filename=./HPL.dat
 p=-1
@@ -229,4 +230,4 @@ if [[ $globalRank -lt $size ]]; then
   echo "Node Binding: Process $rank [(p,q)=($myp,$myq)] CPU Cores: $omp_num_threads - $places"
 fi
 #run
-${hpl_bin} 
+${hpl_bin} -p ${p} -q ${q}

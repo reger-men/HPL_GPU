@@ -220,7 +220,7 @@ int main( ARGC, ARGV )
 
               algo.fswap = fswap; algo.fsthr = tswap;
               algo.equil = equil; algo.align = align;
-
+              
               HPL_pdtest( &test, &grid, &algo, nval[in], nbval[inb] );
 
              }

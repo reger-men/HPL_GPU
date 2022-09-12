@@ -35,6 +35,7 @@ void HIP::init(const HPL_T_grid* GRID)
     HIP_CHECK_ERROR(hipGetDeviceCount(&count));
     //TODO: set dynamic device id
     int device_id = localRank % count; 
+    // printf("host: %s, device id: %d, myrow: %d, mycol: %d\n", host_name, device_id, GRID->local_myrow, GRID->local_mycol);
     HIP_CHECK_ERROR(hipSetDevice(device_id));
 
     // Get device properties
@@ -1653,7 +1654,7 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
    */
   PANEL->ldl2 = 0;  /* local leading dim of array L2 */
   PANEL->dldl2 = 0; /* local leading dim of array L2 */
-  PANEL->dldl1 = 1.02 * A->dN; // padding
+  PANEL->dldl1 = 1.015 * A->dN; // padding to avoid stack overflow
   PANEL->len = 0;   /* length of the buffer to broadcast */
   PANEL->nu0 = 0;
   PANEL->nu1 = 0;
@@ -1666,9 +1667,10 @@ void HIP::panel_init(HPL_T_grid *GRID, HPL_T_palg *ALGO, const int M, const int 
   /*Split fraction*/
   const double fraction = 0.6;
 
-  if ((double)M / A->dN > 0.97) {
+  // get the panel init time
+  if ((double)M / A->dN > 0.985) {
     HPL_ptimer_boot();
-    HPL_ptimer( 0 );
+    HPL_ptimer( HPL_rzero );
   }
   dalign = ALGO->align * sizeof(double);
   size_t lpiv = (5 * JB * sizeof(int) + sizeof(double) - 1) / (sizeof(double));

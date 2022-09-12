@@ -140,7 +140,7 @@ int HPL_grid_init
       local_mycol = local_rank % q; local_myrow = local_rank / q;
       int noderow = node / (NPCOL / q); int nodecol = node % (NPCOL / q);
       myrow = noderow * p + local_myrow; mycol = nodecol * q + local_mycol;
-      myrow = rank / NPCOL; mycol = rank - myrow * NPCOL;
+      // myrow = rank / NPCOL; mycol = rank - myrow * NPCOL;
    }
    else
    {

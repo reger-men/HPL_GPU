@@ -20,10 +20,18 @@ EXECUTE_PROCESS(
 find_package(OpenMP)
 
 # Add rocM root dir to CMAKE_PREFIX_PATH, usually /opt/rocm
-list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
-include(/opt/rocm/lib/cmake/hip/FindHIP.cmake)
-include(/opt/rocm/share/rocm/cmake/ROCMCheckTargetIds.cmake)
-find_package( hip REQUIRED )
+if(NOT DEFINED ROCM_PATH)
+  if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH $ENV{ROCM_PATH})
+  else()
+    set(ROCM_PATH "/opt/rocm")
+  endif()
+endif()
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
+set(CMAKE_MODULE_PATH "${ROCM_PATH}/hip/cmake" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${ROCM_PATH}/share/rocm/cmake" ${CMAKE_MODULE_PATH})
+include(ROCMCheckTargetIds)
+find_package( HIP REQUIRED )
 find_package( rocblas REQUIRED )
 
 # switch compiler and linker on non-Windows
@@ -83,15 +91,6 @@ else ()
     endif ()
 endif ()
 
-# find_library(BLAS_LIBRARIES NAMES blis
-#              PATHS ${BLAS_DIR}
-#              NO_DEFAULT_PATH)
-# if (BLAS_LIBRARIES)
-#   message(STATUS "Found BLAS: ${BLAS_LIBRARIES}")
-# else()
-#   find_package(BLAS REQUIRED)
-# endif()
-
 if(NOT DEFINED BLAS_DIR)
   if(DEFINED ENV{BLAS_DIR})
     set(BLAS_DIR $ENV{BLAS_DIR})
@@ -100,7 +99,18 @@ if(NOT DEFINED BLAS_DIR)
 else()
   list(APPEND CMAKE_PREFIX_PATH ${BLAS_DIR})
 endif()
-find_package( BLAS REQUIRED )
+
+find_library(BLAS_LIBRARIES NAMES blis openblas
+             PATHS ${BLAS_DIR}
+             HINTS ${BLAS_DIR}/lib/zen3 ${BLAS_DIR}/lib
+             NO_DEFAULT_PATH)
+if (BLAS_LIBRARIES)
+  message(STATUS "Found BLAS: ${BLAS_LIBRARIES}")
+else()
+  message(STATUS "BLAS NOT Found: ${BLAS_LIBRARIES}")
+  find_package(BLAS REQUIRED)
+endif()
+# find_package( BLAS REQUIRED )
 
 # append math library, if found
 find_library(MATH_LIBRARY m)
@@ -217,7 +227,6 @@ target_include_directories( xhplhip PUBLIC hip:device
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-# target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES} OpenMP::OpenMP_CXX /global/home/lulu/mun-node-3/blis-multi-thread/lib/zen3/libblis.so)
 target_link_libraries( xhplhip roc::rocblas roc::rocrand ${BLAS_LIBRARIES} ${MPI_CXX_LIBRARIES} OpenMP::OpenMP_CXX)
 
 configure_file( include/hplhip_config.hin ${CMAKE_CURRENT_SOURCE_DIR}/include/hplhip_config.h @ONLY NEWLINE_STYLE LF )
