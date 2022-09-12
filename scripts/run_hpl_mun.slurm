@@ -13,7 +13,6 @@
 #SBATCH -w mun-node-4
 #SBATCH --exclusive
 
-#source ../env/env.crusher.sh
 source env.mun.sh
 
 NP=$SLURM_NPROCS
@@ -38,9 +37,7 @@ cp config/HPL_${NP}GPU.dat HPL.dat
 # #CMD+="${HOME}/mpich_bind.sh "
 # CMD+="$EXE"
 
-sh mpirun_xhplhip.sh
-
-
+bash mpirun_xhplhip.sh
 
 if [ $NODES -gt 8 ]; then
     echo "export FI_MR_CACHE_MAX_COUNT=0"
