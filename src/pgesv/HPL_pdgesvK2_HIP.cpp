@@ -286,7 +286,6 @@ void HPL_pdgesvK2_HIP
     /* if this is process 0,0 and not the first panel */
     if(GRID->myrow == 0 && mycol == 0 && j > 0) {
       time = HPL_ptimer_walltime() - start_time;
-      gflops = 2.0 * (N * (double)N * N - n * (double)n * n) / 3.0 / (time > 0.0 ? time : 1.e-6) / 1.e9;
       printf("Column=%09d (%4.1f%%) ", j, j * 100.0 / N);
       printf("Step Time(s)=%9.7f ", stepEnd-stepStart);
 
@@ -305,6 +304,7 @@ void HPL_pdgesvK2_HIP
       if (panel[0]->nu1) printf("DGEMM2 Gflops=%9.3e ", largeDgemm1Gflops);
       else printf("DGEMM2 Gflops=--------- ");
       
+      gflops = 2.0 * (A->n * (double)A->n * A->n - (A->n - j) * (double)(A->n - j) * (A->n - j)) / 3.0 / (time > 0.0 ? time : 1.e-6) / 1.e9;
       printf("Overall Gflops=%9.3e\n", gflops);
     }
 #endif

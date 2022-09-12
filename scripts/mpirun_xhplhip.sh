@@ -7,6 +7,9 @@ mpi_bin=${mpi_dir}/bin/mpiexec
 mpi_lib=${mpi_dir}/lib
 hpl_runscript=./run_xhplhip.sh
 
+if [ -z "${ROCM_PATH}" ]; then rocm_dir="/opt/rocm/lib";
+else rocm_dir="${ROCM_PATH}/lib"; fi
+
 filename=HPL.dat
 
 P=$(sed -n "11, 1p" ${filename} | awk '{print $1}')
@@ -18,9 +21,9 @@ num_cpu_sockets=$(lscpu | grep Socket | awk '{print $2}')
 total_cpu_cores=$(($num_cpu_cores*$num_cpu_sockets))
 
 export LD_LIBRARY_PATH=${mpi_lib}:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="${rocm_dir}":$LD_LIBRARY_PATH
 #Default MPI options
-mpi_args="--map-by slot:PE=${total_cpu_cores} --bind-to core:overload-allowed --mca btl ^openib --mca pml ucx --report-bindings -x LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib ${mpi_args}"
+mpi_args="--map-by slot:PE=${total_cpu_cores} --bind-to core:overload-allowed --mca btl ^openib --mca pml ucx -x LD_LIBRARY_PATH="${rocm_dir}/lib":$LD_LIBRARY_PATH ${mpi_args}"
 
 ${mpi_bin} --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 
 # ${mpi_bin} --hostfile hostfile --allow-run-as-root -np ${np} ${mpi_args} ${hpl_runscript} 

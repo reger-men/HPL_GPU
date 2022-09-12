@@ -158,7 +158,7 @@ void HPL_pdtest
 /*
  * generate matrix and right-hand-side, [ A | b ] which is N by N+1.
  */
-  MPI_Type_contiguous(2*NB+4, MPI_DOUBLE, &PDFACT_ROW);
+  MPI_Type_contiguous(NB+4, MPI_DOUBLE, &PDFACT_ROW);
   MPI_Type_commit(&PDFACT_ROW);
 
   HPL_BE_dmatgen(GRID, N, N+1, NB, mat.d_A, mat.ld, HPL_ISEED, T_HIP);
@@ -230,6 +230,7 @@ void HPL_pdtest
    (void) vsip_blockrelease_d( mat.block, VSIP_TRUE ); 
    vsip_blockdestroy_d( mat.block );
 #endif
+
 /*
  * Gather max of all CPU and WALL clock timings and print timing results
  */
@@ -510,7 +511,6 @@ void HPL_pdtest
       HPL_fprintf( TEST->outfp, "%s%16.8e%s%s\n",
          "||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)= ", resid1,
          " ...... ", ( resid1 < TEST->thrsh ? "PASSED" : "FAILED" ) );
-
       if( resid1 >= TEST->thrsh ) 
       {
          HPL_fprintf( TEST->outfp, "%s%18.6f\n",

@@ -2,9 +2,9 @@
 
 #include <hip/hip_runtime.h>
 #if defined(HPLHIP_USE_ROCRAND)
-#include <rocrand.h>
+#include <rocrand/rocrand.h>
 #endif
-#include <rocblas.h>
+#include <rocblas/rocblas.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -81,7 +81,7 @@ enum SWP_PHASE {
 };
 
 namespace HIP {
-    void init(size_t);
+    void init(const HPL_T_grid*);
     void release();
 
     void malloc(void**, size_t);

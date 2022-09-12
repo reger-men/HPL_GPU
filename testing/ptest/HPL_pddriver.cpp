@@ -99,7 +99,7 @@ int main( ARGC, ARGV )
                               inbm, indh, indv, ipfa, ipq, irfa, itop,
                               mycol, myrow, ns, nbs, nbms, ndhs, ndvs,
                               npcol, npfs, npqs, nprow, nrfs, ntps, 
-                              rank, size, tswap;
+                              rank, size, tswap, p, q;
    HPL_T_ORDER                pmapping;
    HPL_T_FACT                 rpfa;
    HPL_T_SWAP                 fswap;
@@ -147,16 +147,9 @@ int main( ARGC, ARGV )
  * 1            Equilibration (0=no,1=yes)
  * 8            memory alignment in double (> 0)
  */
-   HPL_pdinfo( &test, &ns, nval, &nbs, nbval, &pmapping, &npqs, pval, qval,
-               &npfs, pfaval, &nbms, nbmval, &ndvs, ndvval, &nrfs, rfaval,
-               &ntps, topval, &ndhs, ndhval, &fswap, &tswap, &L1notran,
-               &Unotran, &equil, &align );
-
-   /*
-   * Init Target Device
-   */
-   HPL_BE_init(1, HPL_TR);
-
+   HPL_pdinfo( ARGC, ARGV, &test, &ns, nval, &nbs, nbval, &pmapping, &npqs, 
+               pval, qval, &p, &q, &npfs, pfaval, &nbms, nbmval, &ndvs, ndvval, &nrfs, rfaval, &ntps, topval, &ndhs, ndhval, &fswap, 
+               &tswap, &L1notran, &Unotran, &equil, &align );
 /*
  * Loop over different process grids - Define process grid. Go to bottom
  * of process grid loop if this case does not use my process.
@@ -164,11 +157,13 @@ int main( ARGC, ARGV )
    for( ipq = 0; ipq < npqs; ipq++ )
    {
       (void) HPL_grid_init( MPI_COMM_WORLD, pmapping, pval[ipq], qval[ipq],
-                            &grid );
+                            p, q, &grid );
       (void) HPL_grid_info( &grid, &nprow, &npcol, &myrow, &mycol );
 
       if( ( myrow < 0 ) || ( myrow >= nprow ) ||
           ( mycol < 0 ) || ( mycol >= npcol ) ) goto label_end_of_npqs;
+      
+      HPL_BE_init(&grid, HPL_TR);
 
       for( in = 0; in < ns; in++ )
       {                            /* Loop over various problem sizes */
@@ -225,7 +220,7 @@ int main( ARGC, ARGV )
 
               algo.fswap = fswap; algo.fsthr = tswap;
               algo.equil = equil; algo.align = align;
-
+              
               HPL_pdtest( &test, &grid, &algo, nval[in], nbval[inb] );
 
              }
